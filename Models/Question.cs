@@ -14,7 +14,7 @@
 
         public string LabValues { get; set; }
 
-        public IEnumerable<string> Options { get; set; }
+        public IEnumerable<Option> Options { get; set; }
 
         public string CorrectAnswerLetter { get; set; }
 
@@ -38,5 +38,12 @@
         General,
         PaperOneMockExam,
         PaperTwoMockExam
+    }
+
+
+    public class Option
+    {
+        public string Letter { get; set; }
+        public string Text { get; set; }
     }
 }

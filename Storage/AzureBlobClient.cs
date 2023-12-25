@@ -9,18 +9,24 @@ using System.Text.Json;
 
 namespace MedicLaunchApi.Storage
 {
-    public class AzureBlobClient: IBlobClient
+    public class AzureBlobClient: IAzureBlobClient
     {
         private readonly BlobContainerClient blobContainerClient;
         private readonly ILogger<AzureBlobClient> logger;
 
-        public AzureBlobClient(IOptionsMonitor<BlobOptions> options, ILogger<AzureBlobClient> logger)
+        public AzureBlobClient(ILogger<AzureBlobClient> logger)
         {
-            this.blobContainerClient = new BlobContainerClient(new Uri(options.CurrentValue.ContainerEndPoint), new DefaultAzureCredential());
+            string? connectionStringFromEnvironment = Environment.GetEnvironmentVariable("AZURE_STORAGE_CONNECTION_STRING");
+            if(string.IsNullOrEmpty(connectionStringFromEnvironment))
+            {
+                throw new Exception("AZURE_STORAGE_CONNECTION_STRING environment variable is not set");
+            }
+
+            this.blobContainerClient = new BlobContainerClient(connectionStringFromEnvironment, "database");
             this.logger = logger;
         }
 
-        public async Task<TItem> CreateItemAsync<TItem>(string fullPath, TItem item, CancellationToken cancellationToken, Dictionary<string, string> tags)
+        public async Task<TItem> CreateItemAsync<TItem>(string fullPath, TItem item, CancellationToken cancellationToken, Dictionary<string, string> tags = null)
         {
             this.logger.LogInformation($"Creating blob at {fullPath}");
             var blobClient = this.blobContainerClient.GetBlobClient(fullPath);

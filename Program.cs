@@ -1,7 +1,10 @@
 
 using MedicLaunchApi.Data;
+using MedicLaunchApi.Repository;
+using MedicLaunchApi.Storage;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace MedicLaunchApi
 {
@@ -21,6 +24,9 @@ namespace MedicLaunchApi
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
+            builder.Services.AddScoped<QuestionRepository>();
+            builder.Services.AddScoped<AzureBlobClient>();
+            //builder.Services.Configure<BlobOptions>(builder.Configuration.GetSection("BlobOptions"));
 
             // Add Google auth
             //var configuration = builder.Configuration;

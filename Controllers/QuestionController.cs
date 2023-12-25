@@ -1,44 +1,64 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using MedicLaunchApi.Models;
+using MedicLaunchApi.Models.ViewModels;
+using MedicLaunchApi.Repository;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
+using System.Security.Claims;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace MedicLaunchApi.Controllers
 {
+    [Authorize]
     [Route("api/questions")]
     [ApiController]
     public class QuestionController : ControllerBase
     {
-        // GET: api/<QuestionController>
-        [HttpGet]
-        public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }
+        private readonly ILogger<QuestionController> logger;
+        private readonly QuestionRepository questionRepository;
 
-        // GET api/<QuestionController>/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        public QuestionController(ILogger<QuestionController> logger, QuestionRepository questionRepository)
         {
-            return "value";
+            this.logger = logger;
+            this.questionRepository = questionRepository;
         }
 
         // POST api/questions/create
-        [HttpPost]
-        public void Create([FromBody] string value)
+        [HttpPost("create")]
+        public async Task<IActionResult> Create([FromBody] QuestionViewModel model)
         {
-        }
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if(string.IsNullOrEmpty(currentUserId))
+            {
+                this.logger.LogError("User is not authenticated");
+                return Unauthorized();
+            }
 
-        // PUT api/<QuestionController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
+            // TODO: add question code
 
-        // DELETE api/<QuestionController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+            var question = new Question
+            {
+                Id = Guid.NewGuid().ToString(),
+                SpecialityId = model.SpecialityId,
+                QuestionType = Enum.Parse<QuestionType>(model.QuestionType),
+                QuestionText = model.QuestionText,
+                LabValues = model.LabValues,
+                Options = model.Options,
+                CorrectAnswerLetter = model.CorrectAnswerLetter,
+                Explanation = model.Explanation,
+                ClinicalTips = model.ClinicalTips,
+                References = model.References,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                UpdatedByUserId = currentUserId,
+                AuthorUserId = currentUserId
+            };
+
+
+            await this.questionRepository.CreateQuestionAsync(question, CancellationToken.None);
+
+            return Ok();
         }
     }
 }

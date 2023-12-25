@@ -1,14 +1,23 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Identity.Web;
+using System.Security.Claims;
 
 namespace MedicLaunchApi.Repository
 {
     public abstract class UserRepositoryBase
     {
-        private readonly UserManager<IdentityUser> userManager;
+        protected readonly HttpContextAccessor httpContextAccessor;
 
-        public UserRepositoryBase(UserManager<IdentityUser> userManager)
+        public UserRepositoryBase(HttpContextAccessor httpContextAccessor)
         {
-            this.userManager = userManager;
+            this.httpContextAccessor = httpContextAccessor;
+        }
+
+        protected virtual string GetUserBlobPath()
+        {
+            var claimsIdentity = (ClaimsIdentity)this.httpContextAccessor.HttpContext.User.Identity;
+            var userId = claimsIdentity.Claims.FirstOrDefault(claim => claim.Type == ClaimConstants.Oid);
+            return $"{userId}";
         }
     }
 }
