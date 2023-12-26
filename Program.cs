@@ -48,7 +48,10 @@ namespace MedicLaunchApi
 
             app.UseMiddleware<Middleware.SwaggerBasicAuthMiddleware>();
             app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Mediclaunch API v1");
+            });
 
             app.MapControllers();
 
