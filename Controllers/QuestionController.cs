@@ -75,17 +75,69 @@ namespace MedicLaunchApi.Controllers
                 UpdatedByUserId = currentUserId
             };
 
-            await this.questionRepository.UpdateQuestionAsync(question, CancellationToken.None);
-            return Ok();
+            var updatedQuestion = await this.questionRepository.UpdateQuestionAsync(question, CancellationToken.None);
+            return Ok(updatedQuestion);
         }
 
         // GET api/questions/speciality/{specialityId}
         [HttpGet("speciality/{specialityId}")]
-        public async Task<IActionResult> GetQuestions(string specialityId)
+        public async Task<IEnumerable<QuestionViewModel>> GetQuestions(string specialityId)
         {
             // TODO: convert to question view model - use auto mapper
             var questions = await this.questionRepository.GetQuestionsAsync(specialityId, CancellationToken.None);
-            return Ok(questions);
+            return questions.Select(q => new QuestionViewModel
+            {
+                Id = q.Id,
+                SpecialityId = q.SpecialityId,
+                QuestionType = q.QuestionType.ToString(),
+                QuestionText = q.QuestionText,
+                LabValues = q.LabValues,
+                Options = q.Options,
+                CorrectAnswerLetter = q.CorrectAnswerLetter,
+                Explanation = q.Explanation,
+                ClinicalTips = q.ClinicalTips,
+                References = q.References
+            }).ToList();
+        }
+
+        // DELETE api/questions/delete/{specialityId}/{questionId}
+        [HttpDelete("delete/{specialityId}/{questionId}")]
+        public async Task<IActionResult> DeleteQuestion(string specialityId, string questionId)
+        {
+            await this.questionRepository.DeleteQuestionAsync(specialityId, questionId, CancellationToken.None);
+            return Ok();
+        }
+
+        // POST api/questions/speciality/create
+        [HttpPost("speciality/create")]
+        public async Task<IActionResult> CreateSpeciality([FromBody] SpecialityViewModel model)
+        {
+            var speciality = new Speciality
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = model.Name
+            };
+            await this.questionRepository.AddSpeciality(speciality, CancellationToken.None);
+            return Ok(speciality);
+        }
+
+        // POST api/questions/speciality/bulk-create
+        [HttpPost("speciality/bulk-create")]
+        public async Task<IActionResult> CreateSpecialities([FromBody] IEnumerable<SpecialityViewModel> specialities)
+        {
+            foreach (var speciality in specialities)
+            {
+                await CreateSpeciality(speciality);
+            }
+
+            return Ok();
+        }
+
+        // GET api/questions/specialities
+        [HttpGet("specialities")]
+        public async Task<IEnumerable<SpecialityViewModel>> GetSpecialities()
+        {
+            return await this.questionRepository.GetSpecialities(CancellationToken.None);
         }
 
         private async Task CreateQuestion(QuestionViewModel model, string currentUserId, string? questionId = null)

@@ -2,9 +2,9 @@
 {
     public class QuestionViewModel
     {
-        public string SpecialityId { get; set; }
+        public string? Id { get; set; }
 
-        public string SpecialityName { get; set; }
+        public string SpecialityId { get; set; }
 
         public string QuestionType { get; set; }
 
@@ -21,6 +21,5 @@
         public string ClinicalTips { get; set; }
 
         public string References { get; set; }
-
     }
 }

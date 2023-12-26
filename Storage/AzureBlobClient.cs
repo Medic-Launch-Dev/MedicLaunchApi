@@ -86,7 +86,7 @@ namespace MedicLaunchApi.Storage
 
             string message = $"Blob not found at {fullPath}";
             this.logger.LogError(message);
-            throw new Exception(message);
+            throw new KeyNotFoundException(message);
         }
 
         public async Task<TItem> UpdateItemAsync<TItem>(string fullPath, TItem item, CancellationToken cancellationToken, Dictionary<string, string> tags = null)
@@ -103,6 +103,16 @@ namespace MedicLaunchApi.Storage
             string message = $"Blob not found at {fullPath}";
             this.logger.LogError(message);
             throw new Exception(message);
+        }
+
+        public async Task<TItem> CreateOrUpdateItem<TItem>(string fullPath, TItem item, CancellationToken cancellationToken, Dictionary<string, string> tags = null)
+        {
+            var blobClient = this.blobContainerClient.GetBlobClient(fullPath);
+            var exists = await blobClient.ExistsAsync(cancellationToken);
+
+            var logMessage = exists.HasValue && exists.Value ? $"Updating blob at {fullPath}" : $"Creating blob at {fullPath}";
+            this.logger.LogInformation(logMessage);
+            return await UploadItemAsync(blobClient, item, cancellationToken, tags);
         }
 
         private static async Task<TItem> UploadItemAsync<TItem>(BlobClient blobClient, TItem item, CancellationToken cancellationToken, Dictionary<string, string> tags)
