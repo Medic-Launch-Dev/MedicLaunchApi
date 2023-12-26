@@ -51,9 +51,6 @@ namespace MedicLaunchApi.Storage
         {
             this.logger.LogInformation($"Getting all blobs at {folderPath}");
 
-            var blobClient = this.blobContainerClient.GetBlobClient(folderPath);
-            // Write code to download all the blobs in the folder folderPath and deserialize them into a list of TItem
-            var result = new List<TItem>();
             var pages = blobContainerClient.GetBlobsAsync(cancellationToken: cancellationToken, traits: BlobTraits.Tags, prefix: folderPath).AsPages();
 
             var blobs = new ConcurrentBag<TItem>();
@@ -61,9 +58,7 @@ namespace MedicLaunchApi.Storage
             {
                 foreach (var blob in page.Values)
                 {
-                    var blobReadOptions = new BlobOpenReadOptions(false);
-                    using var stream = await blobClient.OpenReadAsync(blobReadOptions, cancellationToken);
-                    var item = await JsonSerializer.DeserializeAsync<TItem>(stream, cancellationToken: cancellationToken);
+                    var item = await GetItemAsync<TItem>(blob.Name, cancellationToken, false);
                     blobs.Add(item);
                 }
             }
@@ -94,7 +89,7 @@ namespace MedicLaunchApi.Storage
             throw new Exception(message);
         }
 
-        public async Task<TItem> UpdateItemAsync<TItem>(string fullPath, TItem item, CancellationToken cancellationToken, Dictionary<string, string> tags)
+        public async Task<TItem> UpdateItemAsync<TItem>(string fullPath, TItem item, CancellationToken cancellationToken, Dictionary<string, string> tags = null)
         {
             this.logger.LogInformation($"Updating blob at {fullPath}");
             var blobClient = this.blobContainerClient.GetBlobClient(fullPath);

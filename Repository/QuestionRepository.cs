@@ -18,6 +18,24 @@ namespace MedicLaunchApi.Repository
             return await azureBlobClient.CreateItemAsync(questionJsonPath, question, cancellationToken);
         }
 
+        public async Task<Question> UpdateQuestionAsync(Question question, CancellationToken cancellationToken)
+        {
+            var questionJsonPath = GetQuestionJsonPath(question.SpecialityId, question.Id);
+            return await azureBlobClient.UpdateItemAsync(questionJsonPath, question, cancellationToken);
+        }
+
+        public async Task<IEnumerable<Question>> GetQuestionsAsync(string specialityId, CancellationToken cancellationToken)
+        {
+            var questionJsonPath = GetAllQuestionsJsonPath(specialityId);
+            return await azureBlobClient.GetAllItemsAsync<Question>(questionJsonPath, cancellationToken);
+        }
+
+        public Task DeleteQuestionAsync(string specialityId, string questionId, CancellationToken cancellationToken)
+        {
+            var questionJsonPath = GetQuestionJsonPath(specialityId, questionId);
+            return azureBlobClient.DeleteItemAsync(questionJsonPath, cancellationToken);
+        }
+
         private string GetQuestionJsonPath(string specialtyId, string questionId)
         {
             return $"speciality/{specialtyId}/questions/{questionId}.json";
@@ -25,7 +43,7 @@ namespace MedicLaunchApi.Repository
 
         private string GetAllQuestionsJsonPath(string specialtyId)
         {
-            return $"{specialtyId}/questions";
+            return $"speciality/{specialtyId}/questions";
         }
     }
 }
