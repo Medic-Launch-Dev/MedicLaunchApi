@@ -3,7 +3,12 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MedicLaunchApi", "MedicLaunchApi.csproj", "{0E8529E2-2648-49B0-BE97-AB7F7E18B248}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MedicLaunchApi", "MedicLaunchApi.csproj", "{0E8529E2-2648-49B0-BE97-AB7F7E18B248}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B321E133-1147-4176-B5C6-2138BF585B2F}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
