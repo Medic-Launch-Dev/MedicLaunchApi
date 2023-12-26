@@ -7,3 +7,4 @@ Features that should work so far:
 - Admin can add a speciality
 
 Ue the shared postman collection which has sample requests and response for the new endpoints.
+![image](https://github.com/Medic-Launch-Dev/MedicLaunchApi/assets/154400233/9e9d05b5-7776-483e-85fa-dd995f4347c3)
