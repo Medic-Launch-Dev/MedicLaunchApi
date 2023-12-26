@@ -26,7 +26,6 @@ namespace MedicLaunchApi
             builder.Services.AddSwaggerGen();
             builder.Services.AddScoped<QuestionRepository>();
             builder.Services.AddScoped<AzureBlobClient>();
-         
             //builder.Services.Configure<BlobOptions>(builder.Configuration.GetSection("BlobOptions"));
 
             // Add Google auth
@@ -41,17 +40,15 @@ namespace MedicLaunchApi
             app.MapIdentityApi<IdentityUser>();
           
             // Configure the HTTP request pipeline.
-            
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
+
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
-            app.UseMiddleware<Middleware.SwaggerBasicAuthMiddleware>();
-            app.UseSwagger();
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Mediclaunch API v1");
-            });
 
             app.MapControllers();
 
