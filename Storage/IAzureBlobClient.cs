@@ -12,7 +12,8 @@
 
         Task DeleteItemAsync(string fullPath, CancellationToken cancellationToken);
 
-        // write task method to get all items
         Task<IEnumerable<TItem>> GetAllItemsAsync<TItem>(string folderPath, CancellationToken cancellationToken);
+
+        Task<TItem> CreateOrUpdateItem<TItem>(string fullPath, TItem item, CancellationToken cancellationToken, Dictionary<string, string> tags = null);
     }
 }
