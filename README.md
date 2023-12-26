@@ -6,6 +6,4 @@ Features that should work so far:
 - User can list all questions under a given speciality
 - Admin can add a speciality
 
-Access swagger API at: https://mediclaunchapi.azurewebsites.net/swagger/index.html
-
-If the swagger is not working, use the shared postman collection which has sample requests and response for the new endpoints.
+Ue the shared postman collection which has sample requests and response for the new endpoints.
