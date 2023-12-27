@@ -43,7 +43,7 @@ namespace MedicLaunchApi.Controllers
         [HttpPost("update/{questionId}")]
         public async Task<IActionResult> Update([FromBody] UpdateQuestionViewModel model, string questionId)
         {
-            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            string? currentUserId = GetCurrentUserId();
             if (string.IsNullOrEmpty(currentUserId))
             {
                 this.logger.LogError("User is not authenticated");
@@ -51,7 +51,7 @@ namespace MedicLaunchApi.Controllers
             }
 
             // If specialty is changed, we should delete question from the previous speciality and create a new question under the new speciality
-            if(model.PreviousSpecialityId != model.SpecialityId)
+            if (model.PreviousSpecialityId != model.SpecialityId)
             {
                 await this.questionRepository.DeleteQuestionAsync(model.PreviousSpecialityId, questionId, CancellationToken.None);
                 await CreateQuestion(model, currentUserId, questionId);
@@ -88,6 +88,39 @@ namespace MedicLaunchApi.Controllers
             return Ok(questions);
         }
 
+        [HttpPost("attemptquestion")]
+        public async Task<IActionResult> AttemptQuestion(QuestionAttemptRequest questionAttempt)
+        {
+            var attempt = new QuestionAttempt
+            {
+                Id = Guid.NewGuid().ToString(),
+                QuestionId = questionAttempt.QuestionId,
+                ChosenAnswer = questionAttempt.ChosenAnswer,
+                CorrectAnswer = questionAttempt.CorrectAnswer,
+                IsCorrect = questionAttempt.IsCorrect,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            await this.questionRepository.AddQuestionAttempt(attempt, GetCurrentUserId());
+            return Ok();
+        }
+
+        [HttpPost("flagquestion")]
+        public async Task<IActionResult> FlagQuestion(string questionId)
+        {
+            var questionFlagged = new FlaggedQuestion
+            {
+                Id = Guid.NewGuid().ToString(),
+                QuestionId = questionId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            await this.questionRepository.AddQuestionFlagged(questionFlagged, GetCurrentUserId());
+            return Ok();
+        }
+
         private async Task CreateQuestion(QuestionViewModel model, string currentUserId, string? questionId = null)
         {
             // TODO: add question code
@@ -110,6 +143,11 @@ namespace MedicLaunchApi.Controllers
             };
 
             await this.questionRepository.CreateQuestionAsync(question, CancellationToken.None);
+        }
+
+        private string GetCurrentUserId()
+        {
+            return User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         }
     }
 }

@@ -36,6 +36,18 @@ namespace MedicLaunchApi.Repository
             return azureBlobClient.DeleteItemAsync(questionJsonPath, cancellationToken);
         }
 
+        public async Task AddQuestionAttempt(QuestionAttempt attempt, string userId)
+        {
+            string userAttemptsJsonPath = $"user/{userId}/questionattempts/{attempt.Id}.json";
+            await azureBlobClient.CreateItemAsync(userAttemptsJsonPath, attempt, CancellationToken.None);
+        }
+
+        public async Task AddQuestionFlagged(FlaggedQuestion flaggedQuestion, string userId)
+        {
+            string userAttemptsJsonPath = $"user/{userId}/flaggedquestions/{flaggedQuestion.Id}.json";
+            await azureBlobClient.CreateItemAsync(userAttemptsJsonPath, flaggedQuestion, CancellationToken.None);
+        }
+
         private string GetQuestionJsonPath(string specialtyId, string questionId)
         {
             return $"speciality/{specialtyId}/questions/{questionId}.json";
