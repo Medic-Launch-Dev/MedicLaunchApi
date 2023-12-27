@@ -6,7 +6,9 @@
 
         public string QuestionId { get; set; }
 
-        public string AnswerLetter { get; set; }
+        public string ChosenOption { get; set; }
+
+        public string CorrectOption { get; set; }
 
         public bool IsCorrect { get; set; }
 

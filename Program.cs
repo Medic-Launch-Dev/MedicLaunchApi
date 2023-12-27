@@ -25,6 +25,7 @@ namespace MedicLaunchApi
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddScoped<QuestionRepository>();
+            builder.Services.AddScoped<PracticeSessionRepository>();
             builder.Services.AddScoped<AzureBlobClient>();
             //builder.Services.Configure<BlobOptions>(builder.Configuration.GetSection("BlobOptions"));
 
