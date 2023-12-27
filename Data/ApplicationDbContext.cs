@@ -8,6 +8,8 @@ namespace MedicLaunchApi.Data
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) :
             base(options)
-        { }
+        {
+            //Database.Migrate();
+        }
     }
 }
