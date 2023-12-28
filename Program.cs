@@ -15,7 +15,9 @@ namespace MedicLaunchApi
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-            builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase("AppDb"));
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString, options => options.UseAzureSqlDefaults()));
+
             builder.Services.AddAuthorization();
             builder.Services.AddIdentityApiEndpoints<IdentityUser>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
@@ -38,13 +40,12 @@ namespace MedicLaunchApi
 
             var app = builder.Build();
             app.MapIdentityApi<IdentityUser>();
-          
+            //var dbContext = app.Services.GetRequiredService<ApplicationDbContext>();
+            //dbContext.Database.Migrate();
+
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+            app.UseSwagger();
+            app.UseSwaggerUI();
 
             app.UseHttpsRedirection();
 
