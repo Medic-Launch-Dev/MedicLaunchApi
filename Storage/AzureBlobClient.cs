@@ -39,6 +39,19 @@ namespace MedicLaunchApi.Storage
             return await UploadItemAsync(blobClient, item, cancellationToken, tags);
         }
 
+        public async Task<TItem> CreateOrUpdateItemAsync<TItem>(string fullPath, TItem item, CancellationToken cancellationToken, Dictionary<string, string> tags = null)
+        {
+            this.logger.LogInformation($"Creating or updating blob at {fullPath}");
+            var blobClient = this.blobContainerClient.GetBlobClient(fullPath);
+            
+            var exists = await blobClient.ExistsAsync(cancellationToken);
+
+            var verb = exists.HasValue && exists.Value ? "Updating" : "Creating";
+            this.logger.LogInformation($"{verb} blob at {fullPath}");
+
+            return await UploadItemAsync(blobClient, item, cancellationToken, tags);
+        }
+
         public async Task DeleteItemAsync(string fullPath, CancellationToken cancellationToken)
         {
             this.logger.LogInformation($"Deleting blob at {fullPath}");

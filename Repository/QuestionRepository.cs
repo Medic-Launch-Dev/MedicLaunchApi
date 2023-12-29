@@ -38,7 +38,7 @@ namespace MedicLaunchApi.Repository
 
         public async Task AddQuestionAttempt(QuestionAttempt attempt, string userId)
         {
-            string userAttemptsJsonPath = $"user/{userId}/questionattempts/{userId}.json";
+            string userAttemptsJsonPath = $"user/{userId}/questionattempts/{attempt.Id}.json";
             await azureBlobClient.CreateItemAsync(userAttemptsJsonPath, attempt, CancellationToken.None);
         }
 
@@ -54,11 +54,29 @@ namespace MedicLaunchApi.Repository
             return await azureBlobClient.GetAllItemsAsync<FlaggedQuestion>(flaggedQuestionsPath, CancellationToken.None);
         }
 
+        public async Task CreateOrUpdatePracticeStats(PracticeStats practiceStats, string userId)
+        {
+            string userPracticeStatsJsonPath = GetPracticeStatsJsonPath(userId);
+            await azureBlobClient.CreateOrUpdateItemAsync(userPracticeStatsJsonPath, practiceStats, CancellationToken.None);
+        }
+
+        public async Task<PracticeStats> GetPracticeStatsAsync(string userId)
+        {
+            string userPracticeStatsJsonPath = GetPracticeStatsJsonPath(userId);
+            var practiceStats = await azureBlobClient.GetAllItemsAsync<PracticeStats>(userPracticeStatsJsonPath, CancellationToken.None);
+            return practiceStats.FirstOrDefault();
+        }
+
         public async Task<IEnumerable<QuestionAttempt>> GetAttemptedQuestionsAsync(string userId)
         {
             // TODO: add speciality as filter to reduce attempt files fetched
             var attemptsPath = GetUserAttemptsJsonPath(userId);
             return await azureBlobClient.GetAllItemsAsync<QuestionAttempt>(attemptsPath, CancellationToken.None);
+        }
+
+        private string GetPracticeStatsJsonPath(string userId)
+        {
+            return $"user/{userId}/practicestats";
         }
 
         private static string GetUserAttemptsJsonPath(string userId)

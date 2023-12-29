@@ -103,6 +103,35 @@ namespace MedicLaunchApi.Controllers
             };
 
             await this.questionRepository.AddQuestionAttempt(attempt, GetCurrentUserId());
+
+            var practiceStats = await this.questionRepository.GetPracticeStatsAsync(GetCurrentUserId());
+            if (practiceStats != null)
+            {
+                if (attempt.IsCorrect)
+                {
+                    practiceStats.TotalCorrect++;
+                }
+                else
+                {
+                    practiceStats.TotalIncorrect++;
+                }
+
+                practiceStats.UpdatedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                practiceStats = new PracticeStats
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    TotalCorrect = attempt.IsCorrect ? 1 : 0,
+                    TotalIncorrect = attempt.IsCorrect ? 0 : 1,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+            }
+
+            await this.questionRepository.CreateOrUpdatePracticeStats(practiceStats, GetCurrentUserId());
+
             return Ok();
         }
 
@@ -118,6 +147,25 @@ namespace MedicLaunchApi.Controllers
             };
 
             await this.questionRepository.AddQuestionFlagged(questionFlagged, GetCurrentUserId());
+            
+            var practiceStats = await this.questionRepository.GetPracticeStatsAsync(GetCurrentUserId());
+            if(practiceStats != null)
+            {
+                practiceStats.TotalFlagged++;
+                practiceStats.UpdatedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                practiceStats = new PracticeStats
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    TotalFlagged = 1,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+            }
+
+            await this.questionRepository.CreateOrUpdatePracticeStats(practiceStats, GetCurrentUserId());
             return Ok();
         }
 
