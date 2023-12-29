@@ -155,6 +155,35 @@ namespace MedicLaunchApi.Controllers
             };
 
             await this.questionRepository.AddQuestionAttempt(attempt, GetCurrentUserId());
+
+            var practiceStats = await this.questionRepository.GetPracticeStatsAsync(GetCurrentUserId());
+            if (practiceStats != null)
+            {
+                if (attempt.IsCorrect)
+                {
+                    practiceStats.TotalCorrect++;
+                }
+                else
+                {
+                    practiceStats.TotalIncorrect++;
+                }
+
+                practiceStats.UpdatedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                practiceStats = new PracticeStats
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    TotalCorrect = attempt.IsCorrect ? 1 : 0,
+                    TotalIncorrect = attempt.IsCorrect ? 0 : 1,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+            }
+
+            await this.questionRepository.CreateOrUpdatePracticeStats(practiceStats, GetCurrentUserId());
+
             return Ok();
         }
 
@@ -170,7 +199,48 @@ namespace MedicLaunchApi.Controllers
             };
 
             await this.questionRepository.AddQuestionFlagged(questionFlagged, GetCurrentUserId());
+            
+            var practiceStats = await this.questionRepository.GetPracticeStatsAsync(GetCurrentUserId());
+            if(practiceStats != null)
+            {
+                practiceStats.TotalFlagged++;
+                practiceStats.UpdatedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                practiceStats = new PracticeStats
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    TotalFlagged = 1,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
+            }
+
+            await this.questionRepository.CreateOrUpdatePracticeStats(practiceStats, GetCurrentUserId());
             return Ok();
+        }
+
+        [HttpPost("filter")]
+        public async Task<QuestionsFilterResponse> FilterQuestions(QuestionsFilterRequest filterRequest)
+        {
+            var tasks = filterRequest.SpecialityIds.Select(speciality => this.questionRepository.GetQuestionsAsync(speciality, CancellationToken.None));
+            var questions = await Task.WhenAll(tasks);
+            var allQuestions = filterRequest.QuestionType.HasValue ? 
+                questions.SelectMany(q => q).Where(m => m.QuestionType == filterRequest.QuestionType) :
+                questions.SelectMany(q => q);
+
+            var attemptedQuestions = await this.questionRepository.GetAttemptedQuestionsAsync(GetCurrentUserId());
+
+            var flaggedQuestions = await this.questionRepository.GetFlaggedQuestionsAsync(GetCurrentUserId());
+
+            return new QuestionsFilterResponse
+            {
+                IncorrectQuestions = allQuestions.Where(q => attemptedQuestions.Any(attempt => attempt.QuestionId == q.Id && !attempt.IsCorrect)),
+                FlaggedQuestions = allQuestions.Where(q => flaggedQuestions.Any(flagged => flagged.QuestionId == q.Id)),
+                AllQuestions = allQuestions,
+                NewQuestions = allQuestions.Where(q => !attemptedQuestions.Any(attempt => attempt.QuestionId == q.Id)),
+            };
         }
 
         private async Task CreateQuestion(QuestionViewModel model, string currentUserId, string? questionId = null)

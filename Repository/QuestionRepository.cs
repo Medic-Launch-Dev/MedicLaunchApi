@@ -83,6 +83,42 @@ namespace MedicLaunchApi.Repository
             await azureBlobClient.CreateItemAsync(userAttemptsJsonPath, flaggedQuestion, CancellationToken.None);
         }
 
+        public async Task<IEnumerable<FlaggedQuestion>> GetFlaggedQuestionsAsync(string userId)
+        {
+            var flaggedQuestionsPath = $"user/{userId}/flaggedquestions";
+            return await azureBlobClient.GetAllItemsAsync<FlaggedQuestion>(flaggedQuestionsPath, CancellationToken.None);
+        }
+
+        public async Task CreateOrUpdatePracticeStats(PracticeStats practiceStats, string userId)
+        {
+            string userPracticeStatsJsonPath = GetPracticeStatsJsonPath(userId);
+            await azureBlobClient.CreateOrUpdateItemAsync(userPracticeStatsJsonPath, practiceStats, CancellationToken.None);
+        }
+
+        public async Task<PracticeStats> GetPracticeStatsAsync(string userId)
+        {
+            string userPracticeStatsJsonPath = GetPracticeStatsJsonPath(userId);
+            var practiceStats = await azureBlobClient.GetAllItemsAsync<PracticeStats>(userPracticeStatsJsonPath, CancellationToken.None);
+            return practiceStats.FirstOrDefault();
+        }
+
+        public async Task<IEnumerable<QuestionAttempt>> GetAttemptedQuestionsAsync(string userId)
+        {
+            // TODO: add speciality as filter to reduce attempt files fetched
+            var attemptsPath = GetUserAttemptsJsonPath(userId);
+            return await azureBlobClient.GetAllItemsAsync<QuestionAttempt>(attemptsPath, CancellationToken.None);
+        }
+
+        private string GetPracticeStatsJsonPath(string userId)
+        {
+            return $"user/{userId}/practicestats";
+        }
+
+        private static string GetUserAttemptsJsonPath(string userId)
+        {
+            return $"user/{userId}/questionattempts";
+        }
+
         private string GetQuestionJsonPath(string specialtyId, string questionId)
         {
             return $"speciality/{specialtyId}/questions/{questionId}.json";
