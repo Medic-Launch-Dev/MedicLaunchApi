@@ -4,6 +4,8 @@
     {
         public string Id { get; set; }
 
+        public string SpecialityId { get; set; }
+
         public string QuestionId { get; set; }
 
         public string ChosenAnswer { get; set; }
