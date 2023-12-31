@@ -10,6 +10,9 @@ namespace MedicLaunchApi
 {
     public class Program
     {
+        private const string LocalDevCorsPolicy = "LocalDevelopmentCorsPolicy";
+        private const string ProdCorsPolicy = "ProdCorsPolicy";
+
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
@@ -26,27 +29,50 @@ namespace MedicLaunchApi
             builder.Services.AddSwaggerGen();
             builder.Services.AddScoped<QuestionRepository>();
             builder.Services.AddScoped<AzureBlobClient>();
-            //builder.Services.Configure<BlobOptions>(builder.Configuration.GetSection("BlobOptions"));
 
-            // Add Google auth
-            //var configuration = builder.Configuration;
-            //builder.Services.AddAuthentication().AddGoogle(googleOptions =>
-            //{
-            //    googleOptions.ClientId = configuration["Authentication:Google:ClientId"];
-            //    googleOptions.ClientSecret = configuration["Authentication:Google:ClientSecret"];
-            //});
+            var services = builder.Services;
+            services.AddCors(options =>
+            {
+                options.AddPolicy(ProdCorsPolicy,
+                    policy =>
+                    {
+                        policy.AllowAnyHeader()
+                            .AllowCredentials()
+                            .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH")
+                            .WithOrigins("https://mediclaunchapi.azurewebsites.ne");
+                    });
+            });
+
+            // add local development CORS policy for local development environment
+            services.AddCors(options =>
+            {
+                options.AddPolicy(LocalDevCorsPolicy,
+                                       policy =>
+                                       {
+                        policy.AllowAnyHeader()
+                            .AllowCredentials()
+                            .AllowAnyMethod()
+                            .WithOrigins("http://localhost:3000", "https://localhost:3000");
+                    });
+            });
+
 
             var app = builder.Build();
             app.MapIdentityApi<IdentityUser>();
-          
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+
+            app.UseSwagger();
+            app.UseSwaggerUI();
 
             app.UseHttpsRedirection();
+
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseCors(LocalDevCorsPolicy);
+            }
+            else
+            {
+                app.UseCors(ProdCorsPolicy);
+            }
 
             app.UseAuthorization();
 

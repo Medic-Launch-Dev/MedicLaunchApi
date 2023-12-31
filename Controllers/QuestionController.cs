@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace MedicLaunchApi.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [Route("api/questions")]
     [ApiController]
     public class QuestionController : ControllerBase
