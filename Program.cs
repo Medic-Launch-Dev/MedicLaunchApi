@@ -39,7 +39,7 @@ namespace MedicLaunchApi
                         policy.AllowAnyHeader()
                             .AllowCredentials()
                             .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH")
-                            .WithOrigins("https://mediclaunchapi.azurewebsites.ne");
+                            .WithOrigins("https://mediclaunchapi.azurewebsites.net", "https://mediclaunchdb.z13.web.core.windows.net");
                     });
             });
 
