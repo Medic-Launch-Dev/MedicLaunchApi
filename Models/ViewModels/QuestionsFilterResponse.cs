@@ -2,12 +2,12 @@
 {
     public class QuestionsFilterResponse
     {
-        public IEnumerable<Question> NewQuestions { get; set; }
+        public IEnumerable<QuestionViewModel> NewQuestions { get; set; }
 
-        public IEnumerable<Question> IncorrectQuestions { get; set; }
+        public IEnumerable<QuestionViewModel> IncorrectQuestions { get; set; }
 
-        public IEnumerable<Question> FlaggedQuestions { get; set; }
+        public IEnumerable<QuestionViewModel> FlaggedQuestions { get; set; }
 
-        public IEnumerable<Question> AllQuestions { get; set; }
+        public IEnumerable<QuestionViewModel> AllQuestions { get; set; }
     }
 }

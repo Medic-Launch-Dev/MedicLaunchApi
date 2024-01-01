@@ -36,7 +36,7 @@ namespace MedicLaunchApi.Controllers
         [HttpPost("update/{questionId}")]
         public async Task<IActionResult> Update([FromBody] UpdateQuestionViewModel model, string questionId)
         {
-            string? currentUserId = GetCurrentUserId();
+            string currentUserId = GetCurrentUserId();
 
             // If specialty is changed, we should delete question from the previous speciality and create a new question under the new speciality
             if (model.PreviousSpecialityId != model.SpecialityId)
@@ -70,22 +70,10 @@ namespace MedicLaunchApi.Controllers
         [HttpGet("speciality/{specialityId}")]
         public async Task<IEnumerable<QuestionViewModel>> GetQuestions(string specialityId)
         {
-            // TODO: convert to question view model - use auto mapper
             var questions = await this.questionRepository.GetQuestionsAsync(specialityId, CancellationToken.None);
-            return questions.Select(q => new QuestionViewModel
-            {
-                Id = q.Id,
-                SpecialityId = q.SpecialityId,
-                QuestionType = q.QuestionType.ToString(),
-                QuestionText = q.QuestionText,
-                LabValues = q.LabValues,
-                Options = q.Options,
-                CorrectAnswerLetter = q.CorrectAnswerLetter,
-                Explanation = q.Explanation,
-                ClinicalTips = q.ClinicalTips,
-                References = q.References
-            }).ToList();
+            return CreateQuestionViewModel(questions);
         }
+
 
         [HttpDelete("delete/{specialityId}/{questionId}")]
         public async Task<IActionResult> DeleteQuestion(string specialityId, string questionId)
@@ -219,10 +207,10 @@ namespace MedicLaunchApi.Controllers
 
             return new QuestionsFilterResponse
             {
-                IncorrectQuestions = allQuestions.Where(q => attemptedQuestions.Any(attempt => attempt.QuestionId == q.Id && !attempt.IsCorrect)),
-                FlaggedQuestions = allQuestions.Where(q => flaggedQuestions.Any(flagged => flagged.QuestionId == q.Id)),
-                AllQuestions = allQuestions,
-                NewQuestions = allQuestions.Where(q => !attemptedQuestions.Any(attempt => attempt.QuestionId == q.Id)),
+                IncorrectQuestions = CreateQuestionViewModel(allQuestions.Where(q => attemptedQuestions.Any(attempt => attempt.QuestionId == q.Id && !attempt.IsCorrect))),
+                FlaggedQuestions = CreateQuestionViewModel(allQuestions.Where(q => flaggedQuestions.Any(flagged => flagged.QuestionId == q.Id))),
+                AllQuestions = CreateQuestionViewModel(allQuestions),
+                NewQuestions = CreateQuestionViewModel(allQuestions.Where(q => !attemptedQuestions.Any(attempt => attempt.QuestionId == q.Id))),
             };
         }
 
@@ -248,6 +236,23 @@ namespace MedicLaunchApi.Controllers
             };
 
             await this.questionRepository.CreateQuestionAsync(question, CancellationToken.None);
+        }
+
+        private static IEnumerable<QuestionViewModel> CreateQuestionViewModel(IEnumerable<Question> questions)
+        {
+            return questions.Select(q => new QuestionViewModel
+            {
+                Id = q.Id,
+                SpecialityId = q.SpecialityId,
+                QuestionType = q.QuestionType.ToString(),
+                QuestionText = q.QuestionText,
+                LabValues = q.LabValues,
+                Options = q.Options,
+                CorrectAnswerLetter = q.CorrectAnswerLetter,
+                Explanation = q.Explanation,
+                ClinicalTips = q.ClinicalTips,
+                References = q.References
+            }).ToList();
         }
 
         private string GetCurrentUserId()
