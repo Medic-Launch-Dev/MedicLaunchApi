@@ -9,7 +9,7 @@ using System.Security.Claims;
 
 namespace MedicLaunchApi.Controllers
 {
-    //[Authorize]
+    [Authorize]
     [Route("api/questions")]
     [ApiController]
     public class QuestionController : ControllerBase
@@ -23,32 +23,20 @@ namespace MedicLaunchApi.Controllers
             this.questionRepository = questionRepository;
         }
 
-        // POST api/questions/create
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] QuestionViewModel model)
         {
-            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(currentUserId))
-            {
-                this.logger.LogError("User is not authenticated");
-                return Unauthorized();
-            }
+            string currentUserId = GetCurrentUserId();
 
             await CreateQuestion(model, currentUserId);
 
             return Ok();
         }
 
-        // POST api/questions/update/{questionId}
         [HttpPost("update/{questionId}")]
         public async Task<IActionResult> Update([FromBody] UpdateQuestionViewModel model, string questionId)
         {
             string? currentUserId = GetCurrentUserId();
-            if (string.IsNullOrEmpty(currentUserId))
-            {
-                this.logger.LogError("User is not authenticated");
-                return Unauthorized();
-            }
 
             // If specialty is changed, we should delete question from the previous speciality and create a new question under the new speciality
             if (model.PreviousSpecialityId != model.SpecialityId)
@@ -79,7 +67,6 @@ namespace MedicLaunchApi.Controllers
             return Ok(updatedQuestion);
         }
 
-        // GET api/questions/speciality/{specialityId}
         [HttpGet("speciality/{specialityId}")]
         public async Task<IEnumerable<QuestionViewModel>> GetQuestions(string specialityId)
         {
@@ -100,7 +87,6 @@ namespace MedicLaunchApi.Controllers
             }).ToList();
         }
 
-        // DELETE api/questions/delete/{specialityId}/{questionId}
         [HttpDelete("delete/{specialityId}/{questionId}")]
         public async Task<IActionResult> DeleteQuestion(string specialityId, string questionId)
         {
@@ -108,7 +94,6 @@ namespace MedicLaunchApi.Controllers
             return Ok();
         }
 
-        // POST api/questions/speciality/create
         [HttpPost("speciality/create")]
         public async Task<IActionResult> CreateSpeciality([FromBody] SpecialityViewModel model)
         {
@@ -121,7 +106,6 @@ namespace MedicLaunchApi.Controllers
             return Ok(speciality);
         }
 
-        // POST api/questions/speciality/bulk-create
         [HttpPost("speciality/bulk-create")]
         public async Task<IActionResult> CreateSpecialities([FromBody] IEnumerable<SpecialityViewModel> specialities)
         {
@@ -133,7 +117,6 @@ namespace MedicLaunchApi.Controllers
             return Ok();
         }
 
-        // GET api/questions/specialities
         [HttpGet("specialities")]
         public async Task<IEnumerable<SpecialityViewModel>> GetSpecialities()
         {
