@@ -54,7 +54,8 @@ namespace MedicLaunchApi
                         policy.AllowAnyHeader()
                             .AllowCredentials()
                             .AllowAnyMethod()
-                            .WithOrigins("http://localhost:3000", "https://localhost:3000");
+                            .AllowAnyOrigin()
+                            //.WithOrigins("http://localhost:3000", "https://localhost:3000");
                     });
             });
 
@@ -67,14 +68,15 @@ namespace MedicLaunchApi
 
             app.UseHttpsRedirection();
 
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseCors(LocalDevCorsPolicy);
-            }
-            else
-            {
-                app.UseCors(ProdCorsPolicy);
-            }
+            //if (app.Environment.IsDevelopment())
+            //{
+            //    app.UseCors(LocalDevCorsPolicy);
+            //}
+            //else
+            //{
+            //    app.UseCors(ProdCorsPolicy);
+            //}
+            app.UseCors(LocalDevCorsPolicy);
 
             app.UseAuthorization();
 
