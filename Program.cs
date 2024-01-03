@@ -51,10 +51,10 @@ namespace MedicLaunchApi
                 options.AddPolicy(LocalDevCorsPolicy,
                                        policy =>
                                        {
-                        policy.AllowAnyHeader()
-                            .AllowCredentials()
-                            .AllowAnyMethod()
-                            .AllowAnyOrigin()
+                                           policy.AllowAnyHeader()
+                                               .AllowCredentials()
+                                               .AllowAnyMethod()
+                                               .AllowAnyOrigin();
                             //.WithOrigins("http://localhost:3000", "https://localhost:3000");
                     });
             });
