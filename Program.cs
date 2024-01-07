@@ -54,9 +54,9 @@ namespace MedicLaunchApi
                                            policy.AllowAnyHeader()
                                                .AllowCredentials()
                                                .AllowAnyMethod()
-                                               .AllowAnyOrigin();
-                            //.WithOrigins("http://localhost:3000", "https://localhost:3000");
-                    });
+                            //.AllowAnyOrigin();
+                                               .WithOrigins("https://mediclaunchapi.azurewebsites.net", "https://mediclaunchdb.z13.web.core.windows.net", "http://localhost:3000", "https://localhost:3000");
+                                       });
             });
 
 
