@@ -53,12 +53,11 @@ namespace MedicLaunchApi.Controllers
                 SpecialityId = model.SpecialityId,
                 QuestionType = Enum.Parse<QuestionType>(model.QuestionType),
                 QuestionText = model.QuestionText,
-                LabValues = model.LabValues,
                 Options = model.Options,
                 CorrectAnswerLetter = model.CorrectAnswerLetter,
                 Explanation = model.Explanation,
                 ClinicalTips = model.ClinicalTips,
-                References = model.References,
+                LearningPoints = model.LearningPoints,
                 UpdatedAt = DateTime.UtcNow,
                 UpdatedByUserId = currentUserId
             };
@@ -214,6 +213,20 @@ namespace MedicLaunchApi.Controllers
             };
         }
 
+        [HttpPost("uploadimage")]
+        public async Task<IActionResult> UploadImage(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                string message = "No file was uploaded";
+                this.logger.LogError(message);
+                return BadRequest(message);
+            }
+
+            var blobUrl = await this.questionRepository.UploadQuestionImage(file);
+            return Ok(new { imageUrl = blobUrl });
+        }
+
         private async Task CreateQuestion(QuestionViewModel model, string currentUserId, string? questionId = null)
         {
             // TODO: add question code
@@ -223,12 +236,11 @@ namespace MedicLaunchApi.Controllers
                 SpecialityId = model.SpecialityId,
                 QuestionType = Enum.Parse<QuestionType>(model.QuestionType),
                 QuestionText = model.QuestionText,
-                LabValues = model.LabValues,
                 Options = model.Options,
                 CorrectAnswerLetter = model.CorrectAnswerLetter,
                 Explanation = model.Explanation,
                 ClinicalTips = model.ClinicalTips,
-                References = model.References,
+                LearningPoints = model.LearningPoints,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 UpdatedByUserId = currentUserId,
@@ -246,12 +258,11 @@ namespace MedicLaunchApi.Controllers
                 SpecialityId = q.SpecialityId,
                 QuestionType = q.QuestionType.ToString(),
                 QuestionText = q.QuestionText,
-                LabValues = q.LabValues,
                 Options = q.Options,
                 CorrectAnswerLetter = q.CorrectAnswerLetter,
                 Explanation = q.Explanation,
                 ClinicalTips = q.ClinicalTips,
-                References = q.References
+                LearningPoints = q.LearningPoints
             }).ToList();
         }
 

@@ -12,8 +12,6 @@
 
         public string QuestionText { get; set; }
 
-        public string LabValues { get; set; }
-
         public IEnumerable<Option> Options { get; set; }
 
         public string CorrectAnswerLetter { get; set; }
@@ -22,7 +20,7 @@
 
         public string ClinicalTips { get; set; }
 
-        public string References { get; set; }
+        public string LearningPoints { get; set; }
 
         public string AuthorUserId { get; set; }
 
