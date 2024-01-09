@@ -1,5 +1,6 @@
 
 using MedicLaunchApi.Data;
+using MedicLaunchApi.Models;
 using MedicLaunchApi.Repository;
 using MedicLaunchApi.Storage;
 using Microsoft.AspNetCore.Identity;
@@ -22,8 +23,10 @@ namespace MedicLaunchApi
             builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString, options => options.UseAzureSqlDefaults()));
 
             builder.Services.AddAuthorization();
-            builder.Services.AddIdentityApiEndpoints<IdentityUser>()
-                .AddEntityFrameworkStores<ApplicationDbContext>();
+            builder.Services.AddIdentityApiEndpoints<MedicLaunchUser>()
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddUserManager<UserManager<MedicLaunchUser>>();
+                //.AddSignInManager<UserManager<MedicLaunchUser>>();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -54,9 +57,9 @@ namespace MedicLaunchApi
                                            policy.AllowAnyHeader()
                                                .AllowCredentials()
                                                .AllowAnyMethod()
-                                               .AllowAnyOrigin();
-                            //.WithOrigins("http://localhost:3000", "https://localhost:3000");
-                    });
+                            //.AllowAnyOrigin();
+                                               .WithOrigins("https://mediclaunchapi.azurewebsites.net", "https://mediclaunchdb.z13.web.core.windows.net", "http://localhost:3000", "https://localhost:3000");
+                                       });
             });
 
 

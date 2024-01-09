@@ -1,21 +1,47 @@
 ﻿using Google.Apis.Auth;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+using MedicLaunchApi.Models;
+using MedicLaunchApi.Models.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace MedicLaunchApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/account")]
     [ApiController]
     public class AccountController : ControllerBase
     {
-        private readonly SignInManager<IdentityUser> signInManager;
+        private readonly UserManager<MedicLaunchUser> userManager;
 
-        public AccountController(SignInManager<IdentityUser> signInManager)
+        public AccountController(UserManager<MedicLaunchUser> signInManager)
         {
-            this.signInManager = signInManager;
+            this.userManager = signInManager;
+        }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterUserRequest user)
+        {
+            var newUser = new MedicLaunchUser
+            {
+                UserName = user.Email,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                DisplayName = user.DisplayName,
+                University = user.University,
+                GraduationYear = user.GraduationYear,
+                City = user.City,
+                HowDidYouHearAboutUs = user.HowDidYouHearAboutUs
+            };
+
+            var result = await this.userManager.CreateAsync(newUser);
+            if (result.Succeeded)
+            {
+                return Ok();
+            }
+            else
+            {
+                return BadRequest(result.Errors);
+            }
         }
     }
 }

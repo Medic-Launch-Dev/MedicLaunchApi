@@ -1,4 +1,5 @@
-﻿using MedicLaunchApi.Models;
+﻿using Azure.Storage.Blobs;
+using MedicLaunchApi.Models;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Storage;
 
@@ -107,6 +108,11 @@ namespace MedicLaunchApi.Repository
             // TODO: add speciality as filter to reduce attempt files fetched
             var attemptsPath = GetUserAttemptsJsonPath(userId);
             return await azureBlobClient.GetAllItemsAsync<QuestionAttempt>(attemptsPath, CancellationToken.None);
+        }
+
+        public async Task<string> UploadQuestionImage(IFormFile file)
+        {
+            return await azureBlobClient.UploadImageAsyc(file);
         }
 
         private string GetPracticeStatsJsonPath(string userId)

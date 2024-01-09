@@ -12,6 +12,7 @@ namespace MedicLaunchApi.Storage
     public class AzureBlobClient: IAzureBlobClient
     {
         private readonly BlobContainerClient blobContainerClient;
+        private readonly BlobContainerClient imagesContainerClient;
         private readonly ILogger<AzureBlobClient> logger;
 
         public AzureBlobClient(ILogger<AzureBlobClient> logger)
@@ -23,6 +24,7 @@ namespace MedicLaunchApi.Storage
             }
 
             this.blobContainerClient = new BlobContainerClient(connectionStringFromEnvironment, "database");
+            this.imagesContainerClient = new BlobContainerClient(connectionStringFromEnvironment, "images");
             this.logger = logger;
         }
 
@@ -126,6 +128,22 @@ namespace MedicLaunchApi.Storage
             var logMessage = exists.HasValue && exists.Value ? $"Updating blob at {fullPath}" : $"Creating blob at {fullPath}";
             this.logger.LogInformation(logMessage);
             return await UploadItemAsync(blobClient, item, cancellationToken, tags);
+        }
+
+        public async Task<string> UploadImageAsyc(IFormFile file)
+        {
+            this.logger.LogInformation($"Uploading file {file.FileName}");
+            var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+            var blobClient = imagesContainerClient.GetBlobClient(fileName);
+
+            using (var stream = file.OpenReadStream())
+            {
+                await blobClient.UploadAsync(stream, true);
+            }
+
+            var blobUri = blobClient.Uri.ToString();
+
+            return blobUri;
         }
 
         private static async Task<TItem> UploadItemAsync<TItem>(BlobClient blobClient, TItem item, CancellationToken cancellationToken, Dictionary<string, string> tags)
