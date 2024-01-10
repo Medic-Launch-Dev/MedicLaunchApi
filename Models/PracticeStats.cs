@@ -4,8 +4,6 @@
     {
         public string Id { get; set; }
 
-        public int TotalQuestions { get; set; }
-
         public int TotalCorrect { get; set; }
 
         public int TotalIncorrect { get; set; }
