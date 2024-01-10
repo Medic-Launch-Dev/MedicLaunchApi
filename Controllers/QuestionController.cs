@@ -191,6 +191,12 @@ namespace MedicLaunchApi.Controllers
             return Ok();
         }
 
+        [HttpGet("practicestats")]
+        public async Task<PracticeStats> GetPracticeStats()
+        {
+            return await this.questionRepository.GetPracticeStatsAsync(GetCurrentUserId());
+        }
+
         [HttpPost("filter")]
         public async Task<QuestionsFilterResponse> FilterQuestions(QuestionsFilterRequest filterRequest)
         {
