@@ -29,6 +29,8 @@
         public DateTime UpdatedAt { get; set; }
 
         public string UpdatedByUserId { get; set; }
+
+        public bool IsSubmitted { get; set; }
     }
 
     public enum QuestionType
