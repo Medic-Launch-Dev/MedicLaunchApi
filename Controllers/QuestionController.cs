@@ -27,8 +27,8 @@ namespace MedicLaunchApi.Controllers
         public async Task<IActionResult> Create([FromBody] QuestionViewModel model)
         {
             string currentUserId = GetCurrentUserId();
-
-            await CreateQuestion(model, currentUserId);
+            string questionCode = await GetQuestionCode(model.SpecialityId, CancellationToken.None);
+            await CreateQuestion(model, questionCode, currentUserId);
 
             return Ok();
         }
@@ -47,6 +47,7 @@ namespace MedicLaunchApi.Controllers
             }
 
             // otherwise, update the existing question and save it
+            string questionCode = await GetQuestionCode(model.SpecialityId, CancellationToken.None);
             var question = new Question
             {
                 Id = questionId,
@@ -59,7 +60,8 @@ namespace MedicLaunchApi.Controllers
                 ClinicalTips = model.ClinicalTips,
                 LearningPoints = model.LearningPoints,
                 UpdatedAt = DateTime.UtcNow,
-                UpdatedByUserId = currentUserId
+                UpdatedByUserId = currentUserId,
+                Code = questionCode,
             };
 
             var updatedQuestion = await this.questionRepository.UpdateQuestionAsync(question, CancellationToken.None);
@@ -233,7 +235,7 @@ namespace MedicLaunchApi.Controllers
             return Ok(new { imageUrl = blobUrl });
         }
 
-        private async Task CreateQuestion(QuestionViewModel model, string currentUserId, string? questionId = null)
+        private async Task CreateQuestion(QuestionViewModel model, string questionCode, string currentUserId, string? questionId = null)
         {
             // TODO: add question code
             var question = new Question
@@ -250,7 +252,8 @@ namespace MedicLaunchApi.Controllers
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 UpdatedByUserId = currentUserId,
-                AuthorUserId = currentUserId
+                AuthorUserId = currentUserId,
+                Code = questionCode,
             };
 
             await this.questionRepository.CreateQuestionAsync(question, CancellationToken.None);
@@ -270,6 +273,21 @@ namespace MedicLaunchApi.Controllers
                 ClinicalTips = q.ClinicalTips,
                 LearningPoints = q.LearningPoints
             }).ToList();
+        }
+
+        private async Task<string> GetQuestionCode(string specialityId, CancellationToken token)
+        {
+            // get count of questions in the speciality
+            var questions = await this.questionRepository.GetQuestionsAsync(specialityId, token);
+            var allSpecialities = await this.questionRepository.GetSpecialities(token);
+            var speciality = allSpecialities.FirstOrDefault(s => s.Id == specialityId);
+            if (speciality == null)
+            {
+                throw new Exception("Speciality not found");
+            }
+
+            string questionCode = speciality.Name.Substring(0, 2).ToUpper() + (questions.Count() + 1);
+            return questionCode;
         }
 
         private string GetCurrentUserId()
