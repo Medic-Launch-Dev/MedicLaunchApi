@@ -19,5 +19,7 @@
         public string ClinicalTips { get; set; }
 
         public string LearningPoints { get; set; }
+
+        public bool IsSubmitted { get; set; }
     }
 }
