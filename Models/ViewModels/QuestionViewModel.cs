@@ -4,6 +4,8 @@
     {
         public string? Id { get; set; }
 
+        public string? QuestionCode { get; internal set; }
+
         public string SpecialityId { get; set; }
 
         public string QuestionType { get; set; }

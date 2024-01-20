@@ -2,6 +2,7 @@
 using MedicLaunchApi.Data;
 using MedicLaunchApi.Models;
 using MedicLaunchApi.Repository;
+using MedicLaunchApi.Services;
 using MedicLaunchApi.Storage;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -34,6 +35,7 @@ namespace MedicLaunchApi
             builder.Services.AddSwaggerGen();
             builder.Services.AddScoped<QuestionRepository>();
             builder.Services.AddScoped<AzureBlobClient>();
+            builder.Services.AddScoped<PracticeService>();
 
             var services = builder.Services;
             services.AddCors(options =>
