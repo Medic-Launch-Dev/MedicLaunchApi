@@ -6,8 +6,13 @@ namespace MedicLaunchApi.Models.ViewModels
     {
         public string[] SpecialityIds { get; set; }
 
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        public QuestionType? QuestionType { get; set; }
+        public string QuestionType { get; set; }
+
+        public string Familiarity { get; set; }
+
+        public string SelectionOrder { get; set; }
+
+        public bool AllSpecialitiesSelected { get; set; }
     }
 
     public enum Familiarity
