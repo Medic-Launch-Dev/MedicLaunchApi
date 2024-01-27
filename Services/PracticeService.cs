@@ -14,7 +14,8 @@ namespace MedicLaunchApi.Services
 
         public async Task<IEnumerable<QuestionViewModel>> GetQuestions(QuestionsFilterRequest filterRequest, string currentUserId)
         {
-            if (filterRequest.AllSpecialitiesSelected)
+            if(filterRequest.AllSpecialitiesSelected)
+            {
                 var allSpecialities = await this.questionRepository.GetSpecialities(CancellationToken.None);
                 filterRequest.SpecialityIds = allSpecialities.Select(s => s.Id!).ToArray();
             }
@@ -29,25 +30,32 @@ namespace MedicLaunchApi.Services
             var attemptedQuestions = await this.questionRepository.GetAttemptedQuestionsAsync(currentUserId);
 
             var familiarity = Enum.Parse<Familiarity>(filterRequest.Familiarity);
+            IEnumerable<Question> selectedQuestions = new List<Question>();
             switch (familiarity)
             {
                 case Familiarity.NewQuestions:
-                    return CreateQuestionViewModel(allQuestions.Where(q => !attemptedQuestions.Any(attempt => attempt.QuestionId == q.Id)));
+                    selectedQuestions = allQuestions.Where(q => !attemptedQuestions.Any(attempt => attempt.QuestionId == q.Id));
+                    break;
                 case Familiarity.IncorrectQuestions:
-                    return CreateQuestionViewModel(allQuestions.Where(q => attemptedQuestions.Any(attempt => attempt.QuestionId == q.Id && !attempt.IsCorrect)));
+                    selectedQuestions = allQuestions.Where(q => attemptedQuestions.Any(attempt => attempt.QuestionId == q.Id && !attempt.IsCorrect));
+                    break;
                 case Familiarity.FlaggedQuestions:
-                    return CreateQuestionViewModel(allQuestions.Where(q => flaggedQuestions.Any(flagged => flagged.QuestionId == q.Id)));
+                    selectedQuestions = allQuestions.Where(q => flaggedQuestions.Any(flagged => flagged.QuestionId == q.Id));
+                    break;
                 case Familiarity.AllQuestions:
-                    return CreateQuestionViewModel(allQuestions);
+                    selectedQuestions = allQuestions;
+                    break;
                 default:
                     break;
             }
 
-            return CreateQuestionViewModel(allQuestions);
+            var specialities = await this.questionRepository.GetSpecialities(CancellationToken.None);
+            var specialityMap = specialities.ToDictionary(s => s.Id!, s => s.Name);
+            var questionsList = CreateQuestionViewModel(selectedQuestions, specialityMap);
+            return questionsList;
         }
 
-
-        public IEnumerable<QuestionViewModel> CreateQuestionViewModel(IEnumerable<Question> questions)
+        public IEnumerable<QuestionViewModel> CreateQuestionViewModel(IEnumerable<Question> questions, Dictionary<string, string> specialityMap)
         {
             return questions.Select(q => new QuestionViewModel
             {
@@ -59,7 +67,8 @@ namespace MedicLaunchApi.Services
                 CorrectAnswerLetter = q.CorrectAnswerLetter,
                 Explanation = q.Explanation,
                 ClinicalTips = q.ClinicalTips,
-                LearningPoints = q.LearningPoints
+                LearningPoints = q.LearningPoints,
+                SpecialityName = specialityMap[q.SpecialityId]
             }).ToList();
         }
     }

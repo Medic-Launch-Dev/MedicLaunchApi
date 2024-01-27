@@ -23,5 +23,7 @@
         public string LearningPoints { get; set; }
 
         public bool IsSubmitted { get; set; }
+
+        public string SpecialityName { get; set; }
     }
 }
