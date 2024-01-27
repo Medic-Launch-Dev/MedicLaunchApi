@@ -16,7 +16,7 @@ namespace MedicLaunchApi.Models
 
         public string University { get; set; }
 
-        public string GraduationYear { get; set; }
+        public int GraduationYear { get; set; }
 
         public string? City { get; set; }
 

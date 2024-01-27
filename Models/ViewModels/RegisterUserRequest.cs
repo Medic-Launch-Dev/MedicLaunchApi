@@ -14,7 +14,7 @@
 
         public string University { get; set; } = string.Empty;
 
-        public string GraduationYear { get; set; } = string.Empty;
+        public int GraduationYear { get; set; }
 
         public string? City { get; set; }
 
