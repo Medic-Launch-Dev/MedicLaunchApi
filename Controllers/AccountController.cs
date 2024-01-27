@@ -30,7 +30,8 @@ namespace MedicLaunchApi.Controllers
                 University = user.University,
                 GraduationYear = user.GraduationYear,
                 City = user.City,
-                HowDidYouHearAboutUs = user.HowDidYouHearAboutUs
+                HowDidYouHearAboutUs = user.HowDidYouHearAboutUs,
+                SubscribeToPromotions = user.SubscribeToPromotions
             };
 
             var result = await this.userManager.CreateAsync(newUser, user.Password);
