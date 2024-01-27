@@ -20,18 +20,21 @@ namespace MedicLaunchApi.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterUserRequest user)
         {
-            var newUser = CreateUser();
-            newUser.UserName = user.Email;
-            newUser.Email = user.Email;
-            newUser.FirstName = user.FirstName;
-            newUser.LastName = user.LastName;
-            newUser.DisplayName = user.DisplayName;
-            newUser.University = user.University;
-            newUser.GraduationYear = user.GraduationYear;
-            newUser.City = user.City;
-            newUser.HowDidYouHearAboutUs = user.HowDidYouHearAboutUs;
+            var newUser = new MedicLaunchUser
+            {
+                UserName = user.Email,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                DisplayName = user.DisplayName,
+                University = user.University,
+                GraduationYear = user.GraduationYear,
+                City = user.City,
+                HowDidYouHearAboutUs = user.HowDidYouHearAboutUs,
+                PasswordHash = user.Password
+            };
 
-            var result = await this.userManager.CreateAsync(newUser, user.Password);
+            var result = await this.userManager.CreateAsync(newUser);
             if (result.Succeeded)
             {
                 return Ok();
@@ -42,18 +45,5 @@ namespace MedicLaunchApi.Controllers
             }
         }
 
-        private MedicLaunchUser CreateUser()
-        {
-            try
-            {
-                return Activator.CreateInstance<MedicLaunchUser>();
-            }
-            catch
-            {
-                throw new InvalidOperationException($"Can't create an instance of '{nameof(MedicLaunchUser)}'. " +
-                    $"Ensure that '{nameof(MedicLaunchUser)}' is not an abstract class and has a parameterless constructor, or alternatively " +
-                    $"override the register page in /Areas/Identity/Pages/Account/Register.cshtml");
-            }
-        }
     }
 }
