@@ -21,5 +21,7 @@ namespace MedicLaunchApi.Models
         public string? City { get; set; }
 
         public string? HowDidYouHearAboutUs { get; set; }
+
+        public bool SubscribeToPromotions { get; set; }
     }
 }
