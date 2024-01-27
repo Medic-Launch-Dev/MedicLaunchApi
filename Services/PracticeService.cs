@@ -15,7 +15,6 @@ namespace MedicLaunchApi.Services
         public async Task<IEnumerable<QuestionViewModel>> GetQuestions(QuestionsFilterRequest filterRequest, string currentUserId)
         {
             if (filterRequest.AllSpecialitiesSelected)
-            {
                 var allSpecialities = await this.questionRepository.GetSpecialities(CancellationToken.None);
                 filterRequest.SpecialityIds = allSpecialities.Select(s => s.Id!).ToArray();
             }
