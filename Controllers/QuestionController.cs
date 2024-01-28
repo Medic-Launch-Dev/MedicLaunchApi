@@ -221,6 +221,12 @@ namespace MedicLaunchApi.Controllers
             return Ok(new { imageUrl = blobUrl });
         }
 
+        [HttpPost("familiaritycounts")]
+        public Task<QuestionFamiliarityCounts> GetQuestionFamiliarityCounts([FromBody] FamiliarityCountsRequest request)
+        {
+            return this.practiceService.GetCategoryCounts(GetCurrentUserId(), request);
+        }
+
         private IEnumerable<QuestionViewModel> CreateQuestionViewModel(IEnumerable<Question> questions)
         {
             return questions.Select(q => new QuestionViewModel

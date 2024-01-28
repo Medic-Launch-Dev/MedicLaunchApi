@@ -14,7 +14,7 @@ namespace MedicLaunchApi.Services
 
         public async Task<IEnumerable<QuestionViewModel>> GetQuestions(QuestionsFilterRequest filterRequest, string currentUserId)
         {
-            if(filterRequest.AllSpecialitiesSelected)
+            if (filterRequest.AllSpecialitiesSelected)
             {
                 var allSpecialities = await this.questionRepository.GetSpecialities(CancellationToken.None);
                 filterRequest.SpecialityIds = allSpecialities.Select(s => s.Id!).ToArray();
@@ -70,6 +70,38 @@ namespace MedicLaunchApi.Services
                 LearningPoints = q.LearningPoints,
                 SpecialityName = specialityMap[q.SpecialityId]
             }).ToList();
+        }
+
+        public async Task<QuestionFamiliarityCounts> GetCategoryCounts(string currentUserId, FamiliarityCountsRequest request)
+        {
+            var allSpecialitiesSelected = request.AllSpecialitiesSelected;
+            var specialityIds = request.SpecialityIds;
+            if (allSpecialitiesSelected)
+            {
+                var allSpecialities = await this.questionRepository.GetSpecialities(CancellationToken.None);
+                specialityIds = allSpecialities.Select(s => s.Id!).ToArray();
+            }
+
+            var tasks = specialityIds.Select(speciality => this.questionRepository.GetQuestionsAsync(speciality, CancellationToken.None));
+            var questions = await Task.WhenAll(tasks);
+
+            var flaggedQuestions = await this.questionRepository.GetFlaggedQuestionsAsync(currentUserId);
+            var attemptedQuestions = await this.questionRepository.GetAttemptedQuestionsAsync(currentUserId);
+
+            var allQuestions = questions.SelectMany(q => q);
+
+            var newQuestions = allQuestions.Where(q => !attemptedQuestions.Any(attempt => attempt.QuestionId == q.Id));
+            var incorrectQuestions = allQuestions.Where(q => attemptedQuestions.Any(attempt => attempt.QuestionId == q.Id && !attempt.IsCorrect));
+
+            var flagged = allQuestions.Where(q => flaggedQuestions.Any(flagged => flagged.QuestionId == q.Id));
+
+            return new QuestionFamiliarityCounts()
+            {
+                NewQuestions = newQuestions.Count(),
+                IncorrectQuestions = incorrectQuestions.Count(),
+                FlaggedQuestions = flagged.Count(),
+                AllQuestions = allQuestions.Count()
+            };
         }
     }
 }
