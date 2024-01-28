@@ -74,7 +74,7 @@ namespace MedicLaunchApi.Controllers
         public async Task<IEnumerable<QuestionViewModel>> GetQuestions(string specialityId)
         {
             var questions = await this.questionRepository.GetQuestionsAsync(specialityId, CancellationToken.None);
-            return practiceService.CreateQuestionViewModel(questions);
+            return CreateQuestionViewModel(questions);
         }
 
 
@@ -219,6 +219,29 @@ namespace MedicLaunchApi.Controllers
 
             var blobUrl = await this.questionRepository.UploadQuestionImage(file);
             return Ok(new { imageUrl = blobUrl });
+        }
+
+        [HttpPost("familiaritycounts")]
+        public Task<QuestionFamiliarityCounts> GetQuestionFamiliarityCounts([FromBody] FamiliarityCountsRequest request)
+        {
+            return this.practiceService.GetCategoryCounts(GetCurrentUserId(), request);
+        }
+
+        private IEnumerable<QuestionViewModel> CreateQuestionViewModel(IEnumerable<Question> questions)
+        {
+            return questions.Select(q => new QuestionViewModel
+            {
+                Id = q.Id,
+                SpecialityId = q.SpecialityId,
+                QuestionType = q.QuestionType.ToString(),
+                QuestionText = q.QuestionText,
+                Options = q.Options,
+                CorrectAnswerLetter = q.CorrectAnswerLetter,
+                Explanation = q.Explanation,
+                ClinicalTips = q.ClinicalTips,
+                LearningPoints = q.LearningPoints,
+                QuestionCode = q.Code
+            }).ToList();
         }
 
         private async Task CreateQuestion(QuestionViewModel model, string questionCode, string currentUserId, string? questionId = null)
