@@ -233,7 +233,8 @@ namespace MedicLaunchApi.Controllers
                 CorrectAnswerLetter = q.CorrectAnswerLetter,
                 Explanation = q.Explanation,
                 ClinicalTips = q.ClinicalTips,
-                LearningPoints = q.LearningPoints
+                LearningPoints = q.LearningPoints,
+                QuestionCode = q.Code
             }).ToList();
         }
 
