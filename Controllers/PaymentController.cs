@@ -5,7 +5,7 @@ using Stripe;
 namespace MedicLaunchApi.Controllers
 {
     [Authorize]
-    [Route("api/[controller]")]
+    [Route("api/payment")]
     [ApiController]
     public class PaymentController : ControllerBase
     {
