@@ -49,6 +49,8 @@ namespace MedicLaunchApi.Controllers
                 return Ok();
             }
 
+            model.QuestionCode ??= await GetQuestionCode(model.SpecialityId, CancellationToken.None);
+
             // otherwise, update the existing question and save it
             var question = new Question
             {
