@@ -36,6 +36,9 @@ namespace MedicLaunchApi
             builder.Services.AddScoped<QuestionRepository>();
             builder.Services.AddScoped<AzureBlobClient>();
             builder.Services.AddScoped<PracticeService>();
+            builder.Services.AddScoped<PaymentRepository>();
+            builder.Services.AddScoped<UserRepository>();
+            builder.Services.AddScoped<PaymentService>();
 
             var services = builder.Services;
             services.AddCors(options =>

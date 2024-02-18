@@ -1,6 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using MedicLaunchApi.Common;
+using MedicLaunchApi.Models;
+using MedicLaunchApi.Repository;
+using MedicLaunchApi.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stripe;
+using System.Security.Claims;
 
 namespace MedicLaunchApi.Controllers
 {
@@ -9,50 +14,40 @@ namespace MedicLaunchApi.Controllers
     [ApiController]
     public class PaymentController : ControllerBase
     {
-        private readonly string stripeApiKey;
-        private readonly string stripePublishableKey;
-        public PaymentController()
-        {
-            this.stripeApiKey = Environment.GetEnvironmentVariable("STRIPE_API_KEY") ?? string.Empty;
-            if (string.IsNullOrEmpty(this.stripeApiKey))
-            {
-                throw new Exception("STRIPE_API_KEY environment variable is not set");
-            }
+        private readonly ILogger<PaymentController> logger;
+        private readonly PaymentService paymentService;
 
-            this.stripePublishableKey = Environment.GetEnvironmentVariable("STRIPE_PUBLISHABLE_KEY") ?? string.Empty;
-            if (string.IsNullOrEmpty(this.stripePublishableKey))
-            {
-                throw new Exception("STRIPE_PUBLISHABLE_KEY environment variable is not set");
-            }
+        public PaymentController(ILogger<PaymentController> logger, PaymentService paymentService)
+        {
+            this.logger = logger;
+            this.paymentService = paymentService;
         }
 
         [HttpPost]
         [Route("create-payment-intent")]
-        public IActionResult CreatePaymentIntent(string paymentPlan)
+        public async Task<IActionResult> CreatePaymentIntent(string planId)
         {
-            // TODO: Add logic to determine the amount based on the payment plan
-
-            StripeConfiguration.ApiKey = this.stripeApiKey;
-
-            var options = new PaymentIntentCreateOptions
+            try
             {
-                Amount = 2000,
-                Currency = "GBP", // TODO: Change to the currency of the user
-                AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
-                {
-                    Enabled = true,
-                },
-            };
-            var service = new PaymentIntentService();
-            PaymentIntent paymentIntent = service.Create(options);
-            return Ok(new { clientSecret = paymentIntent.ClientSecret });
+                var clientSecret = await this.paymentService.CreatePaymentIntent(planId, this.GetCurrentUserId());
+                return Ok(new { clientSecret });
+            }
+            catch (Exception)
+            {
+                return BadRequest();
+            }
         }
 
         [HttpGet]
         [Route("publishable-key")]
         public IActionResult GetPublishableKey()
         {
-            return Ok(new { publishableKey = this.stripePublishableKey });
+            return Ok(new { publishableKey = this.paymentService.GetPublishKey() });
+        }
+
+        private string GetCurrentUserId()
+        {
+            return User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         }
     }
 }

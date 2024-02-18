@@ -1,6 +1,8 @@
 ﻿using Google.Apis.Auth;
 using MedicLaunchApi.Models;
 using MedicLaunchApi.Models.ViewModels;
+using MedicLaunchApi.Repository;
+using MedicLaunchApi.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,10 +13,13 @@ namespace MedicLaunchApi.Controllers
     public class AccountController : ControllerBase
     {
         private readonly UserManager<MedicLaunchUser> userManager;
-
-        public AccountController(UserManager<MedicLaunchUser> signInManager)
+        private readonly PaymentService paymentService;
+        private readonly UserRepository userRepository;
+        public AccountController(UserManager<MedicLaunchUser> signInManager, PaymentService paymentService, UserRepository userRepository)
         {
             this.userManager = signInManager;
+            this.paymentService = paymentService;
+            this.userRepository = userRepository;
         }
 
         [HttpPost("register")]
@@ -37,6 +42,8 @@ namespace MedicLaunchApi.Controllers
             var result = await this.userManager.CreateAsync(newUser, user.Password);
             if (result.Succeeded)
             {
+                // Create stripe customer to be used for future payments
+                this.paymentService.CreateStripeCustomer(newUser);
                 return Ok();
             }
             else
