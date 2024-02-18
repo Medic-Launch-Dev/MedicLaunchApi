@@ -1,7 +1,6 @@
 ﻿using MedicLaunchApi.Common;
 using MedicLaunchApi.Controllers;
 using MedicLaunchApi.Models;
-using MedicLaunchApi.Repository;
 using Microsoft.AspNetCore.Identity;
 using Stripe;
 
@@ -12,15 +11,12 @@ namespace MedicLaunchApi.Services
         private readonly string stripeApiKey;
         private readonly string stripePublishableKey;
         private readonly ILogger<PaymentController> logger;
-        private readonly PaymentRepository paymentRepository;
-        private readonly UserRepository userRepository;
         private readonly UserManager<MedicLaunchUser> userManager;
 
-        public PaymentService(ILogger<PaymentController> logger, PaymentRepository paymentRepository, UserManager<MedicLaunchUser> userManager)
+        public PaymentService(ILogger<PaymentController> logger, UserManager<MedicLaunchUser> userManager)
         {
             this.logger = logger;
             this.stripeApiKey = Environment.GetEnvironmentVariable("STRIPE_API_KEY") ?? string.Empty;
-            this.paymentRepository = paymentRepository;
 
             if (string.IsNullOrEmpty(this.stripeApiKey))
             {
@@ -41,8 +37,6 @@ namespace MedicLaunchApi.Services
             StripeConfiguration.ApiKey = this.stripeApiKey;
             var subscription = PaymentHelper.GetSubscriptionPlan(planId);
 
-            var userProfile = await this.userRepository.GetUserProfile(userId, CancellationToken.None);
-
             var options = new PaymentIntentCreateOptions
             {
                 Amount = subscription.Amount,
@@ -56,16 +50,6 @@ namespace MedicLaunchApi.Services
             var service = new PaymentIntentService();
             PaymentIntent paymentIntent = service.Create(options);
 
-            var payment = new Payment
-            {
-                PaymentIntentId = paymentIntent.Id,
-                PaymentIntentStatus = paymentIntent.Status,
-                PaymentIntentAmount = paymentIntent.Amount,
-                PaymentIntentCurrency = paymentIntent.Currency,
-                PaymentIntentClientSecret = paymentIntent.ClientSecret,
-                SubscriptionPlanId = planId
-            };
-
             var user = await this.userManager.FindByIdAsync(userId);
             if (user == null)
             {
@@ -75,12 +59,6 @@ namespace MedicLaunchApi.Services
                 user.SubscriptionPlanId = planId;
                 await this.userManager.UpdateAsync(user);
             }
-
-            //await this.paymentRepository.CreatePayment(payment, userId, CancellationToken.None);
-
-            //// Update user profile with subscription plan but the date is not set until payment is successful
-            //userProfile.SubscriptionPlanId = planId;
-            //await this.userRepository.UpdateUserProfile(userProfile, CancellationToken.None);
 
             return paymentIntent.ClientSecret;
         }

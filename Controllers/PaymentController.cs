@@ -1,10 +1,6 @@
-﻿using MedicLaunchApi.Common;
-using MedicLaunchApi.Models;
-using MedicLaunchApi.Repository;
-using MedicLaunchApi.Services;
+﻿using MedicLaunchApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Stripe;
 using System.Security.Claims;
 
 namespace MedicLaunchApi.Controllers

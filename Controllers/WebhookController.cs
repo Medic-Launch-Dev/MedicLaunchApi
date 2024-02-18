@@ -1,10 +1,8 @@
 ﻿using MedicLaunchApi.Common;
 using MedicLaunchApi.Models;
 using MedicLaunchApi.Repository;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Stripe;
 
 namespace MedicLaunchApi.Controllers
@@ -15,19 +13,16 @@ namespace MedicLaunchApi.Controllers
     {
         private readonly string stripeWebhookSecret;
         private readonly ILogger<PaymentController> logger;
-        private readonly PaymentRepository paymentRepository;
-        private readonly UserRepository userRepository;
         private readonly UserManager<MedicLaunchUser> userManager;
 
         public WebhookController(ILogger<PaymentController> logger, UserManager<MedicLaunchUser> userManager, PaymentRepository paymentRepository, UserRepository userRepository)
         {
             this.logger = logger;
 
+            // TODO: remove hardcoding of stripe secret key
             this.stripeWebhookSecret = "whsec_4336112a6ad48ab2bc2dba791ef9187d30ddc55e455c34d46f1b040be530b5dd";
 
             this.userManager = userManager;
-            this.paymentRepository = paymentRepository;
-            this.userRepository = userRepository;
         }
 
         [HttpPost]
@@ -97,7 +92,7 @@ namespace MedicLaunchApi.Controllers
             //    return BadRequest();
             //}
 
-            string customerEmail = "khalid.abdilahi91@gmail.com"; //intent.Customer.Email;
+            string customerEmail = "khalid.abdilahi92@gmail.com"; //intent.Customer.Email;
 
             // Find user by email using usermanager
             var user = await userManager.FindByEmailAsync(customerEmail);
@@ -111,30 +106,6 @@ namespace MedicLaunchApi.Controllers
             user.SubscriptionExpiryDate = DateTime.UtcNow.AddMonths(plan.Months);
             user.SubscriptionCreatedDate = DateTime.UtcNow;
             await userManager.UpdateAsync(user);
-
-            //var userId = user.Id;
-
-            //var payments = await this.paymentRepository.GetPayments(userId, CancellationToken.None);
-            //var storedIntent = payments.Where(m => m.PaymentIntentId == intent.Id).FirstOrDefault();
-
-            //if (storedIntent == null)
-            //{
-            //    this.logger.LogError($"Unable to find corresponding payment object for the intent {intent.Id}");
-            //    return BadRequest();
-            //}
-
-            //await this.paymentRepository.UpdatePaymentStatus(userId, intent.Id, intent.Status, CancellationToken.None);
-            //var userProfile = await this.userRepository.GetUserProfile(userId, CancellationToken.None);
-
-            //logger.LogInformation("Payment Succeeded: {ID}", intent.Id);
-
-            //// TODO: Do we need to update customer that payment succeeded?
-            //userProfile.SubscriptionCreatedDate = DateTime.UtcNow;
-
-            //var subscription = PaymentHelper.GetSubscriptionPlan(storedIntent.SubscriptionPlanId);
-            //userProfile.SubscriptionExpiryDate = DateTime.UtcNow.AddMonths(subscription.Months);
-            //await this.userRepository.UpdateUserProfile(userProfile, CancellationToken.None);
-
             return new EmptyResult();
         }
     }
