@@ -34,33 +34,51 @@ namespace MedicLaunchApi.Services
 
         public async Task<string> CreatePaymentIntent(string planId, string userId)
         {
-            StripeConfiguration.ApiKey = this.stripeApiKey;
-            var subscription = PaymentHelper.GetSubscriptionPlan(planId);
-
-            var options = new PaymentIntentCreateOptions
+            try
             {
-                Amount = subscription.Amount,
-                Currency = "GBP",
-                AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
+                StripeConfiguration.ApiKey = this.stripeApiKey;
+                var user = await this.userManager.FindByIdAsync(userId);
+                if (user == null)
                 {
-                    Enabled = true,
+                    this.logger.LogError($"User not found with id {userId}");
                 }
-            };
+                else
+                {
+                    user.SubscriptionPlanId = planId;
+                    await this.userManager.UpdateAsync(user);
+                }
 
-            var service = new PaymentIntentService();
-            PaymentIntent paymentIntent = service.Create(options);
+                var customerOptions = new CustomerListOptions { Limit = 10, Email = user.Email! };
+                var customerService = new CustomerService();
+                Customer customer = customerService.List(customerOptions).SingleOrDefault();
+                if (customer == null)
+                {
+                    this.logger.LogError($"Customer not found with email {user.Email}");
+                }
 
-            var user = await this.userManager.FindByIdAsync(userId);
-            if (user == null)
-            {
-                this.logger.LogError($"User not found with id {userId}");
-            } else
-            {
-                user.SubscriptionPlanId = planId;
-                await this.userManager.UpdateAsync(user);
+                var subscription = PaymentHelper.GetSubscriptionPlan(planId);
+
+                var options = new PaymentIntentCreateOptions
+                {
+                    Amount = subscription.Amount,
+                    Currency = "GBP",
+                    AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
+                    {
+                        Enabled = true,
+                    },
+                    Customer = customer.Id,
+                };
+
+                var service = new PaymentIntentService();
+                PaymentIntent paymentIntent = service.Create(options);
+
+                return paymentIntent.ClientSecret;
             }
-
-            return paymentIntent.ClientSecret;
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex, "Error creating payment intent");
+                throw;
+            }
         }
 
         public void CreateStripeCustomer(MedicLaunchUser user)

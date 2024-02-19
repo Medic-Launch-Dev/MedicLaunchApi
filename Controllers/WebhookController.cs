@@ -86,13 +86,13 @@ namespace MedicLaunchApi.Controllers
                 return BadRequest();
             }
 
-            //if(intent.Customer?.Email == null)
-            //{
-            //    this.logger.LogError("Invalid customer email");
-            //    return BadRequest();
-            //}
+            if (intent.Customer?.Email == null)
+            {
+                this.logger.LogError("Invalid customer email");
+                return BadRequest();
+            }
 
-            string customerEmail = "khalid.abdilahi92@gmail.com"; //intent.Customer.Email;
+            string customerEmail = intent.Customer.Email;
 
             // Find user by email using usermanager
             var user = await userManager.FindByEmailAsync(customerEmail);

@@ -29,7 +29,5 @@ namespace MedicLaunchApi.Models
         public DateTime? SubscriptionCreatedDate { get; set; }
 
         public DateTime? SubscriptionExpiryDate { get; set; }
-
-        public string SubscriptionStatus { get; set; }
     }
 }
