@@ -23,5 +23,11 @@ namespace MedicLaunchApi.Models
         public string? HowDidYouHearAboutUs { get; set; }
 
         public bool SubscribeToPromotions { get; set; }
+
+        public string? SubscriptionPlanId { get; set; }
+
+        public DateTime? SubscriptionCreatedDate { get; set; }
+
+        public DateTime? SubscriptionExpiryDate { get; set; }
     }
 }
