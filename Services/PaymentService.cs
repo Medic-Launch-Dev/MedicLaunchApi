@@ -48,9 +48,10 @@ namespace MedicLaunchApi.Services
                     await this.userManager.UpdateAsync(user);
                 }
 
-                var customerOptions = new CustomerListOptions { Limit = 10, Email = user.Email! };
+                var customerOptions = new CustomerListOptions { Limit = 1, Email = user.Email! };
                 var customerService = new CustomerService();
-                Customer customer = customerService.List(customerOptions).SingleOrDefault();
+                var customers = await customerService.ListAsync(customerOptions);
+                var customer = customers.FirstOrDefault();
                 if (customer == null)
                 {
                     this.logger.LogError($"Customer not found with email {user.Email}");
