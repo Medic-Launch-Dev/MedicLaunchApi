@@ -49,7 +49,7 @@ namespace MedicLaunchApi
                         policy.AllowAnyHeader()
                             .AllowCredentials()
                             .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH")
-                            .WithOrigins("https://mediclaunchapi.azurewebsites.net", "https://mediclaunchdb.z13.web.core.windows.net");
+                            .WithOrigins("https://mediclaunchapi.azurewebsites.net", "https://mediclaunchdb.z13.web.core.windows.net", "https://mediclaunch.azureedge.net");
                     });
             });
 
@@ -63,7 +63,7 @@ namespace MedicLaunchApi
                                                .AllowCredentials()
                                                .AllowAnyMethod()
                             //.AllowAnyOrigin();
-                                               .WithOrigins("https://mediclaunchapi.azurewebsites.net", "https://mediclaunchdb.z13.web.core.windows.net", "http://localhost:3000", "https://localhost:3000");
+                                               .WithOrigins("https://mediclaunchapi.azurewebsites.net", "https://mediclaunchdb.z13.web.core.windows.net", "http://localhost:3000", "https://localhost:3000", "https://mediclaunch.azureedge.net");
                                        });
             });
 
