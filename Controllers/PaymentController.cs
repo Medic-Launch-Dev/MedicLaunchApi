@@ -28,9 +28,10 @@ namespace MedicLaunchApi.Controllers
                 var clientSecret = await this.paymentService.CreatePaymentIntent(planId, this.GetCurrentUserId());
                 return Ok(new { clientSecret });
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return BadRequest();
+                this.logger.LogError(ex, "Error creating payment intent");
+                return BadRequest(ex.Message);
             }
         }
 

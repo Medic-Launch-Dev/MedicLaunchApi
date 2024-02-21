@@ -19,8 +19,11 @@ namespace MedicLaunchApi.Controllers
         {
             this.logger = logger;
 
-            // TODO: remove hardcoding of stripe secret key
-            this.stripeWebhookSecret = "whsec_4336112a6ad48ab2bc2dba791ef9187d30ddc55e455c34d46f1b040be530b5dd";
+            this.stripeWebhookSecret = Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SECRET") ?? string.Empty;
+            if (string.IsNullOrEmpty(this.stripeWebhookSecret))
+            {
+                throw new Exception("STRIPE_WEBHOOK_SECRET environment variable is not set");
+            }
 
             this.userManager = userManager;
         }
@@ -74,7 +77,7 @@ namespace MedicLaunchApi.Controllers
             {
                 // Invalid Signature
                 this.logger.LogError(ex, "Stripe Exception");
-                return BadRequest();
+                return BadRequest(ex.Message);
             }
         }
 
