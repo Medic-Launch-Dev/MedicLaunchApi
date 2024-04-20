@@ -55,6 +55,7 @@ namespace MedicLaunchApi.Services
                 if (customer == null)
                 {
                     this.logger.LogError($"Customer not found with email {user.Email}");
+                    throw new Exception("Stripe customer not found");
                 }
 
                 var subscription = PaymentHelper.GetSubscriptionPlan(planId);
