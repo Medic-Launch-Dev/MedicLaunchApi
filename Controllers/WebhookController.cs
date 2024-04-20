@@ -109,7 +109,7 @@ namespace MedicLaunchApi.Controllers
             user.SubscriptionExpiryDate = DateTime.UtcNow.AddMonths(plan.Months);
             user.SubscriptionCreatedDate = DateTime.UtcNow;
             await userManager.UpdateAsync(user);
-            return new EmptyResult();
+            return Ok();
         }
     }
 }
