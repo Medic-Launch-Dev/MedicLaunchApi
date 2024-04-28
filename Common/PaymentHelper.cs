@@ -6,6 +6,11 @@ namespace MedicLaunchApi.Common
     {
         public static SubscriptionPlan GetSubscriptionPlan(string planId)
         {
+            if(planId == null)
+            {
+                return null;
+            }
+
             var plans = new SubscriptionPlan[] {
                 new SubscriptionPlan()
                 {
