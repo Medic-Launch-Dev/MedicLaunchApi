@@ -167,6 +167,13 @@ namespace MedicLaunchApi.Controllers
             }
         }
 
+        [HttpPost("resetquestions/{userId}")]
+        public async Task<IActionResult> ResetQuestions(string userId)
+        {
+            await this.questionRepository.ClearQuestionAttempts(userId);
+            return Ok();
+        }
+
         private async Task<int> GetQuestionsCompleted(string userId)
         {
             var attemptedQuestions = await this.questionRepository.GetAttemptedQuestionsAsync(userId);
