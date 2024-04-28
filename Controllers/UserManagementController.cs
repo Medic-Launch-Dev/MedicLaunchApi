@@ -57,7 +57,7 @@ namespace MedicLaunchApi.Controllers
             return Ok(userProfiles);
         }
 
-        [HttpGet("update")]
+        [HttpPost("update")]
         // TODO: make sure only admin (i.e. sajjaad can do this)
         public async Task<IActionResult> UpdateUserProfile([FromBody] UpdateUserRequest userProfile)
         {
@@ -85,9 +85,9 @@ namespace MedicLaunchApi.Controllers
             }
         }
 
-        [HttpPost("resetpassword")]
+        [HttpPost("resetuserpassword")]
         // TODO: make sure only admin (i.e. sajjaad can do this)
-        public async Task<IActionResult> ResetUserPassword([FromBody] ResetPasswordRequest resetPasswordRequest)
+        public async Task<IActionResult> ResetUserPassword([FromBody] ResetUserPasswordRequest resetPasswordRequest)
         {
             var user = await this.userManager.FindByIdAsync(resetPasswordRequest.UserId);
             if (user == null)
@@ -107,9 +107,9 @@ namespace MedicLaunchApi.Controllers
             }
         }
 
-        [HttpPost("delete")]
+        [HttpPost("delete/{userId}")]
         // TODO: make sure only admin (i.e. sajjaad can do this)
-        public async Task<IActionResult> DeleteUser([FromBody] string userId)
+        public async Task<IActionResult> DeleteUser(string userId)
         {
             var user = await this.userManager.FindByIdAsync(userId);
             if (user == null)

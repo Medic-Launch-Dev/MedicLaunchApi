@@ -10,8 +10,6 @@
 
         public string DisplayName { get; set; }
 
-        public string Email { get; set; }
-
         public string University { get; set; }
 
         public int GraduationYear { get; set; }
