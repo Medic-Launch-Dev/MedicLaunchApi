@@ -46,7 +46,7 @@ namespace MedicLaunchApi.Controllers
                     City = user.City ?? string.Empty,
                     SubscribeToPromotions = user.SubscribeToPromotions,
                     SubscriptionMonths = subscriptionPlan != null ? subscriptionPlan.Months.ToString() : "N/A",
-                    SubscriptionPurchaseDate = user.SubscriptionCreatedDate,
+                    SubscriptionPurchaseDate = user.SubscriptionCreatedDate.HasValue ? user.SubscriptionCreatedDate.Value.ToUniversalTime().ToString() : string.Empty,
                     QuestionsCompleted = await GetQuestionsCompleted(user.Id)
                 };
                 userProfiles.Add(userProfile);
