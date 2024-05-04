@@ -6,28 +6,31 @@ namespace MedicLaunchApi.Services
 {
     public class PracticeService
     {
+        private readonly QuestionRepositoryLegacy questionRepositoryLegacy;
         private readonly QuestionRepository questionRepository;
-        public PracticeService(QuestionRepository questionRepository)
+
+        public PracticeService(QuestionRepositoryLegacy questionRepositoryLegacy, QuestionRepository questionRepository)
         {
+            this.questionRepositoryLegacy = questionRepositoryLegacy;
             this.questionRepository = questionRepository;
         }
 
-        public async Task<IEnumerable<QuestionViewModel>> GetQuestions(QuestionsFilterRequest filterRequest, string currentUserId)
+        public async Task<IEnumerable<QuestionViewModel>> GetQuestionsLegacy(QuestionsFilterRequest filterRequest, string currentUserId)
         {
             if (filterRequest.AllSpecialitiesSelected)
             {
-                var allSpecialities = await this.questionRepository.GetSpecialities(CancellationToken.None);
+                var allSpecialities = await this.questionRepositoryLegacy.GetSpecialities(CancellationToken.None);
                 filterRequest.SpecialityIds = allSpecialities.Select(s => s.Id!).ToArray();
             }
 
-            var tasks = filterRequest.SpecialityIds.Select(speciality => this.questionRepository.GetQuestionsAsync(speciality, CancellationToken.None));
+            var tasks = filterRequest.SpecialityIds.Select(speciality => this.questionRepositoryLegacy.GetQuestionsAsync(speciality, CancellationToken.None));
             var questions = await Task.WhenAll(tasks);
             var questionType = Enum.Parse<QuestionType>(filterRequest.QuestionType);
 
             var allQuestions = questions.SelectMany(q => q).Where(m => m.QuestionType == questionType);
 
-            var flaggedQuestions = await this.questionRepository.GetFlaggedQuestionsAsync(currentUserId);
-            var attemptedQuestions = await this.questionRepository.GetAttemptedQuestionsAsync(currentUserId);
+            var flaggedQuestions = await this.questionRepositoryLegacy.GetFlaggedQuestionsAsync(currentUserId);
+            var attemptedQuestions = await this.questionRepositoryLegacy.GetAttemptedQuestionsAsync(currentUserId);
 
             var familiarity = Enum.Parse<Familiarity>(filterRequest.Familiarity);
             IEnumerable<Question> selectedQuestions = new List<Question>();
@@ -49,7 +52,7 @@ namespace MedicLaunchApi.Services
                     break;
             }
 
-            var specialities = await this.questionRepository.GetSpecialities(CancellationToken.None);
+            var specialities = await this.questionRepositoryLegacy.GetSpecialities(CancellationToken.None);
             var specialityMap = specialities.ToDictionary(s => s.Id!, s => s.Name);
             var questionsList = CreateQuestionViewModel(selectedQuestions, specialityMap);
             return questionsList;
@@ -78,15 +81,15 @@ namespace MedicLaunchApi.Services
             var specialityIds = request.SpecialityIds;
             if (allSpecialitiesSelected)
             {
-                var allSpecialities = await this.questionRepository.GetSpecialities(CancellationToken.None);
+                var allSpecialities = await this.questionRepositoryLegacy.GetSpecialities(CancellationToken.None);
                 specialityIds = allSpecialities.Select(s => s.Id!).ToArray();
             }
 
-            var tasks = specialityIds.Select(speciality => this.questionRepository.GetQuestionsAsync(speciality, CancellationToken.None));
+            var tasks = specialityIds.Select(speciality => this.questionRepositoryLegacy.GetQuestionsAsync(speciality, CancellationToken.None));
             var questions = await Task.WhenAll(tasks);
 
-            var flaggedQuestions = await this.questionRepository.GetFlaggedQuestionsAsync(currentUserId);
-            var attemptedQuestions = await this.questionRepository.GetAttemptedQuestionsAsync(currentUserId);
+            var flaggedQuestions = await this.questionRepositoryLegacy.GetFlaggedQuestionsAsync(currentUserId);
+            var attemptedQuestions = await this.questionRepositoryLegacy.GetAttemptedQuestionsAsync(currentUserId);
 
             var allQuestions = questions.SelectMany(q => q);
 

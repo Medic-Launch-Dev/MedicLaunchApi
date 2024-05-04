@@ -1,142 +1,160 @@
-﻿using MedicLaunchApi.Models;
+﻿using Google;
+using MedicLaunchApi.Data;
 using MedicLaunchApi.Models.ViewModels;
-using MedicLaunchApi.Storage;
+using Microsoft.EntityFrameworkCore;
+using PracticeStats = MedicLaunchApi.Models.PracticeStats;
 
 namespace MedicLaunchApi.Repository
 {
-    public class QuestionRepository : IQuestionRepository
+    public class QuestionRepository
     {
-        private readonly AzureBlobClient azureBlobClient;
+        private readonly ApplicationDbContext dbContext;
 
-        public QuestionRepository(AzureBlobClient azureBlobClient)
+        public QuestionRepository(ApplicationDbContext dbContext)
         {
-            this.azureBlobClient = azureBlobClient;
+            this.dbContext = dbContext;
         }
 
-        public async Task<Question> CreateQuestionAsync(Question question, CancellationToken cancellationToken)
+        // TODO: do we want to expose the data model or use a view model?
+        public async Task CreateQuestion(Question question)
         {
-            var questionJsonPath = GetQuestionJsonPath(question.SpecialityId, question.Id);
-            return await azureBlobClient.CreateItemAsync(questionJsonPath, question, cancellationToken);
+            dbContext.Questions.Add(question);
+            await dbContext.SaveChangesAsync();
         }
 
-        public async Task<Question> UpdateQuestionAsync(Question question, CancellationToken cancellationToken)
+        public async Task UpdateQuestion(Question question)
         {
-            var questionJsonPath = GetQuestionJsonPath(question.SpecialityId, question.Id);
-            return await azureBlobClient.UpdateItemAsync(questionJsonPath, question, cancellationToken);
+            dbContext.Questions.Update(question);
+            await dbContext.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<Question>> GetQuestionsAsync(string specialityId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Question>> GetAllQuestions()
         {
-            var questionJsonPath = GetAllQuestionsJsonPath(specialityId);
-            return await azureBlobClient.GetAllItemsAsync<Question>(questionJsonPath, cancellationToken);
+            return await dbContext.Questions.ToListAsync<Question>();
         }
 
-        public async Task DeleteQuestionAsync(string specialityId, string questionId, CancellationToken cancellationToken)
+        public async Task DeleteQuestion(string questionId)
         {
-            var questionJsonPath = GetQuestionJsonPath(specialityId, questionId);
-            await azureBlobClient.DeleteItemAsync(questionJsonPath, cancellationToken);
-        }
-
-        public async Task<Speciality> AddSpeciality(Speciality speciality, CancellationToken cancellationToken)
-        {
-            string specialityPath = GetSpecialitiesJsonPath();
-            var specialties = await azureBlobClient.GetItemAsync<List<Speciality>>(specialityPath, cancellationToken, true);
-            if (specialties == null)
+            var question = await dbContext.Questions.FindAsync(questionId);
+            if (question == null)
             {
-                specialties = [speciality];
-                await azureBlobClient.CreateItemAsync(specialityPath, specialties, cancellationToken);
-                return speciality;
+                throw new GoogleApiException("Question not found");
             }
 
-            // update existing speciality
-            specialties.Add(speciality);
-
-            await azureBlobClient.UpdateItemAsync(specialityPath, specialties, cancellationToken);
-            return speciality;
+            dbContext.Questions.Remove(question);
+            await dbContext.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<SpecialityViewModel>> GetSpecialities(CancellationToken none)
+        public async Task AddSpeciality(Speciality speciality)
         {
-            var specialityFolderPath = GetSpecialitiesJsonPath();
-            var specialities = await azureBlobClient.GetItemAsync<List<Speciality>>(specialityFolderPath, none, false);
-            if (specialities == null || specialities.Count() == 0)
+            dbContext.Specialities.Add(speciality);
+            await dbContext.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<Speciality>> GetSpecialities()
+        {
+            return await dbContext.Specialities.ToListAsync<Speciality>();
+        }
+
+        public async Task<Speciality> GetSpeciality(string specialityId)
+        {
+            return await dbContext.Specialities.FindAsync(specialityId);
+        }
+
+        public async Task AttemptQuestion(QuestionAttempt attempt)
+        {
+            dbContext.QuestionAttempts.Add(attempt);
+            await dbContext.SaveChangesAsync();
+        }
+
+        public async Task AddFlaggedQuestion(FlaggedQuestion flaggedQuestion)
+        {
+            dbContext.FlaggedQuestions.Add(flaggedQuestion);
+            await dbContext.SaveChangesAsync();
+        }
+
+        public async Task<PracticeStats> GetPracticeStats(string userId)
+        {
+            var stats = new PracticeStats()
             {
-                return new List<SpecialityViewModel>();
-            }
+                TotalCorrect = await dbContext.QuestionAttempts.CountAsync(qa => qa.UserId == userId && qa.IsCorrect),
+                TotalIncorrect = await dbContext.QuestionAttempts.CountAsync(qa => qa.UserId == userId && !qa.IsCorrect),
+                TotalFlagged = await dbContext.FlaggedQuestions.CountAsync(fq => fq.UserId == userId)
+            };
 
-            return specialities.Select(s => new SpecialityViewModel
+            return stats;
+        }
+
+        public async Task<List<Question>> FilterQuestions(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest, string userId)
+        {
+            var familiarity = Enum.Parse<Familiarity>(filterRequest.Familiarity);
+
+            return familiarity switch
             {
-                Id = s.Id,
-                Name = s.Name
-            });
+                Familiarity.NewQuestions => await GetNewQuestions(filterRequest, userId),
+                Familiarity.IncorrectQuestions => await GetIncorrectQuestions(filterRequest, userId),
+                Familiarity.FlaggedQuestions => await GetFlaggedQuestions(filterRequest, userId),
+                Familiarity.AllQuestions => await GetAllQuestions(filterRequest),
+                _ => [],
+            };
         }
 
-        public async Task AddQuestionAttempt(QuestionAttempt attempt, string userId)
+        private async Task<List<Question>> GetNewQuestions(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest, string userId)
         {
-            string userAttemptsJsonPath = $"user/{userId}/questionattempts/{attempt.Id}.json";
-            await azureBlobClient.CreateItemAsync(userAttemptsJsonPath, attempt, CancellationToken.None);
+            IQueryable<Question> candidateQuestions = GetCandidateQuestions(filterRequest);
+
+            return await candidateQuestions
+                .Where(q => !dbContext.QuestionAttempts.Any(attempt => attempt.UserId == userId && attempt.QuestionId == q.Id)
+                                   && !dbContext.FlaggedQuestions.Any(flagged => flagged.UserId == userId && flagged.QuestionId == q.Id))
+                .ToListAsync();
         }
 
-        public async Task AddQuestionFlagged(FlaggedQuestion flaggedQuestion, string userId)
+        private async Task<List<Question>> GetIncorrectQuestions(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest, string userId)
         {
-            string userAttemptsJsonPath = $"user/{userId}/flaggedquestions/{flaggedQuestion.Id}.json";
-            await azureBlobClient.CreateItemAsync(userAttemptsJsonPath, flaggedQuestion, CancellationToken.None);
+            IQueryable<Question> candidateQuestions = GetCandidateQuestions(filterRequest);
+
+            return await candidateQuestions
+                .Where(q => dbContext.QuestionAttempts.Any(attempt => attempt.UserId == userId && attempt.QuestionId == q.Id && !attempt.IsCorrect))
+                .ToListAsync();
         }
 
-        public async Task<IEnumerable<FlaggedQuestion>> GetFlaggedQuestionsAsync(string userId)
+        private async Task<List<Question>> GetFlaggedQuestions(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest, string userId)
         {
-            var flaggedQuestionsPath = $"user/{userId}/flaggedquestions";
-            return await azureBlobClient.GetAllItemsAsync<FlaggedQuestion>(flaggedQuestionsPath, CancellationToken.None);
+            IQueryable<Question> candidateQuestions = GetCandidateQuestions(filterRequest);
+
+            return await candidateQuestions
+                .Where(q => dbContext.FlaggedQuestions.Any(flagged => flagged.UserId == userId && flagged.QuestionId == q.Id))
+                .ToListAsync();
         }
 
-        public async Task CreateOrUpdatePracticeStats(PracticeStats practiceStats, string userId)
+        private async Task<List<Question>> GetAllQuestions(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest)
         {
-            string userPracticeStatsJsonPath = GetPracticeStatsJsonPath(userId);
-            await azureBlobClient.CreateOrUpdateItemAsync(userPracticeStatsJsonPath, practiceStats, CancellationToken.None);
+            IQueryable<Question> candidateQuestions = GetCandidateQuestions(filterRequest);
+
+            return await candidateQuestions.ToListAsync();
         }
 
-        public async Task<PracticeStats> GetPracticeStatsAsync(string userId)
+        private IQueryable<Question> GetCandidateQuestions(QuestionsFilterRequest filterRequest)
         {
-            string userPracticeStatsJsonPath = GetPracticeStatsJsonPath(userId);
-            var practiceStats = await azureBlobClient.GetAllItemsAsync<PracticeStats>(userPracticeStatsJsonPath, CancellationToken.None);
-            return practiceStats.FirstOrDefault();
+            var questionType = Enum.Parse<QuestionType>(filterRequest.QuestionType);
+            return filterRequest.AllSpecialitiesSelected
+                ? dbContext.Questions.Where(q => q.QuestionType == questionType)
+                : dbContext.Questions.Where(q => filterRequest.SpecialityIds.Contains(q.SpecialityId) && q.QuestionType == questionType);
         }
 
-        public async Task<IEnumerable<QuestionAttempt>> GetAttemptedQuestionsAsync(string userId)
-        {
-            // TODO: add speciality as filter to reduce attempt files fetched
-            var attemptsPath = GetUserAttemptsJsonPath(userId);
-            return await azureBlobClient.GetAllItemsAsync<QuestionAttempt>(attemptsPath, CancellationToken.None);
-        }
+        //public async Task<QuestionFamiliarityCounts> GetCategoryCounts(FamiliarityCountsRequest request, string currentUserId)
+        //{
+        //    IQueryable<Question> candidateQuestions = request.AllSpecialitiesSelected
+        //        ? dbContext.Questions
+        //        : dbContext.Questions.Where(q => request.SpecialityIds.Contains(q.SpecialityId));
 
-        public async Task<string> UploadQuestionImage(IFormFile file)
-        {
-            return await azureBlobClient.UploadImageAsyc(file);
-        }
+        //    return new QuestionFamiliarityCounts()
+        //    {
+        //        AllQuestions = (await GetAllQuestions()).Count(),
+        //        NewQuestions = (await GetNewQuestions(request, currentUserId)).Count(),
 
-        private string GetPracticeStatsJsonPath(string userId)
-        {
-            return $"user/{userId}/practicestats";
-        }
 
-        private static string GetUserAttemptsJsonPath(string userId)
-        {
-            return $"user/{userId}/questionattempts";
-        }
-
-        private string GetQuestionJsonPath(string specialtyId, string questionId)
-        {
-            return $"speciality/{specialtyId}/questions/{questionId}.json";
-        }
-
-        private string GetAllQuestionsJsonPath(string specialtyId)
-        {
-            return $"speciality/{specialtyId}/questions";
-        }
-
-        private static string GetSpecialitiesJsonPath()
-        {
-            return $"speciality/specialities.json";
-        }
+        //    };
+        //}
     }
 }

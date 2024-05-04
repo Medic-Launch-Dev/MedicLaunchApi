@@ -16,10 +16,10 @@ namespace MedicLaunchApi.Controllers
     public class QuestionController : ControllerBase
     {
         private readonly ILogger<QuestionController> logger;
-        private readonly QuestionRepository questionRepository;
+        private readonly QuestionRepositoryLegacy questionRepository;
         private readonly PracticeService practiceService;
 
-        public QuestionController(ILogger<QuestionController> logger, QuestionRepository questionRepository, PracticeService practiceService)
+        public QuestionController(ILogger<QuestionController> logger, QuestionRepositoryLegacy questionRepository, PracticeService practiceService)
         {
             this.logger = logger;
             this.questionRepository = questionRepository;
@@ -206,7 +206,7 @@ namespace MedicLaunchApi.Controllers
         [HttpPost("filter")]
         public async Task<IEnumerable<QuestionViewModel>> FilterQuestions(QuestionsFilterRequest filterRequest)
         {
-           return await this.practiceService.GetQuestions(filterRequest, GetCurrentUserId());
+           return await this.practiceService.GetQuestionsLegacy(filterRequest, GetCurrentUserId());
         }
 
         [HttpPost("uploadimage")]
