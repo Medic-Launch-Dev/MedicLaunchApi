@@ -42,7 +42,7 @@ namespace MedicLaunchApi.Migrations
 
                     b.HasIndex("QuestionId");
 
-                    b.ToTable("AnswerOption");
+                    b.ToTable("AnswerOption", (string)null);
                 });
 
             modelBuilder.Entity("MedicLaunchApi.Data.Question", b =>
@@ -104,7 +104,7 @@ namespace MedicLaunchApi.Migrations
 
                     b.HasIndex("SpecialityId");
 
-                    b.ToTable("Question");
+                    b.ToTable("Question", (string)null);
                 });
 
             modelBuilder.Entity("MedicLaunchApi.Data.Speciality", b =>
@@ -118,7 +118,7 @@ namespace MedicLaunchApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Speciality");
+                    b.ToTable("Speciality", (string)null);
                 });
 
             modelBuilder.Entity("MedicLaunchApi.Models.MedicLaunchUser", b =>

@@ -39,6 +39,7 @@ namespace MedicLaunchApi
             builder.Services.AddScoped<PaymentRepository>();
             builder.Services.AddScoped<UserRepository>();
             builder.Services.AddScoped<PaymentService>();
+            builder.Services.AddScoped<QuestionRepository>();
 
             var services = builder.Services;
             services.AddCors(options =>

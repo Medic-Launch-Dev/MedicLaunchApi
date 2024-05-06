@@ -4,9 +4,10 @@ using MedicLaunchApi.Repository;
 using MedicLaunchApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+using ApplicationDbContext = MedicLaunchApi.Data.ApplicationDbContext;
 
 namespace MedicLaunchApi.Controllers
 {
@@ -16,66 +17,41 @@ namespace MedicLaunchApi.Controllers
     public class QuestionController : ControllerBase
     {
         private readonly ILogger<QuestionController> logger;
-        private readonly QuestionRepositoryLegacy questionRepository;
+        private readonly QuestionRepositoryLegacy questionRepositoryLegacy;
         private readonly PracticeService practiceService;
+        private readonly QuestionRepository questionRepository;
+        private readonly ApplicationDbContext dbContext;
 
-        public QuestionController(ILogger<QuestionController> logger, QuestionRepositoryLegacy questionRepository, PracticeService practiceService)
+        public QuestionController(ILogger<QuestionController> logger, QuestionRepositoryLegacy questionRepositoryLegacy, PracticeService practiceService, QuestionRepository questionRepository, ApplicationDbContext dbContext)
         {
             this.logger = logger;
-            this.questionRepository = questionRepository;
+            this.questionRepositoryLegacy = questionRepositoryLegacy;
             this.practiceService = practiceService;
+            this.questionRepository = questionRepository;
+            this.dbContext = dbContext;
         }
 
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] QuestionViewModel model)
         {
             string currentUserId = GetCurrentUserId();
-            string questionCode = await GetQuestionCode(model.SpecialityId, CancellationToken.None);
+            string questionCode = await this.questionRepository.GenerateQuestionCode(model.SpecialityId);
             await CreateQuestion(model, questionCode, currentUserId);
 
             return Ok();
         }
 
         [HttpPost("update/{questionId}")]
-        public async Task<IActionResult> Update([FromBody] UpdateQuestionViewModel model, string questionId)
+        public async Task<IActionResult> Update([FromBody] QuestionViewModel model, string questionId)
         {
-            string currentUserId = GetCurrentUserId();
-
-            // If specialty is changed, we should delete question from the previous speciality and create a new question under the new speciality
-            if (model.PreviousSpecialityId != model.SpecialityId)
-            {
-                await this.questionRepository.DeleteQuestionAsync(model.PreviousSpecialityId, questionId, CancellationToken.None);
-                await CreateQuestion(model, currentUserId, questionId);
-                return Ok();
-            }
-
-            model.QuestionCode ??= await GetQuestionCode(model.SpecialityId, CancellationToken.None);
-
-            // otherwise, update the existing question and save it
-            var question = new Question
-            {
-                Id = questionId,
-                SpecialityId = model.SpecialityId,
-                QuestionType = Enum.Parse<QuestionType>(model.QuestionType),
-                QuestionText = model.QuestionText,
-                Options = model.Options,
-                CorrectAnswerLetter = model.CorrectAnswerLetter,
-                Explanation = model.Explanation,
-                ClinicalTips = model.ClinicalTips,
-                LearningPoints = model.LearningPoints,
-                UpdatedAt = DateTime.UtcNow,
-                UpdatedByUserId = currentUserId,
-                Code = model.QuestionCode,
-            };
-
-            var updatedQuestion = await this.questionRepository.UpdateQuestionAsync(question, CancellationToken.None);
-            return Ok(updatedQuestion);
+            await this.questionRepository.UpdateQuestionAsync(model, questionId, GetCurrentUserId());
+            return Ok();
         }
 
         [HttpGet("speciality/{specialityId}")]
         public async Task<IEnumerable<QuestionViewModel>> GetQuestions(string specialityId)
         {
-            var questions = await this.questionRepository.GetQuestionsAsync(specialityId, CancellationToken.None);
+            var questions = await this.questionRepository.GetQuestionsInSpecialityAsync(specialityId);
             return CreateQuestionViewModel(questions);
         }
 
@@ -83,7 +59,7 @@ namespace MedicLaunchApi.Controllers
         [HttpDelete("delete/{specialityId}/{questionId}")]
         public async Task<IActionResult> DeleteQuestion(string specialityId, string questionId)
         {
-            await this.questionRepository.DeleteQuestionAsync(specialityId, questionId, CancellationToken.None);
+            await this.questionRepository.DeleteQuestionAsync(questionId);
             return Ok();
         }
 
@@ -95,7 +71,7 @@ namespace MedicLaunchApi.Controllers
                 Id = Guid.NewGuid().ToString(),
                 Name = model.Name
             };
-            await this.questionRepository.AddSpeciality(speciality, CancellationToken.None);
+            await this.questionRepositoryLegacy.AddSpeciality(speciality, CancellationToken.None);
             return Ok(speciality);
         }
 
@@ -113,54 +89,57 @@ namespace MedicLaunchApi.Controllers
         [HttpGet("specialities")]
         public async Task<IEnumerable<SpecialityViewModel>> GetSpecialities()
         {
-            return await this.questionRepository.GetSpecialities(CancellationToken.None);
+            return await this.questionRepositoryLegacy.GetSpecialities(CancellationToken.None);
         }
 
         [HttpPost("attemptquestion")]
         public async Task<IActionResult> AttemptQuestion(QuestionAttemptRequest questionAttempt)
         {
-            var attempt = new QuestionAttempt
-            {
-                Id = Guid.NewGuid().ToString(),
-                QuestionId = questionAttempt.QuestionId,
-                ChosenAnswer = questionAttempt.ChosenAnswer,
-                CorrectAnswer = questionAttempt.CorrectAnswer,
-                IsCorrect = questionAttempt.IsCorrect,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            await this.questionRepository.AddQuestionAttempt(attempt, GetCurrentUserId());
-
-            var practiceStats = await this.questionRepository.GetPracticeStatsAsync(GetCurrentUserId());
-            if (practiceStats != null)
-            {
-                if (attempt.IsCorrect)
-                {
-                    practiceStats.TotalCorrect++;
-                }
-                else
-                {
-                    practiceStats.TotalIncorrect++;
-                }
-
-                practiceStats.UpdatedAt = DateTime.UtcNow;
-            }
-            else
-            {
-                practiceStats = new PracticeStats
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    TotalCorrect = attempt.IsCorrect ? 1 : 0,
-                    TotalIncorrect = attempt.IsCorrect ? 0 : 1,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                };
-            }
-
-            await this.questionRepository.CreateOrUpdatePracticeStats(practiceStats, GetCurrentUserId());
-
+            await this.questionRepository.AttemptQuestionAsync(questionAttempt, GetCurrentUserId());
             return Ok();
+
+            //var attempt = new QuestionAttempt
+            //{
+            //    Id = Guid.NewGuid().ToString(),
+            //    QuestionId = questionAttempt.QuestionId,
+            //    ChosenAnswer = questionAttempt.ChosenAnswer,
+            //    CorrectAnswer = questionAttempt.CorrectAnswer,
+            //    IsCorrect = questionAttempt.IsCorrect,
+            //    CreatedAt = DateTime.UtcNow,
+            //    UpdatedAt = DateTime.UtcNow
+            //};
+
+            //await this.questionRepositoryLegacy.AddQuestionAttempt(attempt, GetCurrentUserId());
+
+            //var practiceStats = await this.questionRepositoryLegacy.GetPracticeStatsAsync(GetCurrentUserId());
+            //if (practiceStats != null)
+            //{
+            //    if (attempt.IsCorrect)
+            //    {
+            //        practiceStats.TotalCorrect++;
+            //    }
+            //    else
+            //    {
+            //        practiceStats.TotalIncorrect++;
+            //    }
+
+            //    practiceStats.UpdatedAt = DateTime.UtcNow;
+            //}
+            //else
+            //{
+            //    practiceStats = new PracticeStats
+            //    {
+            //        Id = Guid.NewGuid().ToString(),
+            //        TotalCorrect = attempt.IsCorrect ? 1 : 0,
+            //        TotalIncorrect = attempt.IsCorrect ? 0 : 1,
+            //        CreatedAt = DateTime.UtcNow,
+            //        UpdatedAt = DateTime.UtcNow
+            //    };
+            //}
+
+            //await this.questionRepositoryLegacy.CreateOrUpdatePracticeStats(practiceStats, GetCurrentUserId());
+
+            //return Ok();
         }
 
         [HttpPost("flagquestion")]
@@ -174,9 +153,9 @@ namespace MedicLaunchApi.Controllers
                 UpdatedAt = DateTime.UtcNow
             };
 
-            await this.questionRepository.AddQuestionFlagged(questionFlagged, GetCurrentUserId());
+            await this.questionRepositoryLegacy.AddQuestionFlagged(questionFlagged, GetCurrentUserId());
             
-            var practiceStats = await this.questionRepository.GetPracticeStatsAsync(GetCurrentUserId());
+            var practiceStats = await this.questionRepositoryLegacy.GetPracticeStatsAsync(GetCurrentUserId());
             if(practiceStats != null)
             {
                 practiceStats.TotalFlagged++;
@@ -193,14 +172,14 @@ namespace MedicLaunchApi.Controllers
                 };
             }
 
-            await this.questionRepository.CreateOrUpdatePracticeStats(practiceStats, GetCurrentUserId());
+            await this.questionRepositoryLegacy.CreateOrUpdatePracticeStats(practiceStats, GetCurrentUserId());
             return Ok();
         }
 
         [HttpGet("practicestats")]
         public async Task<PracticeStats> GetPracticeStats()
         {
-            return await this.questionRepository.GetPracticeStatsAsync(GetCurrentUserId());
+            return await this.questionRepositoryLegacy.GetPracticeStatsAsync(GetCurrentUserId());
         }
 
         [HttpPost("filter")]
@@ -219,7 +198,7 @@ namespace MedicLaunchApi.Controllers
                 return BadRequest(message);
             }
 
-            var blobUrl = await this.questionRepository.UploadQuestionImage(file);
+            var blobUrl = await this.questionRepositoryLegacy.UploadQuestionImage(file);
             return Ok(new { imageUrl = blobUrl });
         }
 
@@ -229,7 +208,7 @@ namespace MedicLaunchApi.Controllers
             return this.practiceService.GetCategoryCounts(GetCurrentUserId(), request);
         }
 
-        private IEnumerable<QuestionViewModel> CreateQuestionViewModel(IEnumerable<Question> questions)
+        private IEnumerable<QuestionViewModel> CreateQuestionViewModel(IEnumerable<MedicLaunchApi.Data.Question> questions)
         {
             return questions.Select(q => new QuestionViewModel
             {
@@ -237,54 +216,49 @@ namespace MedicLaunchApi.Controllers
                 SpecialityId = q.SpecialityId,
                 QuestionType = q.QuestionType.ToString(),
                 QuestionText = q.QuestionText,
-                Options = q.Options,
+                Options = q.Options.Select(m => new Option()
+                {
+                    Letter = m.Letter,
+                    Text = m.Text
+                }),
                 CorrectAnswerLetter = q.CorrectAnswerLetter,
                 Explanation = q.Explanation,
                 ClinicalTips = q.ClinicalTips,
                 LearningPoints = q.LearningPoints,
-                QuestionCode = q.Code
+                QuestionCode = q.Code,
+                SpecialityName = q.Speciality.Name
             }).ToList();
         }
 
         private async Task CreateQuestion(QuestionViewModel model, string questionCode, string currentUserId, string? questionId = null)
         {
-            // TODO: add question code
-            var question = new Question
+            questionId = questionId ?? Guid.NewGuid().ToString();
+            var question = new MedicLaunchApi.Data.Question
             {
-                Id = questionId ?? Guid.NewGuid().ToString(),
+                Id = questionId,
                 SpecialityId = model.SpecialityId,
-                QuestionType = Enum.Parse<QuestionType>(model.QuestionType),
+                QuestionType = Enum.Parse<Data.QuestionType>(model.QuestionType),
                 QuestionText = model.QuestionText,
-                Options = model.Options,
+                Options = model.Options.Select(m => new Data.AnswerOption()
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Letter = m.Letter,
+                    Text = m.Text,
+                    QuestionId = questionId
+                }).ToList(),
                 CorrectAnswerLetter = model.CorrectAnswerLetter,
                 Explanation = model.Explanation,
                 ClinicalTips = model.ClinicalTips,
                 LearningPoints = model.LearningPoints,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                UpdatedByUserId = currentUserId,
-                AuthorUserId = currentUserId,
+                CreatedOn = DateTime.UtcNow,
+                UpdatedOn = DateTime.UtcNow,
+                UpdatedBy = currentUserId,
+                CreatedBy = currentUserId,
                 Code = questionCode,
             };
 
-            await this.questionRepository.CreateQuestionAsync(question, CancellationToken.None);
+            await this.questionRepository.CreateQuestionAsync(question);
         }
-
-        private async Task<string> GetQuestionCode(string specialityId, CancellationToken token)
-        {
-            // get count of questions in the speciality
-            var questions = await this.questionRepository.GetQuestionsAsync(specialityId, token);
-            var allSpecialities = await this.questionRepository.GetSpecialities(token);
-            var speciality = allSpecialities.FirstOrDefault(s => s.Id == specialityId);
-            if (speciality == null)
-            {
-                throw new Exception("Speciality not found");
-            }
-
-            string questionCode = speciality.Name.Substring(0, 2).ToUpper() + (questions.Count() + 1);
-            return questionCode;
-        }
-
         private string GetCurrentUserId()
         {
             return User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
