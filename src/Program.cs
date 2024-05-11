@@ -19,7 +19,6 @@ namespace MedicLaunchApi
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString, options => options.UseAzureSqlDefaults()));
 
@@ -27,7 +26,6 @@ namespace MedicLaunchApi
             builder.Services.AddIdentityApiEndpoints<MedicLaunchUser>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddUserManager<UserManager<MedicLaunchUser>>();
-                //.AddSignInManager<UserManager<MedicLaunchUser>>();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -37,7 +35,7 @@ namespace MedicLaunchApi
             builder.Services.AddScoped<AzureBlobClient>();
             builder.Services.AddScoped<PracticeService>();
             builder.Services.AddScoped<PaymentRepository>();
-            builder.Services.AddScoped<UserRepository>();
+            builder.Services.AddScoped<UserDataRepository>();
             builder.Services.AddScoped<PaymentService>();
             builder.Services.AddScoped<QuestionRepository>();
 
@@ -52,20 +50,14 @@ namespace MedicLaunchApi
                             .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH")
                             .WithOrigins("https://mediclaunchapi.azurewebsites.net", "https://mediclaunchdb.z13.web.core.windows.net", "https://mediclaunch.azureedge.net");
                     });
-            });
 
-            // add local development CORS policy for local development environment
-            services.AddCors(options =>
-            {
                 options.AddPolicy(LocalDevCorsPolicy,
-                                       policy =>
-                                       {
-                                           policy.AllowAnyHeader()
-                                               .AllowCredentials()
-                                               .AllowAnyMethod()
-                            //.AllowAnyOrigin();
-                                               .WithOrigins("https://mediclaunchapi.azurewebsites.net", "https://mediclaunchdb.z13.web.core.windows.net", "http://localhost:3000", "https://localhost:3000", "https://mediclaunch.azureedge.net");
-                                       });
+                        policy =>
+                        {
+                            policy.AllowAnyHeader()
+                                .AllowAnyMethod()
+                                .AllowAnyOrigin();
+                        });
             });
 
 
@@ -77,6 +69,7 @@ namespace MedicLaunchApi
 
             app.UseHttpsRedirection();
 
+            // TODO: Enable this
             //if (app.Environment.IsDevelopment())
             //{
             //    app.UseCors(LocalDevCorsPolicy);

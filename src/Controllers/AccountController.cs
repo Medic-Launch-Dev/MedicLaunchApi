@@ -14,8 +14,8 @@ namespace MedicLaunchApi.Controllers
     {
         private readonly UserManager<MedicLaunchUser> userManager;
         private readonly PaymentService paymentService;
-        private readonly UserRepository userRepository;
-        public AccountController(UserManager<MedicLaunchUser> signInManager, PaymentService paymentService, UserRepository userRepository)
+        private readonly UserDataRepository userRepository;
+        public AccountController(UserManager<MedicLaunchUser> signInManager, PaymentService paymentService, UserDataRepository userRepository)
         {
             this.userManager = signInManager;
             this.paymentService = paymentService;
