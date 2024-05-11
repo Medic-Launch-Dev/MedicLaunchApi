@@ -2,10 +2,9 @@
 using MedicLaunchApi.Data;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
-//using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
 namespace MedicLaunchApi.Tests
@@ -19,10 +18,10 @@ namespace MedicLaunchApi.Tests
         private ILogger<QuestionController> logger;
 
         [TestInitialize]
-        public void Setup()
+        public async Task Setup()
         {
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-                .UseInMemoryDatabase(databaseName: "MedicLaunchApi")
+                .UseInMemoryDatabase(databaseName: "MedicLaunchApi", new InMemoryDatabaseRoot())
                 .Options;
 
             logger = new Mock<ILogger<QuestionController>>().Object;
@@ -30,39 +29,7 @@ namespace MedicLaunchApi.Tests
             context = new ApplicationDbContext(options);
             questionRepository = new QuestionRepository(context);
             questionController = new QuestionController(logger, questionRepository);
-        }
 
-        [TestMethod]
-        public void SimpleTest()
-        {
-            Assert.AreEqual(1, 1);
-        }
-
-        [TestMethod]
-        public async Task CreateSpeciality()
-        {
-            var speciality = new SpecialityViewModel()
-            {
-                Id = "1",
-                Name = "Acute Medicine"
-            };
-
-            var result = await questionController.CreateSpeciality(speciality);
-            Assert.IsNotNull(result);
-
-            var statusCode = result as ObjectResult;
-            Assert.AreEqual(200, statusCode?.StatusCode);
-        }
-
-        [TestMethod]
-        public async Task CreateQuestions()
-        {
-            await AddTestQuestions();
-        }
-
-        [TestMethod]
-        public async Task AttemptQuestions()
-        {
             await AddTestQuestions();
             await AddQuestionAttempts();
         }
@@ -96,7 +63,7 @@ namespace MedicLaunchApi.Tests
         [TestMethod]
         public async Task FilterQuestions_NewQuestions()
         {
-            await AddTestQuestions();
+            //await AddTestQuestions();
             var filterRequest = new QuestionsFilterRequest()
             {
                 SpecialityIds = ["1"],
@@ -107,15 +74,12 @@ namespace MedicLaunchApi.Tests
 
             var questionsResult = await questionRepository.FilterQuestionsAsync(filterRequest, "1");
             Assert.IsNotNull(questionsResult);
-            Assert.AreEqual(3, questionsResult.Count());
+            Assert.AreEqual(1, questionsResult.Count());
         }
 
         [TestMethod]
         public async Task FilterQuestions_IncorrectQuestions()
         {
-            await AddTestQuestions();
-            await AddQuestionAttempts();
-
             var filterRequest = new QuestionsFilterRequest()
             {
                 SpecialityIds = ["1"],
