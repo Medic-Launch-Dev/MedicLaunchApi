@@ -26,9 +26,7 @@ namespace MedicLaunchApi.Controllers
         public async Task<IActionResult> CreateQuestion([FromBody] QuestionViewModel model)
         {
             string currentUserId = GetCurrentUserId();
-            string questionCode = await this.questionRepository.GenerateQuestionCode(model.SpecialityId);
-            await CreateQuestion(model, questionCode, currentUserId);
-
+            await this.questionRepository.CreateQuestionAsync(model, currentUserId);
             return Created();
         }
 
@@ -142,37 +140,6 @@ namespace MedicLaunchApi.Controllers
                 SpecialityName = q.Speciality.Name
             }).ToList();
         }
-
-        private async Task CreateQuestion(QuestionViewModel model, string questionCode, string currentUserId, string? questionId = null)
-        {
-            questionId = questionId ?? Guid.NewGuid().ToString();
-            var question = new MedicLaunchApi.Data.Question
-            {
-                Id = questionId,
-                SpecialityId = model.SpecialityId,
-                QuestionType = Enum.Parse<Data.QuestionType>(model.QuestionType),
-                QuestionText = model.QuestionText,
-                Options = model.Options.Select(m => new Data.AnswerOption()
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Letter = m.Letter,
-                    Text = m.Text,
-                    QuestionId = questionId
-                }).ToList(),
-                CorrectAnswerLetter = model.CorrectAnswerLetter,
-                Explanation = model.Explanation,
-                ClinicalTips = model.ClinicalTips,
-                LearningPoints = model.LearningPoints,
-                CreatedOn = DateTime.UtcNow,
-                UpdatedOn = DateTime.UtcNow,
-                UpdatedBy = currentUserId,
-                CreatedBy = currentUserId,
-                Code = questionCode,
-            };
-
-            await this.questionRepository.CreateQuestionAsync(question);
-        }
-
         private string GetCurrentUserId()
         {
             return User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

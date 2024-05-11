@@ -2,7 +2,6 @@
 using MedicLaunchApi.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
 using PracticeStats = MedicLaunchApi.Models.PracticeStats;
-
 namespace MedicLaunchApi.Repository
 {
     public class QuestionRepository
@@ -14,8 +13,34 @@ namespace MedicLaunchApi.Repository
             this.dbContext = dbContext;
         }
 
-        public async Task CreateQuestionAsync(Question question)
+        public async Task CreateQuestionAsync(QuestionViewModel model, string currentUserId)
         {
+            var questionId = Guid.NewGuid().ToString();
+            var questionCode = await GenerateQuestionCode(model.SpecialityId);
+            var question = new MedicLaunchApi.Data.Question
+            {
+                Id = questionId,
+                SpecialityId = model.SpecialityId,
+                QuestionType = Enum.Parse<Data.QuestionType>(model.QuestionType),
+                QuestionText = model.QuestionText,
+                Options = model.Options.Select(m => new Data.AnswerOption()
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Letter = m.Letter,
+                    Text = m.Text,
+                    QuestionId = questionId
+                }).ToList(),
+                CorrectAnswerLetter = model.CorrectAnswerLetter,
+                Explanation = model.Explanation,
+                ClinicalTips = model.ClinicalTips,
+                LearningPoints = model.LearningPoints,
+                CreatedOn = DateTime.UtcNow,
+                UpdatedOn = DateTime.UtcNow,
+                UpdatedBy = currentUserId,
+                CreatedBy = currentUserId,
+                Code = questionCode,
+            };
+
             dbContext.Questions.Add(question);
             await dbContext.SaveChangesAsync();
         }
@@ -111,7 +136,7 @@ namespace MedicLaunchApi.Repository
 
         public async Task<(string, int)> GetQuestionCountInSpeciality(string specialityId)
         {
-            var result =dbContext.Specialities.Where(m => m.Id == specialityId).Select(m => new { Name = m.Name, QuestionCount = m.Questions.Count });
+            var result = dbContext.Specialities.Where(m => m.Id == specialityId).Select(m => new { Name = m.Name, QuestionCount = m.Questions.Count });
 
             var name = await result.Select(m => m.Name).FirstAsync();
             var count = await result.Select(m => m.QuestionCount).FirstAsync();
