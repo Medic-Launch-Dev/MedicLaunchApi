@@ -102,37 +102,6 @@ namespace MedicLaunchApi.Controllers
         {
             await this.questionRepository.AddFlaggedQuestionAsync(questionId, GetCurrentUserId());
             return Ok();
-            /*
-            var questionFlagged = new FlaggedQuestion
-            {
-                Id = Guid.NewGuid().ToString(),
-                QuestionId = questionId,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
-
-            await this.questionRepositoryLegacy.AddQuestionFlagged(questionFlagged, GetCurrentUserId());
-            
-            var practiceStats = await this.questionRepositoryLegacy.GetPracticeStatsAsync(GetCurrentUserId());
-            if(practiceStats != null)
-            {
-                practiceStats.TotalFlagged++;
-                practiceStats.UpdatedAt = DateTime.UtcNow;
-            }
-            else
-            {
-                practiceStats = new PracticeStats
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    TotalFlagged = 1,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
-                };
-            }
-
-            await this.questionRepositoryLegacy.CreateOrUpdatePracticeStats(practiceStats, GetCurrentUserId());
-            return Ok();
-            */
         }
 
         [HttpGet("practicestats")]
