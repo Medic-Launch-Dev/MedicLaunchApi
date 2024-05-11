@@ -140,6 +140,7 @@ namespace MedicLaunchApi.Controllers
                 SpecialityName = q.Speciality.Name
             }).ToList();
         }
+
         private string GetCurrentUserId()
         {
             return User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

@@ -15,7 +15,7 @@ namespace MedicLaunchApi.Controllers
         private readonly ILogger<PaymentController> logger;
         private readonly UserManager<MedicLaunchUser> userManager;
 
-        public WebhookController(ILogger<PaymentController> logger, UserManager<MedicLaunchUser> userManager, PaymentRepository paymentRepository, UserRepository userRepository)
+        public WebhookController(ILogger<PaymentController> logger, UserManager<MedicLaunchUser> userManager, PaymentRepository paymentRepository, UserDataRepository userRepository)
         {
             this.logger = logger;
 

@@ -19,6 +19,8 @@ namespace MedicLaunchApi.Data
 
         public DbSet<FlaggedQuestion> FlaggedQuestions { get; set; }
 
+        public DbSet<Note> Notes { get; set; }
+
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) :
             base(options)
         {
@@ -143,5 +145,23 @@ namespace MedicLaunchApi.Data
         public Question Question { get; set; }
 
         public DateTime CreatedOn { get; set; }
+    }
+
+    [Table("Note")]
+    public class Note
+    {
+        public string Id { get; set; }
+
+        public string Content { get; set; }
+
+        public string UserId { get; set; }
+
+        public string SpecialityId { get; set; }
+
+        public Speciality Speciality { get; set; }
+
+        public DateTime CreatedOn { get; set; }
+
+        public DateTime UpdatedOn { get; set; }
     }
 }
