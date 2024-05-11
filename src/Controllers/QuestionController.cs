@@ -27,7 +27,7 @@ namespace MedicLaunchApi.Controllers
         {
             string currentUserId = GetCurrentUserId();
             await this.questionRepository.CreateQuestionAsync(model, currentUserId);
-            return Created();
+            return Ok();
         }
 
         [HttpPost("update/{questionId}")]

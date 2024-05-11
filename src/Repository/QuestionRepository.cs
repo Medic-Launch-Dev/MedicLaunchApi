@@ -152,6 +152,13 @@ namespace MedicLaunchApi.Repository
                 UserId = userId,
                 CreatedOn = DateTime.UtcNow
             };
+
+            // Check if question is already flagged
+            if (await dbContext.FlaggedQuestions.AnyAsync(fq => fq.QuestionId == questionId && fq.UserId == userId))
+            {
+                return;
+            }
+
             dbContext.FlaggedQuestions.Add(flaggedQuestion);
             await dbContext.SaveChangesAsync();
         }
