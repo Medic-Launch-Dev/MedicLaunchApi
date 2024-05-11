@@ -9,8 +9,6 @@ namespace MedicLaunchApi.Data
 {
     public class ApplicationDbContext : IdentityDbContext<MedicLaunchApi.Models.MedicLaunchUser>
     {
-        private readonly IConfiguration configuration;
-
         public DbSet<Question> Questions { get; set; }
 
         public DbSet<AnswerOption> AnswerOptions { get; set; }
@@ -21,18 +19,11 @@ namespace MedicLaunchApi.Data
 
         public DbSet<FlaggedQuestion> FlaggedQuestions { get; set; }
 
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IConfiguration configuration) :
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) :
             base(options)
         {
-            this.configuration = configuration;
         }
         
-        protected override void OnConfiguring(DbContextOptionsBuilder options)
-        {
-            var connectionString = this.configuration.GetConnectionString("DefaultConnection");
-            options.UseSqlServer(connectionString, options => options.UseAzureSqlDefaults());
-        }
-
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<Question>()

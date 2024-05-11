@@ -14,24 +14,22 @@ namespace MedicLaunchApi.Controllers
     public class QuestionController : ControllerBase
     {
         private readonly ILogger<QuestionController> logger;
-        private readonly PracticeService practiceService;
         private readonly QuestionRepository questionRepository;
 
-        public QuestionController(ILogger<QuestionController> logger, PracticeService practiceService, QuestionRepository questionRepository)
+        public QuestionController(ILogger<QuestionController> logger, QuestionRepository questionRepository)
         {
             this.logger = logger;
-            this.practiceService = practiceService;
             this.questionRepository = questionRepository;
         }
 
         [HttpPost("create")]
-        public async Task<IActionResult> Create([FromBody] QuestionViewModel model)
+        public async Task<IActionResult> CreateQuestion([FromBody] QuestionViewModel model)
         {
             string currentUserId = GetCurrentUserId();
             string questionCode = await this.questionRepository.GenerateQuestionCode(model.SpecialityId);
             await CreateQuestion(model, questionCode, currentUserId);
 
-            return Ok();
+            return Created();
         }
 
         [HttpPost("update/{questionId}")]
@@ -117,11 +115,11 @@ namespace MedicLaunchApi.Controllers
         return CreateQuestionViewModel(questions);
         }
 
-        [HttpPost("familiaritycounts")]
-        public Task<QuestionFamiliarityCounts> GetQuestionFamiliarityCounts([FromBody] FamiliarityCountsRequest request)
-        {
-            return this.practiceService.GetCategoryCounts(GetCurrentUserId(), request);
-        }
+        //[HttpPost("familiaritycounts")]
+        //public Task<QuestionFamiliarityCounts> GetQuestionFamiliarityCounts([FromBody] FamiliarityCountsRequest request)
+        //{
+        //    return this.practiceService.GetCategoryCounts(GetCurrentUserId(), request);
+        //}
 
         private IEnumerable<QuestionViewModel> CreateQuestionViewModel(IEnumerable<MedicLaunchApi.Data.Question> questions)
         {
