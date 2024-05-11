@@ -15,11 +15,11 @@ namespace MedicLaunchApi.Repository
 
         public async Task CreateQuestionAsync(QuestionViewModel model, string currentUserId)
         {
-            var questionId = Guid.NewGuid().ToString();
+            var id = model.Id ?? Guid.NewGuid().ToString();
             var questionCode = await GenerateQuestionCode(model.SpecialityId);
             var question = new MedicLaunchApi.Data.Question
             {
-                Id = questionId,
+                Id = id,
                 SpecialityId = model.SpecialityId,
                 QuestionType = Enum.Parse<Data.QuestionType>(model.QuestionType),
                 QuestionText = model.QuestionText,
@@ -28,7 +28,7 @@ namespace MedicLaunchApi.Repository
                     Id = Guid.NewGuid().ToString(),
                     Letter = m.Letter,
                     Text = m.Text,
-                    QuestionId = questionId
+                    QuestionId = id
                 }).ToList(),
                 CorrectAnswerLetter = model.CorrectAnswerLetter,
                 Explanation = model.Explanation,

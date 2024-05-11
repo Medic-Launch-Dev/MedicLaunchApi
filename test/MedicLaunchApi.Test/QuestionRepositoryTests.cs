@@ -1,6 +1,5 @@
 ﻿using MedicLaunchApi.Controllers;
 using MedicLaunchApi.Data;
-using MedicLaunchApi.Models;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
 using Microsoft.AspNetCore.Mvc;
@@ -14,13 +13,6 @@ namespace MedicLaunchApi.Tests
     [TestClass]
     public class QuestionRepositoryTests
     {
-        /*
-         * Using in-memory database for EF Core, write a test which does the following:
-         * - Creates a specialization called Acute Medicince
-         * - Add five questions to the specialization
-         * - Retrieve the questions and check that there are five questions
-         */
-
         private ApplicationDbContext context;
         private QuestionRepository questionRepository;
         private QuestionController questionController;
@@ -33,7 +25,6 @@ namespace MedicLaunchApi.Tests
                 .UseInMemoryDatabase(databaseName: "MedicLaunchApi")
                 .Options;
 
-            // create mock of logger
             logger = new Mock<ILogger<QuestionController>>().Object;
 
             context = new ApplicationDbContext(options);
@@ -66,6 +57,83 @@ namespace MedicLaunchApi.Tests
         [TestMethod]
         public async Task CreateQuestions()
         {
+            await AddTestQuestions();
+        }
+
+        [TestMethod]
+        public async Task AttemptQuestions()
+        {
+            await AddTestQuestions();
+            await AddQuestionAttempts();
+        }
+
+        private async Task AddQuestionAttempts()
+        {
+            var questionAttempts = new List<QuestionAttemptRequest>()
+            {
+                new ()
+                {
+                    QuestionId = "1",
+                    ChosenAnswer = "A",
+                    IsCorrect = true,
+                    CorrectAnswer = "A",
+                },
+                new ()
+                {
+                    QuestionId = "2",
+                    ChosenAnswer = "B",
+                    IsCorrect = false,
+                    CorrectAnswer = "C",
+                },
+            };
+
+            foreach (var questionAttempt in questionAttempts)
+            {
+                await questionRepository.AttemptQuestionAsync(questionAttempt, "1");
+            }
+        }
+
+        [TestMethod]
+        public async Task FilterQuestions_NewQuestions()
+        {
+            await AddTestQuestions();
+            var filterRequest = new QuestionsFilterRequest()
+            {
+                SpecialityIds = ["1"],
+                QuestionType = "General",
+                Familiarity = "NewQuestions",
+                SelectionOrder = "Random",
+            };
+
+            var questionsResult = await questionRepository.FilterQuestionsAsync(filterRequest, "1");
+            Assert.IsNotNull(questionsResult);
+            Assert.AreEqual(3, questionsResult.Count());
+        }
+
+        [TestMethod]
+        public async Task FilterQuestions_IncorrectQuestions()
+        {
+            await AddTestQuestions();
+            await AddQuestionAttempts();
+
+            var filterRequest = new QuestionsFilterRequest()
+            {
+                SpecialityIds = ["1"],
+                QuestionType = "General",
+                Familiarity = "IncorrectQuestions",
+                SelectionOrder = "Random",
+            };
+
+            var questionsResult = await questionRepository.FilterQuestionsAsync(filterRequest, "1");
+            Assert.IsNotNull(questionsResult);
+            Assert.AreEqual(1, questionsResult.Count());
+        }
+
+
+
+        #region Sample data
+        private async Task AddTestQuestions()
+        {
             var speciality = new Data.Speciality()
             {
                 Id = "1",
@@ -78,6 +146,7 @@ namespace MedicLaunchApi.Tests
             {
                 new()
                 {
+                    Id = "1",
                     SpecialityId = "1",
                     QuestionType = "General",
                     QuestionText = "What is the capital of France?",
@@ -94,6 +163,7 @@ namespace MedicLaunchApi.Tests
                 },
                 new()
                 {
+                    Id = "2",
                     SpecialityId = "1",
                     QuestionType = "General",
                     QuestionText = "What is the capital of Germany?",
@@ -110,6 +180,7 @@ namespace MedicLaunchApi.Tests
                 },
                 new()
                 {
+                    Id = "3",
                     SpecialityId = "1",
                     QuestionType = "General",
                     QuestionText = "What is the capital of England?",
@@ -132,5 +203,6 @@ namespace MedicLaunchApi.Tests
                 await questionRepository.CreateQuestionAsync(question, userId);
             }
         }
+        #endregion
     }
 }
