@@ -4,11 +4,11 @@ using MedicLaunchApi.Storage;
 
 namespace MedicLaunchApi.Repository
 {
-    public class QuestionRepository : IQuestionRepository
+    public class QuestionRepositoryLegacy : IQuestionRepository
     {
         private readonly AzureBlobClient azureBlobClient;
 
-        public QuestionRepository(AzureBlobClient azureBlobClient)
+        public QuestionRepositoryLegacy(AzureBlobClient azureBlobClient)
         {
             this.azureBlobClient = azureBlobClient;
         }

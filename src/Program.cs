@@ -33,12 +33,13 @@ namespace MedicLaunchApi
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            builder.Services.AddScoped<QuestionRepository>();
+            builder.Services.AddScoped<QuestionRepositoryLegacy>();
             builder.Services.AddScoped<AzureBlobClient>();
             builder.Services.AddScoped<PracticeService>();
             builder.Services.AddScoped<PaymentRepository>();
             builder.Services.AddScoped<UserRepository>();
             builder.Services.AddScoped<PaymentService>();
+            builder.Services.AddScoped<QuestionRepository>();
 
             var services = builder.Services;
             services.AddCors(options =>
