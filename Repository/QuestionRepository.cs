@@ -118,8 +118,15 @@ namespace MedicLaunchApi.Repository
             return (name, count);
         }
 
-        public async Task AddFlaggedQuestionAsync(FlaggedQuestion flaggedQuestion)
+        public async Task AddFlaggedQuestionAsync(string questionId, string userId)
         {
+            var flaggedQuestion = new FlaggedQuestion()
+            {
+                Id = Guid.NewGuid().ToString(),
+                QuestionId = questionId,
+                UserId = userId,
+                CreatedOn = DateTime.UtcNow
+            };
             dbContext.FlaggedQuestions.Add(flaggedQuestion);
             await dbContext.SaveChangesAsync();
         }
@@ -136,7 +143,7 @@ namespace MedicLaunchApi.Repository
             return stats;
         }
 
-        public async Task<List<Question>> FilterQuestions(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest, string userId)
+        public async Task<List<Question>> FilterQuestionsAsync(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest, string userId)
         {
             var familiarity = Enum.Parse<Familiarity>(filterRequest.Familiarity);
 

@@ -4,10 +4,7 @@ using MedicLaunchApi.Repository;
 using MedicLaunchApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-
-using ApplicationDbContext = MedicLaunchApi.Data.ApplicationDbContext;
 
 namespace MedicLaunchApi.Controllers
 {
@@ -17,18 +14,14 @@ namespace MedicLaunchApi.Controllers
     public class QuestionController : ControllerBase
     {
         private readonly ILogger<QuestionController> logger;
-        private readonly QuestionRepositoryLegacy questionRepositoryLegacy;
         private readonly PracticeService practiceService;
         private readonly QuestionRepository questionRepository;
-        private readonly ApplicationDbContext dbContext;
 
-        public QuestionController(ILogger<QuestionController> logger, QuestionRepositoryLegacy questionRepositoryLegacy, PracticeService practiceService, QuestionRepository questionRepository, ApplicationDbContext dbContext)
+        public QuestionController(ILogger<QuestionController> logger, PracticeService practiceService, QuestionRepository questionRepository)
         {
             this.logger = logger;
-            this.questionRepositoryLegacy = questionRepositoryLegacy;
             this.practiceService = practiceService;
             this.questionRepository = questionRepository;
-            this.dbContext = dbContext;
         }
 
         [HttpPost("create")]
@@ -66,12 +59,12 @@ namespace MedicLaunchApi.Controllers
         [HttpPost("speciality/create")]
         public async Task<IActionResult> CreateSpeciality([FromBody] SpecialityViewModel model)
         {
-            var speciality = new Speciality
+            var speciality = new Data.Speciality
             {
                 Id = Guid.NewGuid().ToString(),
                 Name = model.Name
             };
-            await this.questionRepositoryLegacy.AddSpeciality(speciality, CancellationToken.None);
+            await this.questionRepository.AddSpecialityAsync(speciality);
             return Ok(speciality);
         }
 
@@ -89,7 +82,12 @@ namespace MedicLaunchApi.Controllers
         [HttpGet("specialities")]
         public async Task<IEnumerable<SpecialityViewModel>> GetSpecialities()
         {
-            return await this.questionRepositoryLegacy.GetSpecialities(CancellationToken.None);
+            var specialties = await this.questionRepository.GetSpecialitiesAsync();
+            return specialties.Select(s => new SpecialityViewModel
+            {
+                Id = s.Id,
+                Name = s.Name
+            });
         }
 
         [HttpPost("attemptquestion")]
@@ -97,54 +95,14 @@ namespace MedicLaunchApi.Controllers
         {
             await this.questionRepository.AttemptQuestionAsync(questionAttempt, GetCurrentUserId());
             return Ok();
-
-            //var attempt = new QuestionAttempt
-            //{
-            //    Id = Guid.NewGuid().ToString(),
-            //    QuestionId = questionAttempt.QuestionId,
-            //    ChosenAnswer = questionAttempt.ChosenAnswer,
-            //    CorrectAnswer = questionAttempt.CorrectAnswer,
-            //    IsCorrect = questionAttempt.IsCorrect,
-            //    CreatedAt = DateTime.UtcNow,
-            //    UpdatedAt = DateTime.UtcNow
-            //};
-
-            //await this.questionRepositoryLegacy.AddQuestionAttempt(attempt, GetCurrentUserId());
-
-            //var practiceStats = await this.questionRepositoryLegacy.GetPracticeStatsAsync(GetCurrentUserId());
-            //if (practiceStats != null)
-            //{
-            //    if (attempt.IsCorrect)
-            //    {
-            //        practiceStats.TotalCorrect++;
-            //    }
-            //    else
-            //    {
-            //        practiceStats.TotalIncorrect++;
-            //    }
-
-            //    practiceStats.UpdatedAt = DateTime.UtcNow;
-            //}
-            //else
-            //{
-            //    practiceStats = new PracticeStats
-            //    {
-            //        Id = Guid.NewGuid().ToString(),
-            //        TotalCorrect = attempt.IsCorrect ? 1 : 0,
-            //        TotalIncorrect = attempt.IsCorrect ? 0 : 1,
-            //        CreatedAt = DateTime.UtcNow,
-            //        UpdatedAt = DateTime.UtcNow
-            //    };
-            //}
-
-            //await this.questionRepositoryLegacy.CreateOrUpdatePracticeStats(practiceStats, GetCurrentUserId());
-
-            //return Ok();
         }
 
-        [HttpPost("flagquestion")]
+        [HttpPost("flagquestion/{questionId}")]
         public async Task<IActionResult> FlagQuestion(string questionId)
         {
+            await this.questionRepository.AddFlaggedQuestionAsync(questionId, GetCurrentUserId());
+            return Ok();
+            /*
             var questionFlagged = new FlaggedQuestion
             {
                 Id = Guid.NewGuid().ToString(),
@@ -174,32 +132,20 @@ namespace MedicLaunchApi.Controllers
 
             await this.questionRepositoryLegacy.CreateOrUpdatePracticeStats(practiceStats, GetCurrentUserId());
             return Ok();
+            */
         }
 
         [HttpGet("practicestats")]
         public async Task<PracticeStats> GetPracticeStats()
         {
-            return await this.questionRepositoryLegacy.GetPracticeStatsAsync(GetCurrentUserId());
+            return await this.questionRepository.GetPracticeStatsAsync(GetCurrentUserId());
         }
 
         [HttpPost("filter")]
         public async Task<IEnumerable<QuestionViewModel>> FilterQuestions(QuestionsFilterRequest filterRequest)
         {
-           return await this.practiceService.GetQuestionsLegacy(filterRequest, GetCurrentUserId());
-        }
-
-        [HttpPost("uploadimage")]
-        public async Task<IActionResult> UploadImage(IFormFile file)
-        {
-            if (file == null || file.Length == 0)
-            {
-                string message = "No file was uploaded";
-                this.logger.LogError(message);
-                return BadRequest(message);
-            }
-
-            var blobUrl = await this.questionRepositoryLegacy.UploadQuestionImage(file);
-            return Ok(new { imageUrl = blobUrl });
+           var questions = await this.questionRepository.FilterQuestionsAsync(filterRequest, GetCurrentUserId());
+        return CreateQuestionViewModel(questions);
         }
 
         [HttpPost("familiaritycounts")]
@@ -259,6 +205,7 @@ namespace MedicLaunchApi.Controllers
 
             await this.questionRepository.CreateQuestionAsync(question);
         }
+
         private string GetCurrentUserId()
         {
             return User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

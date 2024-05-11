@@ -150,5 +150,7 @@ namespace MedicLaunchApi.Data
         public string QuestionId { get; set; }
 
         public Question Question { get; set; }
+
+        public DateTime CreatedOn { get; set; }
     }
 }
