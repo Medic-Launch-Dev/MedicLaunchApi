@@ -93,7 +93,35 @@ namespace MedicLaunchApi.Tests
             Assert.AreEqual(1, questionsResult.Count());
         }
 
+        [TestMethod]
+        public async Task PracticeStats()
+        {
+            var practiceStats = await questionRepository.GetPracticeStatsAsync("1");
+            Assert.IsNotNull(practiceStats);
+            Assert.AreEqual(1, practiceStats.TotalIncorrect);
+            Assert.AreEqual(1, practiceStats.TotalCorrect);
+            Assert.AreEqual(0, practiceStats.TotalFlagged);
+        }
 
+        [TestMethod]
+        public async Task AttemptQuestion_UpdateAttempt()
+        {
+            // Make sure an attempt is not recorded twice
+            var questionAttempt = new QuestionAttemptRequest()
+            {
+                QuestionId = "1",
+                ChosenAnswer = "A",
+                IsCorrect = true,
+                CorrectAnswer = "A",
+            };
+
+            await questionRepository.AttemptQuestionAsync(questionAttempt, "1");
+            var practiceStats = await questionRepository.GetPracticeStatsAsync("1");
+            Assert.IsNotNull(practiceStats);
+
+            // Should still be 2 attempts, not 3
+            Assert.AreEqual(2, practiceStats.TotalCorrect + practiceStats.TotalIncorrect);
+        }
 
         #region Sample data
         private async Task AddTestQuestions()

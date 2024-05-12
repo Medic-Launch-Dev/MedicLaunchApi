@@ -247,6 +247,19 @@ namespace MedicLaunchApi.Repository
                 CreatedOn = DateTime.UtcNow
             };
 
+            // Check if the user already attempted
+            var existingAttempt = dbContext.QuestionAttempts.FirstOrDefault(at => at.UserId == userId && at.QuestionId == questionAttempt.QuestionId);
+            if (existingAttempt != null)
+            {
+                // Update existing attempt and return
+                existingAttempt.ChosenAnswer = questionAttempt.ChosenAnswer;
+                existingAttempt.CorrectAnswer = questionAttempt.CorrectAnswer;
+                existingAttempt.IsCorrect = questionAttempt.IsCorrect;
+                existingAttempt.UpdatedOn = DateTime.UtcNow;
+                await dbContext.SaveChangesAsync();
+                return;
+            }
+
             dbContext.QuestionAttempts.Add(attempt);
             await dbContext.SaveChangesAsync();
         }
