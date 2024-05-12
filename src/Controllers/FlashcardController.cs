@@ -1,0 +1,76 @@
+﻿using MedicLaunchApi.Models.ViewModels;
+using MedicLaunchApi.Repository;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
+namespace MedicLaunchApi.Controllers
+{
+    [Authorize]
+    [Route("api/flashcard")]
+    [ApiController]
+    public class FlashcardController : ControllerBase
+    {
+        private readonly FlashcardRepository flashcardRepository;
+
+        public FlashcardController(FlashcardRepository flashcardRepository)
+        {
+            this.flashcardRepository = flashcardRepository;
+        }
+
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateFlashcard([FromBody] CreateFlashcardRequest request)
+        {
+            await flashcardRepository.CreateFlashcard(request, GetCurrentUserId());
+
+            return Ok();
+        }
+
+        [HttpPut("update")]
+        public async Task<IActionResult> UpdateFlashcard([FromBody] UpdateFlashcardRequest request)
+        {
+            var flashcard = await flashcardRepository.UpdateFlashcard(request, GetCurrentUserId());
+
+            if (flashcard == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(flashcard);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetFlashcard(string id)
+        {
+            var flashcard = await flashcardRepository.GetFlashcard(id);
+
+            if (flashcard == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(flashcard);
+        }
+
+        [HttpGet("list")]
+        public async Task<IActionResult> GetFlashcards()
+        {
+            var flashcards = await flashcardRepository.GetFlashcards();
+
+            return Ok(flashcards);
+        }
+
+        [HttpDelete("delete/{id}")]
+        public async Task<IActionResult> DeleteFlashcard(string id)
+        {
+            await flashcardRepository.DeleteFlashcard(id);
+
+            return Ok();
+        }
+
+        private string GetCurrentUserId()
+        {
+            return User.FindFirstValue(ClaimTypes.NameIdentifier);
+        }
+    }
+}
