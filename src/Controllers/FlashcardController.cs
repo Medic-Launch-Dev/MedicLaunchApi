@@ -68,6 +68,14 @@ namespace MedicLaunchApi.Controllers
             return Ok();
         }
 
+        [HttpPost("upload-image")]
+        public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
+        {
+            var imageUrl = await flashcardRepository.UploadImageAsync(file);
+
+            return Ok(imageUrl);
+        }
+
         private string GetCurrentUserId()
         {
             return User.FindFirstValue(ClaimTypes.NameIdentifier);

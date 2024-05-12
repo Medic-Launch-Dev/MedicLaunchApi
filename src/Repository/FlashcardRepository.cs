@@ -1,16 +1,19 @@
 ﻿using Azure.Core;
 using MedicLaunchApi.Data;
 using MedicLaunchApi.Models.ViewModels;
+using MedicLaunchApi.Storage;
 using Microsoft.EntityFrameworkCore;
 
 namespace MedicLaunchApi.Repository
 {
     public class FlashcardRepository
     {
-        private readonly ApplicationDbContext _context;
-        public FlashcardRepository(ApplicationDbContext context)
+        private readonly ApplicationDbContext context;
+        private readonly AzureBlobClient azureBlobClient;
+        public FlashcardRepository(ApplicationDbContext context, AzureBlobClient azureBlobClient)
         {
-            _context = context;
+            this.context = context;
+            this.azureBlobClient = azureBlobClient;
         }
 
         public async Task CreateFlashcard(CreateFlashcardRequest request, string userId)
@@ -25,15 +28,15 @@ namespace MedicLaunchApi.Repository
                 CreatedOn = DateTime.UtcNow
             };
 
-            _context.Flashcards.Add(flashcard);
-            await _context.SaveChangesAsync();
+            context.Flashcards.Add(flashcard);
+            await context.SaveChangesAsync();
 
             return;
         }
 
         public async Task<Flashcard> UpdateFlashcard(UpdateFlashcardRequest request, string userId)
         {
-            var flashcard = await _context.Flashcards.FindAsync(request.Id);
+            var flashcard = await context.Flashcards.FindAsync(request.Id);
 
             if (flashcard == null)
             {
@@ -46,14 +49,14 @@ namespace MedicLaunchApi.Repository
             flashcard.UpdatedBy = userId;
             flashcard.UpdatedOn = DateTime.UtcNow;
 
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
 
             return flashcard;
         }
 
         public async Task<FlashcardResponse> GetFlashcard(string id)
         {
-            var flashcard = await _context.Flashcards.Include(m => m.Speciality).FirstOrDefaultAsync(m => m.Id == id);
+            var flashcard = await context.Flashcards.Include(m => m.Speciality).FirstOrDefaultAsync(m => m.Id == id);
 
             if (flashcard == null)
             {
@@ -83,21 +86,26 @@ namespace MedicLaunchApi.Repository
 
         public async Task<List<FlashcardResponse>> GetFlashcards()
         {
-            var flashcards = await _context.Flashcards.Include(m => m.Speciality).ToListAsync();
+            var flashcards = await context.Flashcards.Include(m => m.Speciality).ToListAsync();
             return flashcards.Select(CreateFlashCardResponseModel).ToList();
         }
 
         public async Task DeleteFlashcard(string id)
         {
-            var flashcard = await _context.Flashcards.FindAsync(id);
+            var flashcard = await context.Flashcards.FindAsync(id);
 
             if (flashcard == null)
             {
                 return;
             }
 
-            _context.Flashcards.Remove(flashcard);
-            await _context.SaveChangesAsync();
+            context.Flashcards.Remove(flashcard);
+            await context.SaveChangesAsync();
+        }
+
+        public async Task<string> UploadImageAsync(IFormFile file)
+        {
+            return await azureBlobClient.UploadImageAsyc(file);
         }
     }
 }
