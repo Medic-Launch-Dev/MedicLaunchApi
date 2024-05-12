@@ -25,6 +25,7 @@ namespace MedicLaunchApi.Storage
 
             this.blobContainerClient = new BlobContainerClient(connectionStringFromEnvironment, "database");
             this.imagesContainerClient = new BlobContainerClient(connectionStringFromEnvironment, "images");
+            this.imagesContainerClient.CreateIfNotExists(PublicAccessType.BlobContainer);
             this.logger = logger;
         }
 
