@@ -21,7 +21,9 @@ namespace MedicLaunchApi.Repository
                 Content = request.Content,
                 UserId = userId,
                 CreatedOn = DateTime.UtcNow,
-                SpecialityId = request.SpecialityId
+                SpecialityId = request.SpecialityId,
+                QuestionId = request.QuestionId,
+                FlashcardId = request.FlashcardId
             };
 
             await dbContext.Notes.AddAsync(note);
@@ -51,6 +53,8 @@ namespace MedicLaunchApi.Repository
                 note.Content = updateNoteRequest.Content;
                 note.SpecialityId = updateNoteRequest.SpecialityId;
                 note.UpdatedOn = DateTime.UtcNow;
+                note.QuestionId = updateNoteRequest.QuestionId;
+                note.FlashcardId = updateNoteRequest.FlashcardId;
             }
         }
     }

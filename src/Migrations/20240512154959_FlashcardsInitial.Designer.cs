@@ -4,6 +4,7 @@ using MedicLaunchApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MedicLaunchApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240512154959_FlashcardsInitial")]
+    partial class FlashcardsInitial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -118,13 +121,8 @@ namespace MedicLaunchApi.Migrations
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("FlashcardId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("QuestionId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("SpecialityId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("UpdatedOn")
@@ -135,10 +133,6 @@ namespace MedicLaunchApi.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("FlashcardId");
-
-                    b.HasIndex("QuestionId");
 
                     b.HasIndex("SpecialityId");
 
@@ -528,21 +522,11 @@ namespace MedicLaunchApi.Migrations
 
             modelBuilder.Entity("MedicLaunchApi.Data.Note", b =>
                 {
-                    b.HasOne("MedicLaunchApi.Data.Flashcard", "Flashcard")
-                        .WithMany()
-                        .HasForeignKey("FlashcardId");
-
-                    b.HasOne("MedicLaunchApi.Data.Question", "Question")
-                        .WithMany()
-                        .HasForeignKey("QuestionId");
-
                     b.HasOne("MedicLaunchApi.Data.Speciality", "Speciality")
                         .WithMany()
-                        .HasForeignKey("SpecialityId");
-
-                    b.Navigation("Flashcard");
-
-                    b.Navigation("Question");
+                        .HasForeignKey("SpecialityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Speciality");
                 });
