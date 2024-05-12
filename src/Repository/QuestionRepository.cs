@@ -228,8 +228,8 @@ namespace MedicLaunchApi.Repository
         {
             var questionType = Enum.Parse<QuestionType>(filterRequest.QuestionType);
             return filterRequest.AllSpecialitiesSelected
-                ? dbContext.Questions.Where(q => q.QuestionType == questionType)
-                : dbContext.Questions.Where(q => filterRequest.SpecialityIds.Contains(q.SpecialityId) && q.QuestionType == questionType);
+                ? dbContext.Questions.Where(q => q.QuestionType == questionType).Include(m => m.Speciality)
+                : dbContext.Questions.Where(q => filterRequest.SpecialityIds.Contains(q.SpecialityId) && q.QuestionType == questionType).Include(m => m.Speciality);
         }
 
         #region Practice related methods
