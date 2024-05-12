@@ -6,7 +6,7 @@ using System.Security.Claims;
 
 namespace MedicLaunchApi.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/note")]
     [ApiController]
     public class NotesController : ControllerBase
     {
@@ -17,15 +17,20 @@ namespace MedicLaunchApi.Controllers
             this.userDataRepository = userDataRepository;
         }
 
-        [HttpPost]
+        [HttpPost("create")]
         public async Task<IActionResult> CreateNoteAsync([FromBody] CreateNoteRequest request)
         {
+            if(request.SpecialityId == null && request.QuestionId == null && request.FlashcardId == null)
+            {
+                return BadRequest("A note should be associated with a speciality, question, or a flashcard");
+            }
+
             await userDataRepository.CreateNoteAsync(request, GetCurrentUserId());
 
             return Ok();
         }
 
-        [HttpGet]
+        [HttpGet("list")]
         public async Task<IActionResult> GetNotesAsync()
         {
             var notes = await userDataRepository.GetNotesAsync(GetCurrentUserId());
@@ -33,7 +38,7 @@ namespace MedicLaunchApi.Controllers
             return Ok(notes);
         }
 
-        [HttpDelete("{noteId}")]
+        [HttpDelete("delete/{noteId}")]
         public async Task<IActionResult> DeleteNoteAsync(string noteId)
         {
             await userDataRepository.DeleteNoteAsync(noteId, GetCurrentUserId());
@@ -41,9 +46,14 @@ namespace MedicLaunchApi.Controllers
             return Ok();
         }
 
-        [HttpPut]
+        [HttpPut("update")]
         public async Task<IActionResult> UpdateNoteAsync([FromBody] UpdateNoteRequest request)
         {
+            if (request.SpecialityId == null && request.QuestionId == null && request.FlashcardId == null)
+            {
+                return BadRequest("A note should be associated with a speciality, question, or a flashcard");
+            }
+
             await userDataRepository.UpdateNoteAsync(request, GetCurrentUserId());
 
             return Ok();

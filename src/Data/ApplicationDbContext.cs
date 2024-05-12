@@ -151,6 +151,8 @@ namespace MedicLaunchApi.Data
         public DateTime CreatedOn { get; set; }
     }
 
+
+    // A note could be associated with a speciality, a question or a flashcard
     [Table("Note")]
     public class Note
     {
@@ -160,9 +162,17 @@ namespace MedicLaunchApi.Data
 
         public string UserId { get; set; }
 
-        public string SpecialityId { get; set; }
+        public string? SpecialityId { get; set; }
+
+        public string? QuestionId { get; set; }
+
+        public string? FlashcardId { get; set; }
 
         public Speciality Speciality { get; set; }
+
+        public Question Question { get; set; }
+
+        public Flashcard Flashcard { get; set; }
 
         public DateTime CreatedOn { get; set; }
 
