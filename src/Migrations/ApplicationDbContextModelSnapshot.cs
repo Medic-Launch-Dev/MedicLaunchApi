@@ -43,7 +43,7 @@ namespace MedicLaunchApi.Migrations
 
                     b.HasIndex("QuestionId");
 
-                    b.ToTable("AnswerOption");
+                    b.ToTable("AnswerOption", (string)null);
                 });
 
             modelBuilder.Entity("MedicLaunchApi.Data.FlaggedQuestion", b =>
@@ -66,7 +66,7 @@ namespace MedicLaunchApi.Migrations
 
                     b.HasIndex("QuestionId");
 
-                    b.ToTable("FlaggedQuestion");
+                    b.ToTable("FlaggedQuestion", (string)null);
                 });
 
             modelBuilder.Entity("MedicLaunchApi.Data.Flashcard", b =>
@@ -103,7 +103,7 @@ namespace MedicLaunchApi.Migrations
 
                     b.HasIndex("SpecialityId");
 
-                    b.ToTable("Flashcard");
+                    b.ToTable("Flashcard", (string)null);
                 });
 
             modelBuilder.Entity("MedicLaunchApi.Data.Note", b =>
@@ -142,7 +142,7 @@ namespace MedicLaunchApi.Migrations
 
                     b.HasIndex("SpecialityId");
 
-                    b.ToTable("Note");
+                    b.ToTable("Note", (string)null);
                 });
 
             modelBuilder.Entity("MedicLaunchApi.Data.Question", b =>
@@ -204,7 +204,7 @@ namespace MedicLaunchApi.Migrations
 
                     b.HasIndex("SpecialityId");
 
-                    b.ToTable("Question");
+                    b.ToTable("Question", (string)null);
                 });
 
             modelBuilder.Entity("MedicLaunchApi.Data.QuestionAttempt", b =>
@@ -241,7 +241,7 @@ namespace MedicLaunchApi.Migrations
 
                     b.HasIndex("QuestionId");
 
-                    b.ToTable("QuestionAttempt");
+                    b.ToTable("QuestionAttempt", (string)null);
                 });
 
             modelBuilder.Entity("MedicLaunchApi.Data.Speciality", b =>
@@ -255,7 +255,7 @@ namespace MedicLaunchApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Speciality");
+                    b.ToTable("Speciality", (string)null);
                 });
 
             modelBuilder.Entity("MedicLaunchApi.Models.MedicLaunchUser", b =>

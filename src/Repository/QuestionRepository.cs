@@ -1,6 +1,8 @@
 ﻿using MedicLaunchApi.Data;
+using MedicLaunchApi.Migrations;
 using MedicLaunchApi.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using PracticeStats = MedicLaunchApi.Models.PracticeStats;
 namespace MedicLaunchApi.Repository
 {
@@ -175,53 +177,92 @@ namespace MedicLaunchApi.Repository
             return stats;
         }
 
-        public async Task<List<Question>> FilterQuestionsAsync(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest, string userId)
+        public async Task<List<QuestionViewModel>> FilterQuestionsAsync(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest, string userId)
         {
             var familiarity = Enum.Parse<Familiarity>(filterRequest.Familiarity);
+            IQueryable<Question> result = Enumerable.Empty<Question>().AsQueryable();
 
-            return familiarity switch
+            switch (familiarity)
             {
-                Familiarity.NewQuestions => await GetNewQuestionsAsync(filterRequest, userId),
-                Familiarity.IncorrectQuestions => await GetIncorrectQuestionsAsync(filterRequest, userId),
-                Familiarity.FlaggedQuestions => await GetFlaggedQuestionsAsync(filterRequest, userId),
-                Familiarity.AllQuestions => await GetAllQuestionsAsync(filterRequest),
-                _ => [],
+                case Familiarity.NewQuestions:
+                    result = GetNewQuestionsAsync(filterRequest, userId);
+                    break;
+                case Familiarity.IncorrectQuestions:
+                    result = GetIncorrectQuestionsAsync(filterRequest, userId);
+                    break;
+                case Familiarity.FlaggedQuestions:
+                    result = GetFlaggedQuestionsAsync(filterRequest, userId);
+                    break;
+                case Familiarity.AllQuestions:
+                    result = GetAllQuestionsAsync(filterRequest);
+                    break;
+            }
+
+            var notesQuery = from note in dbContext.Notes
+                             where note.UserId == userId
+                             select note;
+
+            var query = from q in result
+                        join n in notesQuery on q.Id equals n.QuestionId into gj
+                        from note in gj.DefaultIfEmpty()
+                        select CreateQuestionViewModel(q, note);
+
+            return await query.ToListAsync();
+        }
+
+        private static QuestionViewModel CreateQuestionViewModel(Question question, Note? note)
+        {
+            return new QuestionViewModel
+            {
+                Id = question.Id,
+                SpecialityId = question.SpecialityId,
+                QuestionType = question.QuestionType.ToString(),
+                QuestionText = question.QuestionText,
+                Options = question.Options.Select(m => new OptionViewModel()
+                {
+                    Letter = m.Letter,
+                    Text = m.Text
+                }),
+                CorrectAnswerLetter = question.CorrectAnswerLetter,
+                Explanation = question.Explanation,
+                ClinicalTips = question.ClinicalTips,
+                LearningPoints = question.LearningPoints,
+                QuestionCode = question.Code,
+                SpecialityName = question.Speciality.Name,
+                Note = note?.Content
             };
         }
 
-        private async Task<List<Question>> GetNewQuestionsAsync(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest, string userId)
+        private IQueryable<Question> GetNewQuestionsAsync(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest, string userId)
         {
             IQueryable<Question> candidateQuestions = GetCandidateQuestionsAsync(filterRequest);
 
-            return await candidateQuestions
+            return candidateQuestions
                 .Where(q => !dbContext.QuestionAttempts.Any(attempt => attempt.UserId == userId && attempt.QuestionId == q.Id)
-                                   && !dbContext.FlaggedQuestions.Any(flagged => flagged.UserId == userId && flagged.QuestionId == q.Id))
-                .ToListAsync();
+                                   && !dbContext.FlaggedQuestions.Any(flagged => flagged.UserId == userId && flagged.QuestionId == q.Id));
         }
 
-        private async Task<List<Question>> GetIncorrectQuestionsAsync(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest, string userId)
+        private IQueryable<Question> GetIncorrectQuestionsAsync(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest, string userId)
         {
             IQueryable<Question> candidateQuestions = GetCandidateQuestionsAsync(filterRequest);
 
-            return await candidateQuestions
-                .Where(q => dbContext.QuestionAttempts.Any(attempt => attempt.UserId == userId && attempt.QuestionId == q.Id && !attempt.IsCorrect))
-                .ToListAsync();
+            return candidateQuestions
+                .Where(q => dbContext.QuestionAttempts.Any(attempt => attempt.UserId == userId && attempt.QuestionId == q.Id && !attempt.IsCorrect));
         }
 
-        private async Task<List<Question>> GetFlaggedQuestionsAsync(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest, string userId)
+        private IQueryable<Question> GetFlaggedQuestionsAsync(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest, string userId)
         {
             IQueryable<Question> candidateQuestions = GetCandidateQuestionsAsync(filterRequest);
 
-            return await candidateQuestions
-                .Where(q => dbContext.FlaggedQuestions.Any(flagged => flagged.UserId == userId && flagged.QuestionId == q.Id))
-                .ToListAsync();
+            return candidateQuestions
+                .Where(q => dbContext.FlaggedQuestions.Any(flagged => flagged.UserId == userId && flagged.QuestionId == q.Id));
         }
 
-        private async Task<List<Question>> GetAllQuestionsAsync(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest)
+        private IQueryable<Question> GetAllQuestionsAsync(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest)
         {
             IQueryable<Question> candidateQuestions = GetCandidateQuestionsAsync(filterRequest);
 
-            return await candidateQuestions.ToListAsync();
+            return candidateQuestions;
         }
 
         private IQueryable<Question> GetCandidateQuestionsAsync(QuestionsFilterRequest filterRequest)

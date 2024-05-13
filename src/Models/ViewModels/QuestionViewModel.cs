@@ -12,7 +12,7 @@
 
         public string QuestionText { get; set; }
 
-        public IEnumerable<Option> Options { get; set; }
+        public IEnumerable<OptionViewModel> Options { get; set; }
 
         public string CorrectAnswerLetter { get; set; }
 
@@ -25,5 +25,13 @@
         public bool IsSubmitted { get; set; }
 
         public string? SpecialityName { get; set; }
+
+        public string? Note { get; set; }
+    }
+
+    public class OptionViewModel
+    {
+        public string Letter { get; set; }
+        public string Text { get; set; }
     }
 }
