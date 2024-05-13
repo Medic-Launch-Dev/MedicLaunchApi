@@ -168,11 +168,11 @@ namespace MedicLaunchApi.Data
 
         public string? FlashcardId { get; set; }
 
-        public Speciality Speciality { get; set; }
+        public Speciality? Speciality { get; set; }
 
-        public Question Question { get; set; }
+        public Question? Question { get; set; }
 
-        public Flashcard Flashcard { get; set; }
+        public Flashcard? Flashcard { get; set; }
 
         public DateTime CreatedOn { get; set; }
 

@@ -109,8 +109,7 @@ namespace MedicLaunchApi.Controllers
         [HttpPost("filter")]
         public async Task<IEnumerable<QuestionViewModel>> FilterQuestions(QuestionsFilterRequest filterRequest)
         {
-            var questions = await this.questionRepository.FilterQuestionsAsync(filterRequest, GetCurrentUserId());
-            return CreateQuestionViewModel(questions);
+            return await this.questionRepository.FilterQuestionsAsync(filterRequest, GetCurrentUserId());
         }
 
         //[HttpPost("familiaritycounts")]
@@ -127,7 +126,7 @@ namespace MedicLaunchApi.Controllers
                 SpecialityId = q.SpecialityId,
                 QuestionType = q.QuestionType.ToString(),
                 QuestionText = q.QuestionText,
-                Options = q.Options.Select(m => new Option()
+                Options = q.Options.Select(m => new OptionViewModel()
                 {
                     Letter = m.Letter,
                     Text = m.Text

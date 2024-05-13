@@ -20,13 +20,26 @@ namespace MedicLaunchApi.Repository
                 Id = Guid.NewGuid().ToString(),
                 Content = request.Content,
                 UserId = userId,
-                CreatedOn = DateTime.UtcNow,
-                SpecialityId = request.SpecialityId,
-                QuestionId = request.QuestionId,
-                FlashcardId = request.FlashcardId
+                CreatedOn = DateTime.UtcNow
             };
 
+            if(!string.IsNullOrEmpty(request.SpecialityId))
+            {
+                note.SpecialityId = request.SpecialityId;
+            }
+
+            if (!string.IsNullOrEmpty(request.QuestionId))
+            {
+                note.QuestionId = request.QuestionId;
+            }
+
+            if (!string.IsNullOrEmpty(request.FlashcardId))
+            {
+                note.FlashcardId = request.FlashcardId;
+            }
+
             await dbContext.Notes.AddAsync(note);
+            await dbContext.SaveChangesAsync();
         }
 
         public async Task<IEnumerable<Note>> GetNotesAsync(string userId)
@@ -42,6 +55,8 @@ namespace MedicLaunchApi.Repository
             {
                 dbContext.Notes.Remove(note);
             }
+
+            await dbContext.SaveChangesAsync();
         }
 
         public async Task UpdateNoteAsync(UpdateNoteRequest updateNoteRequest, string userId)
@@ -56,6 +71,8 @@ namespace MedicLaunchApi.Repository
                 note.QuestionId = updateNoteRequest.QuestionId;
                 note.FlashcardId = updateNoteRequest.FlashcardId;
             }
+
+            await dbContext.SaveChangesAsync();
         }
     }
 }

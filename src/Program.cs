@@ -33,7 +33,6 @@ namespace MedicLaunchApi
             builder.Services.AddSwaggerGen();
             builder.Services.AddScoped<QuestionRepositoryLegacy>();
             builder.Services.AddScoped<AzureBlobClient>();
-            builder.Services.AddScoped<PracticeService>();
             builder.Services.AddScoped<PaymentRepository>();
             builder.Services.AddScoped<UserDataRepository>();
             builder.Services.AddScoped<PaymentService>();
