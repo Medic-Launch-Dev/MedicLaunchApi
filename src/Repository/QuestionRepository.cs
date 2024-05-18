@@ -41,6 +41,7 @@ namespace MedicLaunchApi.Repository
                 UpdatedBy = currentUserId,
                 CreatedBy = currentUserId,
                 Code = questionCode,
+                QuestionState = model.IsSubmitted ? QuestionState.Submitted : QuestionState.Draft
             };
 
             dbContext.Questions.Add(question);
@@ -244,7 +245,8 @@ namespace MedicLaunchApi.Repository
                 LearningPoints = question.LearningPoints,
                 QuestionCode = question.Code,
                 SpecialityName = question.Speciality.Name,
-                Note = note?.Content
+                Note = note?.Content,
+                IsSubmitted = question.QuestionState == QuestionState.Submitted
             };
         }
 
