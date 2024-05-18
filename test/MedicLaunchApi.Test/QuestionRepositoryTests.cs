@@ -69,7 +69,7 @@ namespace MedicLaunchApi.Tests
                 SpecialityIds = ["1"],
                 QuestionType = "General",
                 Familiarity = "NewQuestions",
-                SelectionOrder = "Random",
+                SelectionOrder = "Randomized",
             };
 
             var questionsResult = await questionRepository.FilterQuestionsAsync(filterRequest, "1");
@@ -85,7 +85,7 @@ namespace MedicLaunchApi.Tests
                 SpecialityIds = ["1"],
                 QuestionType = "General",
                 Familiarity = "IncorrectQuestions",
-                SelectionOrder = "Random",
+                SelectionOrder = "Randomized",
             };
 
             var questionsResult = await questionRepository.FilterQuestionsAsync(filterRequest, "1");
