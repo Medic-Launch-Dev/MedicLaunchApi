@@ -207,7 +207,22 @@ namespace MedicLaunchApi.Repository
                         from note in gj.DefaultIfEmpty()
                         select CreateQuestionViewModel(q, note);
 
-            return await query.ToListAsync();
+            // Apply question ordering. Ordering can be Random or by Speciality
+            var questions = await query.ToListAsync();
+            var order = Enum.Parse<SelectionOrder>(filterRequest.SelectionOrder);
+            switch (order)
+            {
+                case SelectionOrder.Randomized:
+                    questions = questions.OrderBy(m => Guid.NewGuid()).ToList();
+                    break;
+                case SelectionOrder.OrderBySpeciality:
+                    questions = questions.OrderBy(m => m.SpecialityName).ToList();
+                    break;
+                default:
+                    break;
+            }
+
+            return questions;
         }
 
         private static QuestionViewModel CreateQuestionViewModel(Question question, Note? note)
