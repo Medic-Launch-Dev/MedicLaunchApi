@@ -57,16 +57,17 @@ namespace MedicLaunchApi.Repository
         public async Task<FlashcardResponse> GetFlashcard(string id)
         {
             var flashcard = await context.Flashcards.Include(m => m.Speciality).FirstOrDefaultAsync(m => m.Id == id);
+            var noteForFlashcard = await context.Notes.FirstOrDefaultAsync(m => m.FlashcardId == id);
 
             if (flashcard == null)
             {
                 return null;
             }
 
-            return CreateFlashCardResponseModel(flashcard);
+            return CreateFlashCardResponseModel(flashcard, noteForFlashcard);
         }
 
-        private static FlashcardResponse CreateFlashCardResponseModel(Flashcard flashcard)
+        private static FlashcardResponse CreateFlashCardResponseModel(Flashcard flashcard, Note? noteForFlashcard = null)
         {
             return new FlashcardResponse
             {
@@ -80,14 +81,15 @@ namespace MedicLaunchApi.Repository
                     Name = flashcard.Speciality.Name
                 },
                 CreatedBy = flashcard.CreatedBy,
-                CreatedOn = flashcard.CreatedOn
+                CreatedOn = flashcard.CreatedOn,
+                Note = noteForFlashcard?.Content
             };
         }
 
         public async Task<List<FlashcardResponse>> GetFlashcards()
         {
             var flashcards = await context.Flashcards.Include(m => m.Speciality).ToListAsync();
-            return flashcards.Select(CreateFlashCardResponseModel).ToList();
+            return flashcards.Select(flashcard => CreateFlashCardResponseModel(flashcard)).ToList();
         }
 
         public async Task DeleteFlashcard(string id)

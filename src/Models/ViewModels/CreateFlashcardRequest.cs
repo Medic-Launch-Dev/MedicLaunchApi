@@ -1,4 +1,6 @@
-﻿namespace MedicLaunchApi.Models.ViewModels
+﻿using MedicLaunchApi.Data;
+
+namespace MedicLaunchApi.Models.ViewModels
 {
     public class CreateFlashcardRequest
     {
@@ -35,5 +37,7 @@
         public string CreatedBy { get; set; }
 
         public DateTime CreatedOn { get; set; }
+
+        public string? Note { get; set; }
     }
 }
