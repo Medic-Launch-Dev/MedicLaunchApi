@@ -1,9 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json;
 
 namespace MedicLaunchApi.Data
 {
@@ -22,6 +19,10 @@ namespace MedicLaunchApi.Data
         public DbSet<Note> Notes { get; set; }
 
         public DbSet<Flashcard> Flashcards { get; set; }
+
+        public DbSet<UserNotification> UserNotifications { get; set; }
+
+        private readonly ApplicationDbContext context;
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) :
             base(options)
@@ -199,5 +200,21 @@ namespace MedicLaunchApi.Data
         public DateTime? UpdatedOn { get; set; }
 
         public Speciality Speciality { get; set; }
+    }
+
+    [Table("UserNotification")]
+    public class UserNotification
+    {
+        public string Id { get; set; }
+
+        public string UserId { get; set; }
+
+        public string Message { get; set; }
+
+        public bool IsRead { get; set; }
+
+        public DateTime CreatedOn { get; set; }
+
+        public DateTime? ReadOn { get; set;}
     }
 }
