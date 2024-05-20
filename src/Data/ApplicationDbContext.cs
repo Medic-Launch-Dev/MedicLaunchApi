@@ -22,6 +22,8 @@ namespace MedicLaunchApi.Data
 
         public DbSet<UserNotification> UserNotifications { get; set; }
 
+        public DbSet<MockExam> MockExams { get; set; }
+
         private readonly ApplicationDbContext context;
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) :
@@ -37,6 +39,10 @@ namespace MedicLaunchApi.Data
 
             builder.Entity<Question>()
                 .Property(e => e.QuestionState)
+                .HasConversion<string>();
+
+            builder.Entity<MockExam>()
+                .Property(e => e.MockExamType)
                 .HasConversion<string>();
 
             base.OnModelCreating(builder);
@@ -216,5 +222,29 @@ namespace MedicLaunchApi.Data
         public DateTime CreatedOn { get; set; }
 
         public DateTime? ReadOn { get; set;}
+    }
+
+    [Table("MockExam")]
+    public class MockExam
+    {
+        public string Id { get; set; }
+
+        public string UserId { get; set; }
+
+        public MockExamType MockExamType { get; set; }
+
+        public int TotalQuestions { get; set; }
+
+        public int QuestionsCompleted { get; set; }
+
+        public DateTime StartedOn { get; set; }
+
+        public DateTime? CompletedOn { get; set; }
+    }
+
+    public enum MockExamType
+    {
+        PaperOneMockExam,
+        PaperTwoMockExam
     }
 }

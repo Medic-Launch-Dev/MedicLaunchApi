@@ -41,6 +41,7 @@ namespace MedicLaunchApi.Repository
                 UpdatedBy = currentUserId,
                 CreatedBy = currentUserId,
                 Code = questionCode,
+                QuestionState = model.IsSubmitted ? Data.QuestionState.Submitted : Data.QuestionState.Draft
             };
 
             dbContext.Questions.Add(question);
@@ -227,6 +228,16 @@ namespace MedicLaunchApi.Repository
 
         private static QuestionViewModel CreateQuestionViewModel(Question question, Note? note)
         {
+            if(question.Speciality == null)
+            {
+                throw new InvalidOperationException("Include speciality information in question retrieval");
+            }
+
+            if(question.Options == null || question.Options.Count == 0)
+            {
+                throw new InvalidOperationException("Include options information in question retrieval");
+            }
+
             return new QuestionViewModel
             {
                 Id = question.Id,
@@ -244,7 +255,8 @@ namespace MedicLaunchApi.Repository
                 LearningPoints = question.LearningPoints,
                 QuestionCode = question.Code,
                 SpecialityName = question.Speciality.Name,
-                Note = note?.Content
+                Note = note?.Content,
+                IsSubmitted = question.QuestionState == QuestionState.Submitted
             };
         }
 
@@ -284,8 +296,8 @@ namespace MedicLaunchApi.Repository
         {
             var questionType = Enum.Parse<QuestionType>(filterRequest.QuestionType);
             return filterRequest.AllSpecialitiesSelected
-                ? dbContext.Questions.Where(q => q.QuestionType == questionType).Include(m => m.Speciality).Include(m => m.Options)
-                : dbContext.Questions.Where(q => filterRequest.SpecialityIds.Contains(q.SpecialityId) && q.QuestionType == questionType).Include(m => m.Speciality).Include(m => m.Options);
+                ? dbContext.Questions.Where(q => q.QuestionType == questionType && q.QuestionState == QuestionState.Submitted).Include(m => m.Speciality).Include(m => m.Options)
+                : dbContext.Questions.Where(q => filterRequest.SpecialityIds.Contains(q.SpecialityId) && q.QuestionType == questionType && q.QuestionState == QuestionState.Submitted).Include(m => m.Speciality).Include(m => m.Options);
         }
 
         #region Practice related methods
@@ -320,20 +332,14 @@ namespace MedicLaunchApi.Repository
             await dbContext.SaveChangesAsync();
         }
 
-        //public async Task<QuestionFamiliarityCounts> GetCategoryCounts(FamiliarityCountsRequest request, string currentUserId)
-        //{
-        //    IQueryable<Question> candidateQuestions = request.AllSpecialitiesSelected
-        //        ? dbContext.Questions
-        //        : dbContext.Questions.Where(q => request.SpecialityIds.Contains(q.SpecialityId));
-
-        //    return new QuestionFamiliarityCounts()
-        //    {
-        //        AllQuestions = (await GetAllQuestions()).Count(),
-        //        NewQuestions = (await GetNewQuestions(request, currentUserId)).Count(),
-
-
-        //    };
-        //}
+        public async Task<IEnumerable<QuestionViewModel>> GetMockExamQuestionsAsync(string mockExamType)
+        {
+            var questionType = Enum.Parse<QuestionType>(mockExamType);
+            return await dbContext.Questions.Where(q => q.QuestionType == questionType && q.QuestionState == QuestionState.Submitted)
+                .Include(m => m.Speciality)
+                .Include(m => m.Options)
+                .Select(q => CreateQuestionViewModel(q, null)).ToListAsync();
+        }
 
         #endregion
     }
