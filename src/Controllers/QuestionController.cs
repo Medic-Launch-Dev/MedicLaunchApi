@@ -112,11 +112,11 @@ namespace MedicLaunchApi.Controllers
             return await this.questionRepository.FilterQuestionsAsync(filterRequest, GetCurrentUserId());
         }
 
-        //[HttpPost("familiaritycounts")]
-        //public Task<QuestionFamiliarityCounts> GetQuestionFamiliarityCounts([FromBody] FamiliarityCountsRequest request)
-        //{
-        //    return this.practiceService.GetCategoryCounts(GetCurrentUserId(), request);
-        //}
+        [HttpPost("familiaritycounts")]
+        public Task<QuestionFamiliarityCounts> GetQuestionFamiliarityCounts([FromBody] FamiliarityCountsRequest request)
+        {
+            return this.questionRepository.GetQuestionFamiliarityCountsAsync(GetCurrentUserId(), request);
+        }
 
         private IEnumerable<QuestionViewModel> CreateQuestionViewModel(IEnumerable<MedicLaunchApi.Data.Question> questions)
         {

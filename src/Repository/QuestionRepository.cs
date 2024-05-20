@@ -1,14 +1,20 @@
 ﻿using MedicLaunchApi.Data;
-using MedicLaunchApi.Migrations;
 using MedicLaunchApi.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
+using System.Linq.Expressions;
 using PracticeStats = MedicLaunchApi.Models.PracticeStats;
 namespace MedicLaunchApi.Repository
 {
     public class QuestionRepository
     {
         private readonly ApplicationDbContext dbContext;
+
+        Expression<Func<Question, bool>> NewQuestionsPredicate(string userId) => q => !dbContext.QuestionAttempts.Any(attempt => attempt.UserId == userId && attempt.QuestionId == q.Id)
+                                                                                       && !dbContext.FlaggedQuestions.Any(flagged => flagged.UserId == userId && flagged.QuestionId == q.Id);
+        
+        Expression<Func<Question, bool>> IncorrectQuestionsPredicate(string userId) => q => dbContext.QuestionAttempts.Any(attempt => attempt.UserId == userId && attempt.QuestionId == q.Id && !attempt.IsCorrect);
+
+        Expression<Func<Question, bool>> FlaggedQuestionsPredicate(string userId) => q => dbContext.FlaggedQuestions.Any(flagged => flagged.UserId == userId && flagged.QuestionId == q.Id);
 
         public QuestionRepository(ApplicationDbContext dbContext)
         {
@@ -262,42 +268,39 @@ namespace MedicLaunchApi.Repository
 
         private IQueryable<Question> GetNewQuestionsAsync(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest, string userId)
         {
-            IQueryable<Question> candidateQuestions = GetCandidateQuestionsAsync(filterRequest);
+            IQueryable<Question> candidateQuestions = GetCandidateQuestionsAsync(filterRequest.QuestionType, filterRequest.SpecialityIds, filterRequest.AllSpecialitiesSelected);
 
             return candidateQuestions
-                .Where(q => !dbContext.QuestionAttempts.Any(attempt => attempt.UserId == userId && attempt.QuestionId == q.Id)
-                                   && !dbContext.FlaggedQuestions.Any(flagged => flagged.UserId == userId && flagged.QuestionId == q.Id));
+                .Where(NewQuestionsPredicate(userId));
         }
 
         private IQueryable<Question> GetIncorrectQuestionsAsync(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest, string userId)
         {
-            IQueryable<Question> candidateQuestions = GetCandidateQuestionsAsync(filterRequest);
-
-            return candidateQuestions
-                .Where(q => dbContext.QuestionAttempts.Any(attempt => attempt.UserId == userId && attempt.QuestionId == q.Id && !attempt.IsCorrect));
+            IQueryable<Question> candidateQuestions = GetCandidateQuestionsAsync(filterRequest.QuestionType, filterRequest.SpecialityIds, filterRequest.AllSpecialitiesSelected);
+            return candidateQuestions.Where(IncorrectQuestionsPredicate(userId));
         }
 
         private IQueryable<Question> GetFlaggedQuestionsAsync(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest, string userId)
         {
-            IQueryable<Question> candidateQuestions = GetCandidateQuestionsAsync(filterRequest);
+            IQueryable<Question> candidateQuestions = GetCandidateQuestionsAsync(filterRequest.QuestionType, filterRequest.SpecialityIds, filterRequest.AllSpecialitiesSelected);
 
             return candidateQuestions
-                .Where(q => dbContext.FlaggedQuestions.Any(flagged => flagged.UserId == userId && flagged.QuestionId == q.Id));
+                .Where(FlaggedQuestionsPredicate(userId));
         }
 
         private IQueryable<Question> GetAllQuestionsAsync(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest)
         {
-            IQueryable<Question> candidateQuestions = GetCandidateQuestionsAsync(filterRequest);
+            IQueryable<Question> candidateQuestions = GetCandidateQuestionsAsync(filterRequest.QuestionType, filterRequest.SpecialityIds, filterRequest.AllSpecialitiesSelected);
 
             return candidateQuestions;
         }
 
-        private IQueryable<Question> GetCandidateQuestionsAsync(QuestionsFilterRequest filterRequest)
+        private IQueryable<Question> GetCandidateQuestionsAsync(string questionType, string[] specialityIds, bool allSpecialitiesSelected)
         {
-            var questionType = Enum.Parse<QuestionType>(filterRequest.QuestionType);
-            return filterRequest.AllSpecialitiesSelected
-                ? dbContext.Questions.Where(q => q.QuestionType == questionType && q.QuestionState == QuestionState.Submitted).Include(m => m.Speciality).Include(m => m.Options)
-                : dbContext.Questions.Where(q => filterRequest.SpecialityIds.Contains(q.SpecialityId) && q.QuestionType == questionType && q.QuestionState == QuestionState.Submitted).Include(m => m.Speciality).Include(m => m.Options);
+            var questionTypeValue = Enum.Parse<QuestionType>(questionType);
+            return allSpecialitiesSelected
+                ? dbContext.Questions.Where(q => q.QuestionType == questionTypeValue && q.QuestionState == QuestionState.Submitted).Include(m => m.Speciality).Include(m => m.Options)
+                : dbContext.Questions.Where(q => specialityIds.Contains(q.SpecialityId) && q.QuestionType == questionTypeValue && q.QuestionState == QuestionState.Submitted).Include(m => m.Speciality).Include(m => m.Options);
         }
 
         #region Practice related methods
@@ -340,6 +343,22 @@ namespace MedicLaunchApi.Repository
                 .Include(m => m.Options)
                 .Select(q => CreateQuestionViewModel(q, null)).ToListAsync();
         }
+
+        public async Task<QuestionFamiliarityCounts> GetQuestionFamiliarityCountsAsync(string userId, FamiliarityCountsRequest model)
+        {
+            IQueryable<Question> candidateQuestions = GetCandidateQuestionsAsync(model.QuestionType, model.SpecialityIds, model.AllSpecialitiesSelected);
+
+            var counts = new QuestionFamiliarityCounts()
+            {
+                NewQuestions = await candidateQuestions.CountAsync(NewQuestionsPredicate(userId)),
+                IncorrectQuestions = await candidateQuestions.CountAsync(IncorrectQuestionsPredicate(userId)),
+                FlaggedQuestions = await candidateQuestions.CountAsync(FlaggedQuestionsPredicate(userId)),
+                AllQuestions = await candidateQuestions.CountAsync()
+            };
+
+            return counts;
+        }
+
 
         #endregion
     }

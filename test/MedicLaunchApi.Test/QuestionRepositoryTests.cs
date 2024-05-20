@@ -151,7 +151,8 @@ namespace MedicLaunchApi.Tests
                     CorrectAnswerLetter = "A",
                     Explanation = "Paris is the capital of France",
                     ClinicalTips = "None",
-                    LearningPoints = "None"
+                    LearningPoints = "None",
+                    IsSubmitted = true
                 },
                 new()
                 {
@@ -168,7 +169,8 @@ namespace MedicLaunchApi.Tests
                     CorrectAnswerLetter = "C",
                     Explanation = "Berlin is the capital of Germany",
                     ClinicalTips = "None",
-                    LearningPoints = "None"
+                    LearningPoints = "None",
+                    IsSubmitted = true
                 },
                 new()
                 {
@@ -185,7 +187,8 @@ namespace MedicLaunchApi.Tests
                     CorrectAnswerLetter = "B",
                     Explanation = "London is the capital of England",
                     ClinicalTips = "None",
-                    LearningPoints = "None"
+                    LearningPoints = "None",
+                    IsSubmitted = true
                 }
             };
 
