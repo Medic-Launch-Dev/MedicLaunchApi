@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace MedicLaunchApi.Tests
+namespace MedicLaunchApi.Test
 {
     [TestClass]
     public class UserNotificationTests

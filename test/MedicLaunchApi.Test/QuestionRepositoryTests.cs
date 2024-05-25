@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 
-namespace MedicLaunchApi.Tests
+namespace MedicLaunchApi.Test
 {
     [TestClass]
     public class QuestionRepositoryTests
@@ -137,7 +137,7 @@ namespace MedicLaunchApi.Tests
         [TestMethod]
         public async Task CreateQuestionAsync_WithValidRequest_ShouldCreateQuestion()
         {
-            var speciality = new Data.Speciality()
+            var speciality = new Speciality()
             {
                 Id = "1",
                 Name = "Acute Medicine"
@@ -389,7 +389,7 @@ namespace MedicLaunchApi.Tests
 
             var questionsResult = await questionRepository.FilterQuestionsAsync(filterRequest, "1");
             Assert.IsNotNull(questionsResult);
-            
+
             var allAreGeneralQuestions = questionsResult.All(q => q.QuestionType == "General");
             Assert.IsTrue(allAreGeneralQuestions);
         }
@@ -575,7 +575,7 @@ namespace MedicLaunchApi.Tests
         #region Sample data
         private async Task AddThreeTestQuestions()
         {
-            var speciality = new Data.Speciality()
+            var speciality = new Speciality()
             {
                 Id = "1",
                 Name = "Acute Medicine"
