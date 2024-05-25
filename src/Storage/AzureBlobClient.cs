@@ -131,7 +131,7 @@ namespace MedicLaunchApi.Storage
             return await UploadItemAsync(blobClient, item, cancellationToken, tags);
         }
 
-        public async Task<string> UploadImageAsyc(IFormFile file)
+        public async Task<string> UploadImageAsync(IFormFile file)
         {
             this.logger.LogInformation($"Uploading file {file.FileName}");
             var fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
