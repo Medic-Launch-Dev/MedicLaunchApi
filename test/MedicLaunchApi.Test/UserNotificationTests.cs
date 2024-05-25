@@ -13,7 +13,6 @@ namespace MedicLaunchApi.Test
         private NotificationRepository notificationRepository;
         private ApplicationDbContext context;
 
-
         [TestInitialize]
         public void Setup()
         {
