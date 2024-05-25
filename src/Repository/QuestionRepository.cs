@@ -24,7 +24,7 @@ namespace MedicLaunchApi.Repository
         public async Task CreateQuestionAsync(QuestionViewModel model, string currentUserId)
         {
             var id = model.Id ?? Guid.NewGuid().ToString();
-            var questionCode = await GenerateQuestionCode(model.SpecialityId);
+            var questionCode = await GenerateQuestionCodeAsync(model.SpecialityId);
             var question = new MedicLaunchApi.Data.Question
             {
                 Id = id,
@@ -86,13 +86,13 @@ namespace MedicLaunchApi.Repository
             question.UpdatedBy = userId;
             question.SpecialityId = model.SpecialityId;
             question.QuestionType = Enum.Parse<Data.QuestionType>(model.QuestionType);
-            question.Code = await GenerateQuestionCode(model.SpecialityId);
+            question.Code = await GenerateQuestionCodeAsync(model.SpecialityId);
 
             this.dbContext.Questions.Update(question);
             await this.dbContext.SaveChangesAsync();
         }
 
-        public async Task<string> GenerateQuestionCode(string specialityId)
+        public async Task<string> GenerateQuestionCodeAsync(string specialityId)
         {
             (string name, int count) = await GetQuestionCountInSpeciality(specialityId);
 

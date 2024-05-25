@@ -1,4 +1,5 @@
-﻿namespace MedicLaunchApi.Storage
+﻿
+namespace MedicLaunchApi.Storage
 {
     public interface IAzureBlobClient
     {
@@ -15,5 +16,6 @@
         Task<IEnumerable<TItem>> GetAllItemsAsync<TItem>(string folderPath, CancellationToken cancellationToken);
 
         Task<TItem> CreateOrUpdateItem<TItem>(string fullPath, TItem item, CancellationToken cancellationToken, Dictionary<string, string> tags = null);
+        Task<string> UploadImageAsync(IFormFile file);
     }
 }

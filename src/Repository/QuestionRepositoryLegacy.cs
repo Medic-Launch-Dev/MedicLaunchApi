@@ -111,7 +111,7 @@ namespace MedicLaunchApi.Repository
 
         public async Task<string> UploadQuestionImage(IFormFile file)
         {
-            return await azureBlobClient.UploadImageAsyc(file);
+            return await azureBlobClient.UploadImageAsync(file);
         }
 
         private string GetPracticeStatsJsonPath(string userId)

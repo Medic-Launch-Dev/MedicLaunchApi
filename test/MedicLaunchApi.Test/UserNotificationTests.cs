@@ -3,6 +3,7 @@ using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace MedicLaunchApi.Test
 {
@@ -15,8 +16,13 @@ namespace MedicLaunchApi.Test
         [TestInitialize]
         public void Setup()
         {
+            var serviceProvider = new ServiceCollection()
+            .AddEntityFrameworkInMemoryDatabase()
+            .BuildServiceProvider();
+
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: "MedicLaunchApi", new InMemoryDatabaseRoot())
+                .UseInternalServiceProvider(serviceProvider)
                 .Options;
 
             context = new ApplicationDbContext(options);
@@ -36,6 +42,8 @@ namespace MedicLaunchApi.Test
 
             var notifications = await context.UserNotifications.ToListAsync();
             Assert.AreEqual(2, notifications.Count);
+            Assert.AreEqual("1", notifications[0].UserId);
+            Assert.AreEqual("2", notifications[1].UserId);
         }
 
         [TestMethod]
@@ -100,6 +108,13 @@ namespace MedicLaunchApi.Test
 
             var updatedNotifications = await notificationRepository.GetNotificationsForUser(userId);
             Assert.IsTrue(updatedNotifications.First().IsRead);
+        }
+
+        [TestCleanup]
+        public void TearDown()
+        {
+            context.Database.EnsureDeleted();
+            context.Dispose();
         }
     }
 }

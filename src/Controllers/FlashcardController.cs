@@ -21,7 +21,7 @@ namespace MedicLaunchApi.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreateFlashcard([FromBody] CreateFlashcardRequest request)
         {
-            await flashcardRepository.CreateFlashcard(request, GetCurrentUserId());
+            await flashcardRepository.CreateFlashcardAsync(request, GetCurrentUserId());
 
             return Ok();
         }
@@ -29,7 +29,7 @@ namespace MedicLaunchApi.Controllers
         [HttpPut("update")]
         public async Task<IActionResult> UpdateFlashcard([FromBody] UpdateFlashcardRequest request)
         {
-            var flashcard = await flashcardRepository.UpdateFlashcard(request, GetCurrentUserId());
+            var flashcard = await flashcardRepository.UpdateFlashcardAsync(request, GetCurrentUserId());
 
             if (flashcard == null)
             {
@@ -63,7 +63,7 @@ namespace MedicLaunchApi.Controllers
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteFlashcard(string id)
         {
-            await flashcardRepository.DeleteFlashcard(id);
+            await flashcardRepository.DeleteFlashcardAsync(id);
 
             return Ok();
         }

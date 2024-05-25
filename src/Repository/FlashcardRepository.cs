@@ -9,14 +9,14 @@ namespace MedicLaunchApi.Repository
     public class FlashcardRepository
     {
         private readonly ApplicationDbContext context;
-        private readonly AzureBlobClient azureBlobClient;
-        public FlashcardRepository(ApplicationDbContext context, AzureBlobClient azureBlobClient)
+        private readonly IAzureBlobClient azureBlobClient;
+        public FlashcardRepository(ApplicationDbContext context, IAzureBlobClient azureBlobClient)
         {
             this.context = context;
             this.azureBlobClient = azureBlobClient;
         }
 
-        public async Task CreateFlashcard(CreateFlashcardRequest request, string userId)
+        public async Task CreateFlashcardAsync(CreateFlashcardRequest request, string userId)
         {
             var flashcard = new Flashcard
             {
@@ -34,7 +34,7 @@ namespace MedicLaunchApi.Repository
             return;
         }
 
-        public async Task<Flashcard> UpdateFlashcard(UpdateFlashcardRequest request, string userId)
+        public async Task<Flashcard> UpdateFlashcardAsync(UpdateFlashcardRequest request, string userId)
         {
             var flashcard = await context.Flashcards.FindAsync(request.Id);
 
@@ -92,7 +92,7 @@ namespace MedicLaunchApi.Repository
             return flashcards.Select(flashcard => CreateFlashCardResponseModel(flashcard)).ToList();
         }
 
-        public async Task DeleteFlashcard(string id)
+        public async Task DeleteFlashcardAsync(string id)
         {
             var flashcard = await context.Flashcards.FindAsync(id);
 
@@ -107,7 +107,7 @@ namespace MedicLaunchApi.Repository
 
         public async Task<string> UploadImageAsync(IFormFile file)
         {
-            return await azureBlobClient.UploadImageAsyc(file);
+            return await azureBlobClient.UploadImageAsync(file);
         }
     }
 }
