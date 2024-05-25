@@ -4,6 +4,7 @@ using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -18,10 +19,15 @@ namespace MedicLaunchApi.Tests
         private ILogger<QuestionController> logger;
 
         [TestInitialize]
-        public async Task Setup()
+        public void Setup()
         {
+            var serviceProvider = new ServiceCollection()
+            .AddEntityFrameworkInMemoryDatabase()
+            .BuildServiceProvider();
+
             var options = new DbContextOptionsBuilder<ApplicationDbContext>()
                 .UseInMemoryDatabase(databaseName: "MedicLaunchApi", new InMemoryDatabaseRoot())
+                .UseInternalServiceProvider(serviceProvider)
                 .Options;
 
             logger = new Mock<ILogger<QuestionController>>().Object;
@@ -556,6 +562,13 @@ namespace MedicLaunchApi.Tests
 
             string userId = "1";
             await questionRepository.CreateQuestionAsync(question, userId);
+        }
+
+        // clean up
+        [TestCleanup]
+        public void Cleanup()
+        {
+            context.Database.EnsureDeleted();
         }
 
 

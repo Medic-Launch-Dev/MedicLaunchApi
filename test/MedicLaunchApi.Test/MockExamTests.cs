@@ -3,7 +3,7 @@ using MedicLaunchApi.Repository;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore;
 
-namespace MedicLaunchApi.Test
+namespace MedicLaunchApi.Tests
 {
     [TestClass]
     public class MockExamTests
