@@ -1,9 +1,11 @@
 ﻿using MedicLaunchApi.Authorization;
+using MedicLaunchApi.Exceptions;
 using MedicLaunchApi.Models;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
 using MedicLaunchApi.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -34,8 +36,16 @@ namespace MedicLaunchApi.Controllers
         [HttpPost("update/{questionId}")]
         public async Task<IActionResult> Update([FromBody] QuestionViewModel model, string questionId)
         {
-            await this.questionRepository.UpdateQuestionAsync(model, questionId, GetCurrentUserId());
-            return Ok();
+            try
+            {
+                bool isAdmin = User.IsInRole(RoleConstants.Admin);
+                await this.questionRepository.UpdateQuestionAsync(model, questionId, GetCurrentUserId(), isAdmin);
+                return Ok();
+            }
+            catch (AccessDeniedException ex)
+            {
+                return Forbid(ex.Message);
+            }
         }
 
         [HttpGet("speciality/{specialityId}")]

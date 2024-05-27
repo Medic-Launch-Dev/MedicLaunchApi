@@ -222,7 +222,7 @@ namespace MedicLaunchApi.Test
             };
 
             string userId = "1";
-            await questionRepository.UpdateQuestionAsync(question, "1", userId);
+            await questionRepository.UpdateQuestionAsync(question, "1", userId, false);
 
             var updatedQuestion = await context.Questions.FindAsync("1");
             Assert.AreEqual("Paris is the capital of France", updatedQuestion.Explanation);
@@ -251,7 +251,7 @@ namespace MedicLaunchApi.Test
             };
 
             string userId = "1";
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => questionRepository.UpdateQuestionAsync(question, "1", userId));
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => questionRepository.UpdateQuestionAsync(question, "1", userId, false));
         }
 
         [TestMethod]

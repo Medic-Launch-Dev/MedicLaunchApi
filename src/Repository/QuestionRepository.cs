@@ -1,5 +1,7 @@
 ﻿using MedicLaunchApi.Data;
+using MedicLaunchApi.Exceptions;
 using MedicLaunchApi.Models.ViewModels;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using PracticeStats = MedicLaunchApi.Models.PracticeStats;
@@ -54,12 +56,17 @@ namespace MedicLaunchApi.Repository
             await dbContext.SaveChangesAsync();
         }
 
-        public async Task UpdateQuestionAsync(QuestionViewModel model, string questionId, string userId)
+        public async Task UpdateQuestionAsync(QuestionViewModel model, string questionId, string userId, bool isAdmin)
         {
             var question = this.dbContext.Questions.Where(m => m.Id == questionId).Include(m => m.Options).FirstOrDefault();
             if (question == null)
             {
                 throw new InvalidOperationException("Question not found");
+            }
+
+            if (question.CreatedBy != userId && !isAdmin)
+            {
+                throw new AccessDeniedException("You are not allowed to update this question");
             }
 
             foreach (var option in question.Options)
