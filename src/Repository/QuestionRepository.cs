@@ -105,9 +105,20 @@ namespace MedicLaunchApi.Repository
             return await dbContext.Questions.ToListAsync<Question>();
         }
 
-        public async Task<IEnumerable<Question>> GetQuestionsInSpecialityAsync(string specialityId)
+        public async Task<IEnumerable<QuestionViewModel>> GetQuestionsInSpecialityAsync(string specialityId)
         {
-            return await dbContext.Questions.Where(q => q.SpecialityId == specialityId).Include(m => m.Options).Include(s => s.Speciality).ToListAsync();
+            var questions = await dbContext.Questions.Where(q => q.SpecialityId == specialityId).ToListAsync();
+            return questions.Select(q => CreateQuestionViewModel(q));
+        }
+        
+        public async Task<IEnumerable<QuestionViewModel>> GetQuestionsToEdit(EditQuestionsRequest request)
+        {
+            QuestionType questionType = Enum.Parse<QuestionType>(request.QuestionType);
+            var questions = await dbContext.Questions.Where(q => q.SpecialityId == request.SpecialityId && q.QuestionType == questionType)
+                .Include(m => m.Speciality)
+                .Include(m => m.Options)
+                .ToListAsync();
+            return questions.Select(q => CreateQuestionViewModel(q));
         }
 
         public async Task<Question> GetQuestionAsync(string questionId)
@@ -232,7 +243,7 @@ namespace MedicLaunchApi.Repository
             return questions;
         }
 
-        private static QuestionViewModel CreateQuestionViewModel(Question question, Note? note)
+        private static QuestionViewModel CreateQuestionViewModel(Question question, Note? note = null)
         {
             if(question.Speciality == null)
             {

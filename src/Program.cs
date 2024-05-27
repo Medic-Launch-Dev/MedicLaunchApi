@@ -29,10 +29,11 @@ namespace MedicLaunchApi
 
             builder.Services.AddAuthorization(options =>
             {
+                // Admin should be able to do whatever other roles can do
                 options.AddPolicy(RoleConstants.Admin, policy => policy.RequireRole(RoleConstants.Admin));
-                options.AddPolicy(RoleConstants.Student, policy => policy.RequireRole(RoleConstants.Student));
-                options.AddPolicy(RoleConstants.QuestionAuthor, policy => policy.RequireRole(RoleConstants.QuestionAuthor));
-                options.AddPolicy(RoleConstants.FlashcardAuthor, policy => policy.RequireRole(RoleConstants.FlashcardAuthor));
+                options.AddPolicy(RoleConstants.Student, policy => policy.RequireRole(RoleConstants.Student, RoleConstants.Admin));
+                options.AddPolicy(RoleConstants.QuestionAuthor, policy => policy.RequireRole(RoleConstants.QuestionAuthor, RoleConstants.Admin));
+                options.AddPolicy(RoleConstants.FlashcardAuthor, policy => policy.RequireRole(RoleConstants.FlashcardAuthor, RoleConstants.Admin));
             });
 
             builder.Services.AddControllers();

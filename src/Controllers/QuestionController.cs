@@ -1,4 +1,5 @@
-﻿using MedicLaunchApi.Models;
+﻿using MedicLaunchApi.Authorization;
+using MedicLaunchApi.Models;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
 using MedicLaunchApi.Services;
@@ -8,7 +9,7 @@ using System.Security.Claims;
 
 namespace MedicLaunchApi.Controllers
 {
-    [Authorize]
+    [Authorize(Policy = RoleConstants.QuestionAuthor)]
     [Route("api/questions")]
     [ApiController]
     public class QuestionController : ControllerBase
@@ -40,10 +41,14 @@ namespace MedicLaunchApi.Controllers
         [HttpGet("speciality/{specialityId}")]
         public async Task<IEnumerable<QuestionViewModel>> GetQuestions(string specialityId)
         {
-            var questions = await this.questionRepository.GetQuestionsInSpecialityAsync(specialityId);
-            return CreateQuestionViewModel(questions);
+            return await this.questionRepository.GetQuestionsInSpecialityAsync(specialityId);
         }
 
+        [HttpPost("list")]
+        public async Task<IEnumerable<QuestionViewModel>> EditQuestions(EditQuestionsRequest request)
+        {
+            return await this.questionRepository.GetQuestionsToEdit(request);
+        }
 
         [HttpDelete("delete/{specialityId}/{questionId}")]
         public async Task<IActionResult> DeleteQuestion(string specialityId, string questionId)
@@ -84,60 +89,6 @@ namespace MedicLaunchApi.Controllers
                 Id = s.Id,
                 Name = s.Name
             });
-        }
-
-        [HttpPost("attemptquestion")]
-        public async Task<IActionResult> AttemptQuestion(QuestionAttemptRequest questionAttempt)
-        {
-            await this.questionRepository.AttemptQuestionAsync(questionAttempt, GetCurrentUserId());
-            return Ok();
-        }
-
-        [HttpPost("flagquestion/{questionId}")]
-        public async Task<IActionResult> FlagQuestion(string questionId)
-        {
-            await this.questionRepository.AddFlaggedQuestionAsync(questionId, GetCurrentUserId());
-            return Ok();
-        }
-
-        [HttpGet("practicestats")]
-        public async Task<PracticeStats> GetPracticeStats()
-        {
-            return await this.questionRepository.GetPracticeStatsAsync(GetCurrentUserId());
-        }
-
-        [HttpPost("filter")]
-        public async Task<IEnumerable<QuestionViewModel>> FilterQuestions(QuestionsFilterRequest filterRequest)
-        {
-            return await this.questionRepository.FilterQuestionsAsync(filterRequest, GetCurrentUserId());
-        }
-
-        [HttpPost("familiaritycounts")]
-        public Task<QuestionFamiliarityCounts> GetQuestionFamiliarityCounts([FromBody] FamiliarityCountsRequest request)
-        {
-            return this.questionRepository.GetQuestionFamiliarityCountsAsync(GetCurrentUserId(), request);
-        }
-
-        private IEnumerable<QuestionViewModel> CreateQuestionViewModel(IEnumerable<MedicLaunchApi.Data.Question> questions)
-        {
-            return questions.Select(q => new QuestionViewModel
-            {
-                Id = q.Id,
-                SpecialityId = q.SpecialityId,
-                QuestionType = q.QuestionType.ToString(),
-                QuestionText = q.QuestionText,
-                Options = q.Options.Select(m => new OptionViewModel()
-                {
-                    Letter = m.Letter,
-                    Text = m.Text
-                }),
-                CorrectAnswerLetter = q.CorrectAnswerLetter,
-                Explanation = q.Explanation,
-                ClinicalTips = q.ClinicalTips,
-                LearningPoints = q.LearningPoints,
-                QuestionCode = q.Code,
-                SpecialityName = q.Speciality.Name
-            }).ToList();
         }
 
         private string GetCurrentUserId()

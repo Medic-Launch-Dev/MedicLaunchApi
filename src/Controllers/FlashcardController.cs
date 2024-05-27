@@ -1,4 +1,5 @@
-﻿using MedicLaunchApi.Models.ViewModels;
+﻿using MedicLaunchApi.Authorization;
+using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,6 +19,7 @@ namespace MedicLaunchApi.Controllers
             this.flashcardRepository = flashcardRepository;
         }
 
+        [Authorize(Policy = RoleConstants.FlashcardAuthor)]
         [HttpPost("create")]
         public async Task<IActionResult> CreateFlashcard([FromBody] CreateFlashcardRequest request)
         {
@@ -26,6 +28,7 @@ namespace MedicLaunchApi.Controllers
             return Ok();
         }
 
+        [Authorize(Policy = RoleConstants.FlashcardAuthor)]
         [HttpPut("update")]
         public async Task<IActionResult> UpdateFlashcard([FromBody] UpdateFlashcardRequest request)
         {
@@ -60,6 +63,7 @@ namespace MedicLaunchApi.Controllers
             return Ok(flashcards);
         }
 
+        [Authorize(Policy = RoleConstants.FlashcardAuthor)]
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteFlashcard(string id)
         {
@@ -68,6 +72,7 @@ namespace MedicLaunchApi.Controllers
             return Ok();
         }
 
+        [Authorize(Policy = RoleConstants.FlashcardAuthor)]
         [HttpPost("upload-image")]
         public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
         {
