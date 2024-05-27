@@ -359,6 +359,11 @@ namespace MedicLaunchApi.Repository
             return counts;
         }
 
+        // TODO: confirm whether this includes mock exam questions
+        public int GetTotalAttemptedQuestionsForUser(string userId)
+        {
+            return dbContext.QuestionAttempts.Count(attempt => attempt.UserId == userId);
+        }
 
         #endregion
     }

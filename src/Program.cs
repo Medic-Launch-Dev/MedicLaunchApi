@@ -1,4 +1,5 @@
 
+using MedicLaunchApi.Authorization;
 using MedicLaunchApi.Data;
 using MedicLaunchApi.Models;
 using MedicLaunchApi.Repository;
@@ -6,7 +7,6 @@ using MedicLaunchApi.Services;
 using MedicLaunchApi.Storage;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace MedicLaunchApi
 {
@@ -22,16 +22,25 @@ namespace MedicLaunchApi
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString, options => options.UseAzureSqlDefaults()));
 
-            builder.Services.AddAuthorization();
             builder.Services.AddIdentityApiEndpoints<MedicLaunchUser>()
+                .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddUserManager<UserManager<MedicLaunchUser>>();
+
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy(RoleConstants.Admin, policy => policy.RequireRole(RoleConstants.Admin));
+                options.AddPolicy(RoleConstants.Student, policy => policy.RequireRole(RoleConstants.Student));
+                options.AddPolicy(RoleConstants.QuestionAuthor, policy => policy.RequireRole(RoleConstants.QuestionAuthor));
+                options.AddPolicy(RoleConstants.FlashcardAuthor, policy => policy.RequireRole(RoleConstants.FlashcardAuthor));
+            });
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddScoped<QuestionRepositoryLegacy>();
+            builder.Services.AddScoped<IAzureBlobClient, AzureBlobClient>();
             builder.Services.AddScoped<AzureBlobClient>();
             builder.Services.AddScoped<PaymentRepository>();
             builder.Services.AddScoped<UserDataRepository>();
@@ -86,7 +95,42 @@ namespace MedicLaunchApi
 
             app.MapControllers();
 
+            SeedRoles(builder.Services).GetAwaiter().GetResult();
+
             app.Run();
+        }
+
+        private static async Task SeedRoles(IServiceCollection services)
+        {
+            RoleManager<IdentityRole> roleManager = services.BuildServiceProvider().GetRequiredService<RoleManager<IdentityRole>>();
+
+            var existingRoles = await roleManager.Roles.ToListAsync();
+            var roles = new List<IdentityRole>
+            {
+                new IdentityRole { Name = RoleConstants.Admin },
+                new IdentityRole { Name = RoleConstants.Student },
+                new IdentityRole { Name = RoleConstants.QuestionAuthor },
+                new IdentityRole { Name = RoleConstants.FlashcardAuthor }
+            };
+
+            foreach (var role in roles)
+            {
+                if (!existingRoles.Any(r => r.Name == role.Name))
+                {
+                    await roleManager.CreateAsync(role);
+                }
+            }
+
+            var userManager = services.BuildServiceProvider().GetRequiredService<UserManager<MedicLaunchUser>>();
+            var adminUsers = new string[] { "sajjaadkhalil@gmail.com", "khalid.abdilahi91@gmail.com", "wryhook@gmail.com" };
+            foreach (var email in adminUsers)
+            {
+                var user = await userManager.FindByEmailAsync(email);
+                if (user != null)
+                {
+                    await userManager.AddToRoleAsync(user, RoleConstants.Admin);
+                }
+            }
         }
     }
 }

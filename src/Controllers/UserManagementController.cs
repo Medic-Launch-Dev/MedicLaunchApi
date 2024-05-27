@@ -1,4 +1,5 @@
-﻿using MedicLaunchApi.Common;
+﻿using MedicLaunchApi.Authorization;
+using MedicLaunchApi.Common;
 using MedicLaunchApi.Models;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
@@ -9,34 +10,28 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MedicLaunchApi.Controllers
 {
-    [Authorize]
     [Route("api/users")]
     [ApiController]
+    [Authorize(Policy = RoleConstants.Admin)]
     public class UserManagementController : ControllerBase
     {
         private readonly UserManager<MedicLaunchUser> userManager;
         private readonly PaymentService paymentService;
-        private readonly UserDataRepository userRepository;
-        private readonly QuestionRepositoryLegacy questionRepository;
 
-        public UserManagementController(UserManager<MedicLaunchUser> signInManager, PaymentService paymentService, UserDataRepository userRepository, QuestionRepositoryLegacy questionRepository)
+        public UserManagementController(UserManager<MedicLaunchUser> signInManager, PaymentService paymentService)
         {
             this.userManager = signInManager;
             this.paymentService = paymentService;
-            this.userRepository = userRepository;
-            this.questionRepository = questionRepository;
         }
 
         [HttpGet("list")]
-        // TODO: make sure only admin (i.e. sajjaad can do this)
         public async Task<IActionResult> GetUserProfiles()
         {
             var users = this.userManager.Users.ToList();
-            var userProfiles = new List<UserProfileModel>();
-            var tasks = users.Select(async user =>
-            {
+            var userProfiles = new List<UserProfileForAdmin>();
+            var tasks = users.Select(user => {
                 var subscriptionPlan = user.SubscriptionPlanId != null ? PaymentHelper.GetSubscriptionPlan(user.SubscriptionPlanId) : null;
-                var userProfile = new UserProfileModel
+                var userProfile = new UserProfileForAdmin
                 {
                     Id = user.Id,
                     DisplayName = user.DisplayName,
@@ -46,10 +41,10 @@ namespace MedicLaunchApi.Controllers
                     City = user.City ?? string.Empty,
                     SubscribeToPromotions = user.SubscribeToPromotions,
                     SubscriptionMonths = subscriptionPlan != null ? subscriptionPlan.Months.ToString() : "N/A",
-                    SubscriptionPurchaseDate = user.SubscriptionCreatedDate.HasValue ? user.SubscriptionCreatedDate.Value.ToUniversalTime().ToString() : string.Empty,
-                    QuestionsCompleted = await GetQuestionsCompleted(user.Id)
+                    SubscriptionPurchaseDate = user.SubscriptionCreatedDate.HasValue ? user.SubscriptionCreatedDate.Value.ToUniversalTime().ToString() : string.Empty
                 };
                 userProfiles.Add(userProfile);
+                return Task.CompletedTask;
             });
 
             await Task.WhenAll(tasks);
@@ -58,7 +53,6 @@ namespace MedicLaunchApi.Controllers
         }
 
         [HttpPost("update")]
-        // TODO: make sure only admin (i.e. sajjaad can do this)
         public async Task<IActionResult> UpdateUserProfile([FromBody] UpdateUserRequest userProfile)
         {
             var user = await this.userManager.FindByIdAsync(userProfile.Id);
@@ -86,7 +80,6 @@ namespace MedicLaunchApi.Controllers
         }
 
         [HttpPost("resetuserpassword")]
-        // TODO: make sure only admin (i.e. sajjaad can do this)
         public async Task<IActionResult> ResetUserPassword([FromBody] ResetUserPasswordRequest resetPasswordRequest)
         {
             var user = await this.userManager.FindByIdAsync(resetPasswordRequest.UserId);
@@ -108,7 +101,6 @@ namespace MedicLaunchApi.Controllers
         }
 
         [HttpPost("delete/{userId}")]
-        // TODO: make sure only admin (i.e. sajjaad can do this)
         public async Task<IActionResult> DeleteUser(string userId)
         {
             var user = await this.userManager.FindByIdAsync(userId);
@@ -165,12 +157,6 @@ namespace MedicLaunchApi.Controllers
             {
                 return BadRequest(result.Errors);
             }
-        }
-
-        private async Task<int> GetQuestionsCompleted(string userId)
-        {
-            var attemptedQuestions = await this.questionRepository.GetAttemptedQuestionsAsync(userId);
-            return attemptedQuestions.DistinctBy(a => a.QuestionId).Count();
         }
     }
 }
