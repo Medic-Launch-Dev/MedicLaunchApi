@@ -7,6 +7,7 @@ using MedicLaunchApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace MedicLaunchApi.Controllers
 {
@@ -27,28 +28,20 @@ namespace MedicLaunchApi.Controllers
         [HttpGet("list")]
         public async Task<IActionResult> GetUserProfiles()
         {
-            var users = this.userManager.Users.ToList();
-            var userProfiles = new List<UserProfileForAdmin>();
-            var tasks = users.Select(async user => {
-                var subscriptionPlan = user.SubscriptionPlanId != null ? PaymentHelper.GetSubscriptionPlan(user.SubscriptionPlanId) : null;
-                var userProfile = new UserProfileForAdmin
-                {
-                    Id = user.Id,
-                    DisplayName = user.DisplayName,
-                    Email = user.Email ?? string.Empty,
-                    University = user.University,
-                    GraduationYear = user.GraduationYear,
-                    City = user.City ?? string.Empty,
-                    SubscribeToPromotions = user.SubscribeToPromotions,
-                    SubscriptionMonths = subscriptionPlan != null ? subscriptionPlan.Months.ToString() : "N/A",
-                    SubscriptionPurchaseDate = user.SubscriptionCreatedDate.HasValue ? user.SubscriptionCreatedDate.Value.ToUniversalTime().ToString() : string.Empty,
-                    UserRoles = await this.userManager.GetRolesAsync(user)
-                };
-                userProfiles.Add(userProfile);
-                return Task.CompletedTask;
+            var userProfiles = await this.userManager.Users.ToListAsync();
+            var userProfilesForAdmin = userProfiles.Select(async user => new UserProfileForAdmin
+            {
+                Id = user.Id,
+                DisplayName = user.DisplayName,
+                Email = user.Email ?? string.Empty,
+                University = user.University,
+                GraduationYear = user.GraduationYear,
+                City = user.City ?? string.Empty,
+                SubscribeToPromotions = user.SubscribeToPromotions,
+                SubscriptionMonths = user.SubscriptionPlanId != null ? PaymentHelper.GetSubscriptionPlan(user.SubscriptionPlanId).Months.ToString() : "N/A",
+                SubscriptionPurchaseDate = user.SubscriptionCreatedDate.HasValue ? user.SubscriptionCreatedDate.Value.ToUniversalTime().ToString() : string.Empty,
+                UserRoles = await this.userManager.GetRolesAsync(user)
             });
-
-            await Task.WhenAll(tasks);
 
             return Ok(userProfiles);
         }

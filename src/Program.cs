@@ -123,7 +123,7 @@ namespace MedicLaunchApi
             }
 
             var userManager = services.BuildServiceProvider().GetRequiredService<UserManager<MedicLaunchUser>>();
-            var adminUsers = new string[] { "sajjaadkhalil@gmail.com", "khalid.abdilahi91@gmail.com", "wryhook@gmail.com" };
+            var adminUsers = new string[] { "sajjaadkhalil@gmail.com", "khalid.abdilahi91@gmail.com", "wryhook@gmail.com", "admin@mediclaunch.com" };
             foreach (var email in adminUsers)
             {
                 var user = await userManager.FindByEmailAsync(email);
