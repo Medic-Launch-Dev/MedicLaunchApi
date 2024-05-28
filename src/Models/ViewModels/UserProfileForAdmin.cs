@@ -19,5 +19,7 @@
         public string SubscriptionMonths { get; set; }
 
         public string SubscriptionPurchaseDate { get; set; }
+
+        public IList<string> UserRoles { get; set; }
     }
 }

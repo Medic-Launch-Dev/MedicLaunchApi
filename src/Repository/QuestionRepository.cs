@@ -118,14 +118,23 @@ namespace MedicLaunchApi.Repository
             return questions.Select(q => CreateQuestionViewModel(q));
         }
         
-        public async Task<IEnumerable<QuestionViewModel>> GetQuestionsToEdit(EditQuestionsRequest request)
+        public async Task<IEnumerable<QuestionViewModel>> GetQuestionsToEdit(EditQuestionsRequest request, string userId, bool isAdmin)
         {
             QuestionType questionType = Enum.Parse<QuestionType>(request.QuestionType);
-            var questions = await dbContext.Questions.Where(q => q.SpecialityId == request.SpecialityId && q.QuestionType == questionType)
+            var questions = dbContext.Questions.Where(q => q.SpecialityId == request.SpecialityId && q.QuestionType == questionType)
                 .Include(m => m.Speciality)
                 .Include(m => m.Options)
-                .ToListAsync();
-            return questions.Select(q => CreateQuestionViewModel(q));
+                .AsQueryable();
+
+            
+            // If user is not admin, only return questions created by the user
+            if (!isAdmin)
+            {
+                questions = questions.Where(q => q.CreatedBy == userId);
+            }
+
+            var questionsToList = await questions.ToListAsync();
+            return questionsToList.Select(q => CreateQuestionViewModel(q));
         }
 
         public async Task<Question> GetQuestionAsync(string questionId)

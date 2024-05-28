@@ -29,7 +29,7 @@ namespace MedicLaunchApi.Controllers
         {
             var users = this.userManager.Users.ToList();
             var userProfiles = new List<UserProfileForAdmin>();
-            var tasks = users.Select(user => {
+            var tasks = users.Select(async user => {
                 var subscriptionPlan = user.SubscriptionPlanId != null ? PaymentHelper.GetSubscriptionPlan(user.SubscriptionPlanId) : null;
                 var userProfile = new UserProfileForAdmin
                 {
@@ -41,7 +41,8 @@ namespace MedicLaunchApi.Controllers
                     City = user.City ?? string.Empty,
                     SubscribeToPromotions = user.SubscribeToPromotions,
                     SubscriptionMonths = subscriptionPlan != null ? subscriptionPlan.Months.ToString() : "N/A",
-                    SubscriptionPurchaseDate = user.SubscriptionCreatedDate.HasValue ? user.SubscriptionCreatedDate.Value.ToUniversalTime().ToString() : string.Empty
+                    SubscriptionPurchaseDate = user.SubscriptionCreatedDate.HasValue ? user.SubscriptionCreatedDate.Value.ToUniversalTime().ToString() : string.Empty,
+                    UserRoles = await this.userManager.GetRolesAsync(user)
                 };
                 userProfiles.Add(userProfile);
                 return Task.CompletedTask;

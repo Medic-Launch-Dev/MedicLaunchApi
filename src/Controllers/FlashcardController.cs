@@ -1,4 +1,5 @@
 ﻿using MedicLaunchApi.Authorization;
+using MedicLaunchApi.Exceptions;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
 using Microsoft.AspNetCore.Authorization;
@@ -32,14 +33,22 @@ namespace MedicLaunchApi.Controllers
         [HttpPut("update")]
         public async Task<IActionResult> UpdateFlashcard([FromBody] UpdateFlashcardRequest request)
         {
-            var flashcard = await flashcardRepository.UpdateFlashcardAsync(request, GetCurrentUserId());
-
-            if (flashcard == null)
+            try
             {
-                return NotFound();
-            }
+                bool isAdmin = User.IsInRole(RoleConstants.Admin);
+                var flashcard = await flashcardRepository.UpdateFlashcardAsync(request, GetCurrentUserId(), isAdmin);
 
-            return Ok(flashcard);
+                if (flashcard == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(flashcard);
+            }
+            catch (AccessDeniedException ex)
+            {
+                return Forbid(ex.Message);
+            }
         }
 
         [HttpGet("{id}")]
@@ -59,7 +68,6 @@ namespace MedicLaunchApi.Controllers
         public async Task<IActionResult> GetFlashcards()
         {
             var flashcards = await flashcardRepository.GetFlashcards();
-
             return Ok(flashcards);
         }
 

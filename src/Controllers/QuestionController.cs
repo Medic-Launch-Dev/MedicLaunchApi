@@ -57,7 +57,8 @@ namespace MedicLaunchApi.Controllers
         [HttpPost("list")]
         public async Task<IEnumerable<QuestionViewModel>> EditQuestions(EditQuestionsRequest request)
         {
-            return await this.questionRepository.GetQuestionsToEdit(request);
+            bool isAdmin = User.IsInRole(RoleConstants.Admin);
+            return await this.questionRepository.GetQuestionsToEdit(request, GetCurrentUserId(), isAdmin);
         }
 
         [HttpDelete("delete/{specialityId}/{questionId}")]
