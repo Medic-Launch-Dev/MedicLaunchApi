@@ -1,6 +1,6 @@
 ﻿namespace MedicLaunchApi.Models.ViewModels
 {
-    public class UserProfileModel
+    public class MyUserProfile
     {
         public string Id { get; set; }
 

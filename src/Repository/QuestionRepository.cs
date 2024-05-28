@@ -1,5 +1,7 @@
 ﻿using MedicLaunchApi.Data;
+using MedicLaunchApi.Exceptions;
 using MedicLaunchApi.Models.ViewModels;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using PracticeStats = MedicLaunchApi.Models.PracticeStats;
@@ -54,12 +56,17 @@ namespace MedicLaunchApi.Repository
             await dbContext.SaveChangesAsync();
         }
 
-        public async Task UpdateQuestionAsync(QuestionViewModel model, string questionId, string userId)
+        public async Task UpdateQuestionAsync(QuestionViewModel model, string questionId, string userId, bool isAdmin)
         {
             var question = this.dbContext.Questions.Where(m => m.Id == questionId).Include(m => m.Options).FirstOrDefault();
             if (question == null)
             {
                 throw new InvalidOperationException("Question not found");
+            }
+
+            if (question.CreatedBy != userId && !isAdmin)
+            {
+                throw new AccessDeniedException("You are not allowed to update this question");
             }
 
             foreach (var option in question.Options)
@@ -105,9 +112,29 @@ namespace MedicLaunchApi.Repository
             return await dbContext.Questions.ToListAsync<Question>();
         }
 
-        public async Task<IEnumerable<Question>> GetQuestionsInSpecialityAsync(string specialityId)
+        public async Task<IEnumerable<QuestionViewModel>> GetQuestionsInSpecialityAsync(string specialityId)
         {
-            return await dbContext.Questions.Where(q => q.SpecialityId == specialityId).Include(m => m.Options).Include(s => s.Speciality).ToListAsync();
+            var questions = await dbContext.Questions.Where(q => q.SpecialityId == specialityId).ToListAsync();
+            return questions.Select(q => CreateQuestionViewModel(q));
+        }
+        
+        public async Task<IEnumerable<QuestionViewModel>> GetQuestionsToEdit(EditQuestionsRequest request, string userId, bool isAdmin)
+        {
+            QuestionType questionType = Enum.Parse<QuestionType>(request.QuestionType);
+            var questions = dbContext.Questions.Where(q => q.SpecialityId == request.SpecialityId && q.QuestionType == questionType)
+                .Include(m => m.Speciality)
+                .Include(m => m.Options)
+                .AsQueryable();
+
+            
+            // If user is not admin, only return questions created by the user
+            if (!isAdmin)
+            {
+                questions = questions.Where(q => q.CreatedBy == userId);
+            }
+
+            var questionsToList = await questions.ToListAsync();
+            return questionsToList.Select(q => CreateQuestionViewModel(q));
         }
 
         public async Task<Question> GetQuestionAsync(string questionId)
@@ -232,7 +259,7 @@ namespace MedicLaunchApi.Repository
             return questions;
         }
 
-        private static QuestionViewModel CreateQuestionViewModel(Question question, Note? note)
+        private static QuestionViewModel CreateQuestionViewModel(Question question, Note? note = null)
         {
             if(question.Speciality == null)
             {
@@ -359,6 +386,11 @@ namespace MedicLaunchApi.Repository
             return counts;
         }
 
+        // TODO: confirm whether this includes mock exam questions
+        public int GetTotalAttemptedQuestionsForUser(string userId)
+        {
+            return dbContext.QuestionAttempts.Count(attempt => attempt.UserId == userId);
+        }
 
         #endregion
     }

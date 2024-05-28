@@ -1,5 +1,6 @@
 ﻿using MedicLaunchApi.Controllers;
 using MedicLaunchApi.Data;
+using MedicLaunchApi.Exceptions;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
 using Microsoft.EntityFrameworkCore;
@@ -222,7 +223,7 @@ namespace MedicLaunchApi.Test
             };
 
             string userId = "1";
-            await questionRepository.UpdateQuestionAsync(question, "1", userId);
+            await questionRepository.UpdateQuestionAsync(question, "1", userId, false);
 
             var updatedQuestion = await context.Questions.FindAsync("1");
             Assert.AreEqual("Paris is the capital of France", updatedQuestion.Explanation);
@@ -251,7 +252,7 @@ namespace MedicLaunchApi.Test
             };
 
             string userId = "1";
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => questionRepository.UpdateQuestionAsync(question, "1", userId));
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => questionRepository.UpdateQuestionAsync(question, "1", userId, false));
         }
 
         [TestMethod]
@@ -534,6 +535,65 @@ namespace MedicLaunchApi.Test
             Assert.IsTrue(question.IsSubmitted);
         }
 
+        [TestMethod]
+        public async Task UpdateQuestionAsync_WithInvalidUser_ShouldThrowException()
+        {
+            await AddThreeTestQuestions();
+            var updateQuestionRequest = new QuestionViewModel()
+            {
+                Id = "1",
+                SpecialityId = "1",
+                QuestionType = "General",
+                QuestionText = "What is the capital of France?",
+                Options =
+                [
+                    new() { Letter = "A", Text = "Paris" },
+                    new() { Letter = "B", Text = "London" },
+                    new() { Letter = "C", Text = "Berlin" }
+                ],
+                CorrectAnswerLetter = "A",
+                Explanation = "Paris is the capital of France",
+                ClinicalTips = "None",
+                LearningPoints = "None",
+                IsSubmitted = true
+            };
+
+            string userId = "2";
+            await Assert.ThrowsExceptionAsync<AccessDeniedException>(() => questionRepository.UpdateQuestionAsync(updateQuestionRequest, "1", userId, false));
+        }
+
+        [TestMethod]
+        public async Task UpdateQuestionAsync_WithAdminUser_ShouldUpdateQuestion()
+        {
+            await AddThreeTestQuestions();
+            var updateQuestionRequest = new QuestionViewModel()
+            {
+                Id = "1",
+                SpecialityId = "1",
+                QuestionType = "General",
+                QuestionText = "What is the capital of France?",
+                Options =
+                [
+                    new() { Letter = "A", Text = "Paris" },
+                    new() { Letter = "B", Text = "London" },
+                    new() { Letter = "C", Text = "Berlin" }
+                ],
+                CorrectAnswerLetter = "A",
+                Explanation = "Paris is the capital of France",
+                ClinicalTips = "None",
+                LearningPoints = "None",
+                IsSubmitted = true
+            };
+
+            // User id 2 is an admin and didn't create the question
+            string userId = "2";
+            await questionRepository.UpdateQuestionAsync(updateQuestionRequest, "2", userId, true);
+
+            var updatedQuestion = await context.Questions.FindAsync("1");
+            Assert.IsNotNull(updatedQuestion);
+            Assert.AreEqual("Paris is the capital of France", updatedQuestion.Explanation);
+        }
+
         public async Task AddSpeciality(Speciality speciality)
         {
             await questionRepository.AddSpecialityAsync(speciality);
@@ -564,7 +624,6 @@ namespace MedicLaunchApi.Test
             await questionRepository.CreateQuestionAsync(question, userId);
         }
 
-        // clean up
         [TestCleanup]
         public void Cleanup()
         {

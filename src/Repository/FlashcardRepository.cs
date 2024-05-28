@@ -1,5 +1,6 @@
 ﻿using Azure.Core;
 using MedicLaunchApi.Data;
+using MedicLaunchApi.Exceptions;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Storage;
 using Microsoft.EntityFrameworkCore;
@@ -34,13 +35,18 @@ namespace MedicLaunchApi.Repository
             return;
         }
 
-        public async Task<Flashcard> UpdateFlashcardAsync(UpdateFlashcardRequest request, string userId)
+        public async Task<Flashcard> UpdateFlashcardAsync(UpdateFlashcardRequest request, string userId, bool isAdmin)
         {
             var flashcard = await context.Flashcards.FindAsync(request.Id);
 
             if (flashcard == null)
             {
                 return null;
+            }
+
+            if (!isAdmin && flashcard.CreatedBy != userId)
+            {
+                throw new AccessDeniedException("You do not have permission to update this flashcard");
             }
 
             flashcard.Name = request.Name;

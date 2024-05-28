@@ -1,4 +1,5 @@
-﻿using MedicLaunchApi.Models.ViewModels;
+﻿using MedicLaunchApi.Authorization;
+using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,6 +21,7 @@ namespace MedicLaunchApi.Controllers
         }
 
         [HttpPost("create")]
+        [Authorize(Policy = RoleConstants.Admin)]
         public async Task<IActionResult> CreateNotification(CreateNotificationRequest  request)
         {
             await notificationRepository.CreateNotifications(request);
