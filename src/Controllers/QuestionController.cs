@@ -48,12 +48,6 @@ namespace MedicLaunchApi.Controllers
             }
         }
 
-        [HttpGet("speciality/{specialityId}")]
-        public async Task<IEnumerable<QuestionViewModel>> GetQuestions(string specialityId)
-        {
-            return await this.questionRepository.GetQuestionsInSpecialityAsync(specialityId);
-        }
-
         [HttpPost("list")]
         public async Task<IEnumerable<QuestionViewModel>> EditQuestions(EditQuestionsRequest request)
         {

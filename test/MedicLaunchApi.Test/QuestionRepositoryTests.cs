@@ -594,6 +594,56 @@ namespace MedicLaunchApi.Test
             Assert.AreEqual("Paris is the capital of France", updatedQuestion.Explanation);
         }
 
+        [TestMethod]
+        public async Task GetQuestionsInSpecialityAsync_ShouldReturnQuestionsInSpeciality()
+        {
+            var speciality = new Speciality()
+            {
+                Id = "1",
+                Name = "Acute Medicine"
+            };
+
+            var sampleQuestionViewModel = new QuestionViewModel()
+            {
+                Id = "1",
+                SpecialityId = "1",
+                QuestionType = "General",
+                QuestionText = "What is the capital of France?",
+                Options =
+                [
+                    new() { Letter = "A", Text = "Paris" },
+                    new() { Letter = "B", Text = "London" },
+                    new() { Letter = "C", Text = "Berlin" }
+                ],
+                CorrectAnswerLetter = "A",
+                Explanation = "Paris is the capital of France",
+                ClinicalTips = "Sample clinical tips",
+                LearningPoints = "Sample learning points",
+                IsSubmitted = true
+            };
+
+            await questionRepository.AddSpecialityAsync(speciality);
+            await questionRepository.CreateQuestionAsync(sampleQuestionViewModel, "1");
+
+
+            var questions = await questionRepository.GetQuestionsInSpecialityAsync("1");
+            Assert.IsNotNull(questions);
+            Assert.AreEqual(1, questions.Count());
+
+            var firstQuestion = questions.First();
+            Assert.AreEqual("1", firstQuestion.Id);
+            Assert.AreEqual("1", firstQuestion.SpecialityId);
+            Assert.AreEqual("General", firstQuestion.QuestionType);
+
+            // Validate question has options
+            Assert.AreEqual(3, firstQuestion.Options.Count());
+            Assert.AreEqual("A", firstQuestion.CorrectAnswerLetter);
+            Assert.AreEqual("Paris is the capital of France", firstQuestion.Explanation);
+            Assert.AreEqual("Sample clinical tips", firstQuestion.ClinicalTips);
+            Assert.AreEqual("Sample learning points", firstQuestion.LearningPoints);
+            Assert.IsTrue(firstQuestion.IsSubmitted);
+        }
+
         public async Task AddSpeciality(Speciality speciality)
         {
             await questionRepository.AddSpecialityAsync(speciality);
