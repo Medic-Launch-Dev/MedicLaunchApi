@@ -24,7 +24,7 @@ namespace MedicLaunchApi.Controllers
         [HttpPost("start/{mockExamType}")]
         public async Task<IEnumerable<QuestionViewModel>> StartMockExam(string mockExamType)
         {
-            var questions = await questionRepository.GetMockExamQuestionsAsync(mockExamType);
+            var questions = await questionRepository.GetMockExamQuestionsAsync(mockExamType, CurrentUserId);
             await this.mockExamRepository.StartMockExamForUser(CurrentUserId, mockExamType, questions.Count());
 
             return questions;

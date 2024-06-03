@@ -49,7 +49,8 @@ namespace MedicLaunchApi.Repository
                 UpdatedBy = currentUserId,
                 CreatedBy = currentUserId,
                 Code = questionCode,
-                QuestionState = model.IsSubmitted ? Data.QuestionState.Submitted : Data.QuestionState.Draft
+                QuestionState = model.IsSubmitted ? Data.QuestionState.Submitted : Data.QuestionState.Draft,
+                VideoUrl = model.VideoUrl
             };
 
             dbContext.Questions.Add(question);
@@ -94,6 +95,8 @@ namespace MedicLaunchApi.Repository
             question.SpecialityId = model.SpecialityId;
             question.QuestionType = Enum.Parse<Data.QuestionType>(model.QuestionType);
             question.Code = await GenerateQuestionCodeAsync(model.SpecialityId);
+            question.QuestionState = model.IsSubmitted ? Data.QuestionState.Submitted : Data.QuestionState.Draft;
+            question.VideoUrl = model.VideoUrl;
 
             this.dbContext.Questions.Update(question);
             await this.dbContext.SaveChangesAsync();
@@ -236,10 +239,20 @@ namespace MedicLaunchApi.Repository
                              where note.UserId == userId
                              select note;
 
-            var query = from q in result
-                        join n in notesQuery on q.Id equals n.QuestionId into gj
+            // left join questions with flagged questions to mark questions as flagged or not
+            var flaggedQuestionsForUser = dbContext.FlaggedQuestions.Where(fq => fq.UserId == userId).Select(fq => fq.QuestionId);
+
+            // do the left join with flagged questions
+            var questionsWithFlaggedProperty = from q in result
+                                               join fq in flaggedQuestionsForUser on q.Id equals fq into gj
+                                               from flaggedQuestion in gj.DefaultIfEmpty()
+                                               select new { Question = q, IsFlagged = flaggedQuestion != null };
+
+            var query = from q in questionsWithFlaggedProperty
+                        join n in notesQuery on q.Question.Id equals n.QuestionId into gj
                         from note in gj.DefaultIfEmpty()
-                        select CreateQuestionViewModel(q, note);
+                        select CreateQuestionViewModel(q.Question, note, q.IsFlagged);
+
 
             // Apply question ordering. Ordering can be Random or by Speciality
             var questions = await query.ToListAsync();
@@ -259,7 +272,7 @@ namespace MedicLaunchApi.Repository
             return questions;
         }
 
-        private static QuestionViewModel CreateQuestionViewModel(Question question, Note? note = null)
+        private static QuestionViewModel CreateQuestionViewModel(Question question, Note? note = null, bool isFlagged = false)
         {
             if(question.Speciality == null)
             {
@@ -289,7 +302,9 @@ namespace MedicLaunchApi.Repository
                 QuestionCode = question.Code,
                 SpecialityName = question.Speciality.Name,
                 Note = note?.Content,
-                IsSubmitted = question.QuestionState == QuestionState.Submitted
+                IsSubmitted = question.QuestionState == QuestionState.Submitted,
+                IsFlagged = isFlagged,
+                VideoUrl = question.VideoUrl
             };
         }
 
@@ -362,13 +377,25 @@ namespace MedicLaunchApi.Repository
             await dbContext.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<QuestionViewModel>> GetMockExamQuestionsAsync(string mockExamType)
+        public async Task<IEnumerable<QuestionViewModel>> GetMockExamQuestionsAsync(string mockExamType, string userId)
         {
             var questionType = Enum.Parse<QuestionType>(mockExamType);
-            return await dbContext.Questions.Where(q => q.QuestionType == questionType && q.QuestionState == QuestionState.Submitted)
+            var mockQuestions = dbContext.Questions.Where(q => q.QuestionType == questionType && q.QuestionState == QuestionState.Submitted)
                 .Include(m => m.Speciality)
                 .Include(m => m.Options)
-                .Select(q => CreateQuestionViewModel(q, null)).ToListAsync();
+                .AsQueryable();
+
+            // left join mockQuestions with flagged questions
+            var flaggedQuestionsForUser = dbContext.FlaggedQuestions.Where(fq => fq.UserId == userId).Select(fq => fq.QuestionId);
+
+            var questionsWithFlaggedProperty = from q in mockQuestions
+                                               join fq in flaggedQuestionsForUser on q.Id equals fq into gj
+                                               from flaggedQuestion in gj.DefaultIfEmpty()
+                                               select new { Question = q, IsFlagged = flaggedQuestion != null };
+            
+            var result = from q in questionsWithFlaggedProperty
+                        select CreateQuestionViewModel(q.Question, null, q.IsFlagged);
+            return await result.ToListAsync();
         }
 
         public async Task<QuestionFamiliarityCounts> GetQuestionFamiliarityCountsAsync(string userId, FamiliarityCountsRequest model)
@@ -390,6 +417,18 @@ namespace MedicLaunchApi.Repository
         public int GetTotalAttemptedQuestionsForUser(string userId)
         {
             return dbContext.QuestionAttempts.Count(attempt => attempt.UserId == userId);
+        }
+
+        public async Task RemoveFlaggedQuestionAsync(string questionId, string currentUserId)
+        {
+            var flaggedQuestion = await dbContext.FlaggedQuestions.FirstOrDefaultAsync(fq => fq.QuestionId == questionId && fq.UserId == currentUserId);
+            if (flaggedQuestion == null)
+            {
+                return;
+            }
+
+            dbContext.FlaggedQuestions.Remove(flaggedQuestion);
+            await dbContext.SaveChangesAsync();
         }
 
         #endregion

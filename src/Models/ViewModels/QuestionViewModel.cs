@@ -27,6 +27,10 @@
         public string? SpecialityName { get; set; }
 
         public string? Note { get; set; }
+
+        public bool IsFlagged { get; set; }
+
+        public string? VideoUrl { get; set; }
     }
 
     public class OptionViewModel
