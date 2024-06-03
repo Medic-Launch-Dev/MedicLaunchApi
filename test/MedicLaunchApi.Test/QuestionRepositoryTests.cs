@@ -710,6 +710,74 @@ namespace MedicLaunchApi.Test
             Assert.AreEqual("https://www.youtube.com/watch?v=321", updatedQuestionResult.VideoUrl);
         }
 
+        // Test resetting user practice
+        [TestMethod]
+        public async Task ResetUserPractice_ShouldResetUserPractice()
+        {
+            await AddThreeTestQuestions();
+            await AddQuestionAttempts();
+
+            await questionRepository.ResetUserPracticeAsync("1");
+
+            var practiceStats = await questionRepository.GetPracticeStatsAsync("1");
+            Assert.IsNotNull(practiceStats);
+            Assert.AreEqual(0, practiceStats.TotalIncorrect);
+            Assert.AreEqual(0, practiceStats.TotalCorrect);
+            Assert.AreEqual(0, practiceStats.TotalFlagged);
+
+            // flagged questions should be empty
+            var filterRequest = new QuestionsFilterRequest()
+            {
+                SpecialityIds = ["1"],
+                QuestionType = "General",
+                Familiarity = "FlaggedQuestions",
+                SelectionOrder = "Randomized",
+            };
+
+            var questionsResult = await questionRepository.FilterQuestionsAsync(filterRequest, "1");
+            Assert.IsNotNull(questionsResult);
+            Assert.AreEqual(0, questionsResult.Count());
+
+            // incorrect questions should be empty
+            filterRequest = new QuestionsFilterRequest()
+            {
+                SpecialityIds = ["1"],
+                QuestionType = "General",
+                Familiarity = "IncorrectQuestions",
+                SelectionOrder = "Randomized",
+            };
+
+            questionsResult = await questionRepository.FilterQuestionsAsync(filterRequest, "1");
+            Assert.IsNotNull(questionsResult);
+            Assert.AreEqual(0, questionsResult.Count());
+
+            // new questions should NOT be empty
+            filterRequest = new QuestionsFilterRequest()
+            {
+                SpecialityIds = ["1"],
+                QuestionType = "General",
+                Familiarity = "NewQuestions",
+                SelectionOrder = "OrderBySpeciality"
+            };
+
+            var newQuestionsResult = await questionRepository.FilterQuestionsAsync(filterRequest, "1");
+            Assert.IsNotNull(newQuestionsResult);
+            Assert.AreEqual(3, newQuestionsResult.Count());
+
+            // New questions and all questions should be the same
+            filterRequest = new QuestionsFilterRequest()
+            {
+                SpecialityIds = ["1"],
+                QuestionType = "General",
+                Familiarity = "AllQuestions",
+                SelectionOrder = "OrderBySpeciality"
+            };
+
+            var allQuestions = await questionRepository.FilterQuestionsAsync(filterRequest, "1");
+            Assert.IsNotNull(allQuestions);
+            Assert.AreEqual(3, allQuestions.Count());
+        }
+
         public async Task AddSpeciality(Speciality speciality)
         {
             await questionRepository.AddSpecialityAsync(speciality);

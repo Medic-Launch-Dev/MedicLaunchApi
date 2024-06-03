@@ -57,5 +57,13 @@ namespace MedicLaunchApi.Controllers
             await this.questionRepository.RemoveFlaggedQuestionAsync(questionId, CurrentUserId);
             return Ok();
         }
+
+        // Add endpoint to reset attempted and flagged questions for user
+        [HttpPost("reset")]
+        public async Task<IActionResult> ResetQuestions()
+        {
+            await this.questionRepository.ResetUserPracticeAsync(CurrentUserId);
+            return Ok();
+        }
     }
 }

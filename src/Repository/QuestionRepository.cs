@@ -431,6 +431,18 @@ namespace MedicLaunchApi.Repository
             await dbContext.SaveChangesAsync();
         }
 
+        // Reset all questions attempted by the user as well as flagged questions
+        public async Task ResetUserPracticeAsync(string userId)
+        {
+            var attempts = dbContext.QuestionAttempts.Where(attempt => attempt.UserId == userId);
+            dbContext.QuestionAttempts.RemoveRange(attempts);
+
+            var flaggedQuestions = dbContext.FlaggedQuestions.Where(fq => fq.UserId == userId);
+            dbContext.FlaggedQuestions.RemoveRange(flaggedQuestions);
+
+            await dbContext.SaveChangesAsync();
+        }
+
         #endregion
     }
 }
