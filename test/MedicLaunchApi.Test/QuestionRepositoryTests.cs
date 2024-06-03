@@ -282,6 +282,7 @@ namespace MedicLaunchApi.Test
             Assert.AreEqual("Sample clinical tips", question.ClinicalTips);
             Assert.AreEqual("Sample learning points", question.LearningPoints);
             Assert.IsTrue(question.IsSubmitted);
+            Assert.AreEqual("https://www.youtube.com/watch?v=123", question.VideoUrl);
 
             // Check each option is returned correctly
             var optionA = question.Options.First(o => o.Letter == "A");
@@ -518,7 +519,7 @@ namespace MedicLaunchApi.Test
             await AddThreeTestQuestions();
             await AddMockQuestion(mockExamPaper);
 
-            var questionsResult = await questionRepository.GetMockExamQuestionsAsync(mockExamPaper);
+            var questionsResult = await questionRepository.GetMockExamQuestionsAsync(mockExamPaper, "1");
             Assert.IsNotNull(questionsResult);
             Assert.AreEqual(1, questionsResult.Count());
 
@@ -644,6 +645,71 @@ namespace MedicLaunchApi.Test
             Assert.IsTrue(firstQuestion.IsSubmitted);
         }
 
+        // Verify that all fields are updated when a question is updated
+        [TestMethod]
+        public async Task UpdateQuestionAsync_ShouldUpdateAllFields()
+        {
+            var speciality = new Speciality()
+            {
+                Id = "1",
+                Name = "Acute Medicine"
+            };
+
+            await questionRepository.AddSpecialityAsync(speciality);
+
+            var newQuestion = new QuestionViewModel()
+            {
+                Id = "1",
+                SpecialityId = "1",
+                QuestionType = "General",
+                QuestionText = "What is the capital of France?",
+                Options =
+                [
+                    new() { Letter = "A", Text = "Paris" },
+                    new() { Letter = "B", Text = "London" },
+                    new() { Letter = "C", Text = "Berlin" }
+                ],
+                CorrectAnswerLetter = "A",
+                Explanation = "Paris is the capital of France",
+                ClinicalTips = "Sample clinical tips",
+                LearningPoints = "Sample learning points",
+                IsSubmitted = false,
+                VideoUrl = "https://www.youtube.com/watch?v=123"
+            };
+
+            await questionRepository.CreateQuestionAsync(newQuestion, "1");
+
+            var updatedQuestion = new QuestionViewModel()
+            {
+                Id = "1",
+                SpecialityId = "1",
+                QuestionType = "General",
+                QuestionText = "What is the capital of France?",
+                Options =
+                [
+                    new() { Letter = "A", Text = "Paris" },
+                    new() { Letter = "B", Text = "London" },
+                    new() { Letter = "C", Text = "Berlin" }
+                ],
+                CorrectAnswerLetter = "A",
+                Explanation = "Paris is the capital of France",
+                ClinicalTips = "Updated clinical tips",
+                LearningPoints = "Updated learning points",
+                IsSubmitted = true,
+                VideoUrl = "https://www.youtube.com/watch?v=321"
+            };
+
+            await questionRepository.UpdateQuestionAsync(updatedQuestion, "1", "1", false);
+            var questionsFiltered = await questionRepository.GetQuestionsInSpecialityAsync("1");
+            var updatedQuestionResult = questionsFiltered.First();
+
+            // assert that all fields are updated
+            Assert.AreEqual("Updated clinical tips", updatedQuestionResult.ClinicalTips);
+            Assert.AreEqual("Updated learning points", updatedQuestionResult.LearningPoints);
+            Assert.IsTrue(updatedQuestionResult.IsSubmitted);
+            Assert.AreEqual("https://www.youtube.com/watch?v=321", updatedQuestionResult.VideoUrl);
+        }
+
         public async Task AddSpeciality(Speciality speciality)
         {
             await questionRepository.AddSpecialityAsync(speciality);
@@ -710,7 +776,8 @@ namespace MedicLaunchApi.Test
                     Explanation = "Paris is the capital of France",
                     ClinicalTips = "Sample clinical tips",
                     LearningPoints = "Sample learning points",
-                    IsSubmitted = true
+                    IsSubmitted = true,
+                    VideoUrl = "https://www.youtube.com/watch?v=123"
                 },
                 new()
                 {
@@ -728,7 +795,8 @@ namespace MedicLaunchApi.Test
                     Explanation = "Berlin is the capital of Germany",
                     ClinicalTips = "None",
                     LearningPoints = "None",
-                    IsSubmitted = true
+                    IsSubmitted = true,
+                    VideoUrl = "https://www.youtube.com/watch?v=123"
                 },
                 new()
                 {
@@ -746,7 +814,8 @@ namespace MedicLaunchApi.Test
                     Explanation = "London is the capital of England",
                     ClinicalTips = "None",
                     LearningPoints = "None",
-                    IsSubmitted = true
+                    IsSubmitted = true,
+                    VideoUrl = "https://www.youtube.com/watch?v=123"
                 }
             };
 

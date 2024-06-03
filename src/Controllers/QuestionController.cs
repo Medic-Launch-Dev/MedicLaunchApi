@@ -28,6 +28,22 @@ namespace MedicLaunchApi.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreateQuestion([FromBody] QuestionViewModel model)
         {
+            // Validate that the Options list has at least 4 options. Collect model validation errors
+            if (model.Options != null && model.Options.Count() < 4)
+            {
+                ModelState.AddModelError("Options", "Question must have at least 4 options");
+            }
+
+            if(model.Options?.Any(o => string.IsNullOrWhiteSpace(o.Text)) ?? false)
+            {
+                ModelState.AddModelError("Options", "Each option must have text");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             string currentUserId = GetCurrentUserId();
             await this.questionRepository.CreateQuestionAsync(model, currentUserId);
             return Ok();
@@ -36,6 +52,21 @@ namespace MedicLaunchApi.Controllers
         [HttpPost("update/{questionId}")]
         public async Task<IActionResult> Update([FromBody] QuestionViewModel model, string questionId)
         {
+            if (model.Options != null && model.Options.Count() < 4)
+            {
+                ModelState.AddModelError("Options", "Question must have at least 4 options");
+            }
+
+            if (model.Options?.Any(o => string.IsNullOrWhiteSpace(o.Text)) ?? false)
+            {
+                ModelState.AddModelError("Options", "Each option must have text");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             try
             {
                 bool isAdmin = User.IsInRole(RoleConstants.Admin);

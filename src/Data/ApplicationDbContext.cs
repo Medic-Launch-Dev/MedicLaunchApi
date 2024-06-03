@@ -86,6 +86,8 @@ namespace MedicLaunchApi.Data
         public string SpecialityId { get; set; }
 
         public Speciality Speciality { get; set; }
+
+        public string? VideoUrl { get; set; }
     }
 
     public enum QuestionType

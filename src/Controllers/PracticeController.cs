@@ -50,5 +50,12 @@ namespace MedicLaunchApi.Controllers
         {
             return this.questionRepository.GetQuestionFamiliarityCountsAsync(CurrentUserId, request);
         }
+
+        [HttpPost("unflagquestion/{questionId}")]
+        public async Task<IActionResult> UnflagQuestion(string questionId)
+        {
+            await this.questionRepository.RemoveFlaggedQuestionAsync(questionId, CurrentUserId);
+            return Ok();
+        }
     }
 }
