@@ -29,21 +29,26 @@ namespace MedicLaunchApi.Controllers
         public async Task<IActionResult> GetUserProfiles()
         {
             var userProfiles = await this.userManager.Users.ToListAsync();
-            var userProfilesForAdmin = userProfiles.Select(async user => new UserProfileForAdmin
+            var adminUserProfiles = new List<UserProfileForAdmin>();
+            foreach (var user in userProfiles)
             {
-                Id = user.Id,
-                DisplayName = user.DisplayName,
-                Email = user.Email ?? string.Empty,
-                University = user.University,
-                GraduationYear = user.GraduationYear,
-                City = user.City ?? string.Empty,
-                SubscribeToPromotions = user.SubscribeToPromotions,
-                SubscriptionMonths = user.SubscriptionPlanId != null ? PaymentHelper.GetSubscriptionPlan(user.SubscriptionPlanId).Months.ToString() : "N/A",
-                SubscriptionPurchaseDate = user.SubscriptionCreatedDate.HasValue ? user.SubscriptionCreatedDate.Value.ToUniversalTime().ToString() : string.Empty,
-                UserRoles = await this.userManager.GetRolesAsync(user)
-            });
+                var userRoles = await this.userManager.GetRolesAsync(user);
+                adminUserProfiles.Add(new UserProfileForAdmin
+                {
+                    Id = user.Id,
+                    DisplayName = user.DisplayName,
+                    Email = user.Email ?? string.Empty,
+                    University = user.University,
+                    GraduationYear = user.GraduationYear,
+                    City = user.City ?? string.Empty,
+                    SubscribeToPromotions = user.SubscribeToPromotions,
+                    SubscriptionMonths = user.SubscriptionPlanId != null ? PaymentHelper.GetSubscriptionPlan(user.SubscriptionPlanId).Months.ToString() : "N/A",
+                    SubscriptionPurchaseDate = user.SubscriptionCreatedDate.HasValue ? user.SubscriptionCreatedDate.Value.ToUniversalTime().ToString() : string.Empty,
+                    UserRoles = userRoles
+                });
+            }
 
-            return Ok(userProfiles);
+            return Ok(adminUserProfiles);
         }
 
         [HttpPost("update")]
