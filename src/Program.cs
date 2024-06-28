@@ -60,7 +60,7 @@ namespace MedicLaunchApi
                         policy.AllowAnyHeader()
                             .AllowCredentials()
                             .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH")
-                            .WithOrigins("https://mediclaunchapi.azurewebsites.net", "https://mediclaunchdb.z13.web.core.windows.net", "https://mediclaunch.azureedge.net");
+                            .WithOrigins("https://mediclaunchapi.azurewebsites.net", "https://mediclaunchdb.z13.web.core.windows.net", "https://mediclaunch.azureedge.net", "https://mediclaunchprod.azureedge.net");
                     });
 
                 options.AddPolicy(LocalDevCorsPolicy,
