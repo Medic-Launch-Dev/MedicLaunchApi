@@ -3,6 +3,7 @@ using MedicLaunchApi.Exceptions;
 using MedicLaunchApi.Models.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Collections;
 using System.Linq.Expressions;
 using PracticeStats = MedicLaunchApi.Models.PracticeStats;
 namespace MedicLaunchApi.Repository
@@ -441,6 +442,36 @@ namespace MedicLaunchApi.Repository
             dbContext.FlaggedQuestions.RemoveRange(flaggedQuestions);
 
             await dbContext.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<SpecialityAnalyzerResponse>> GetSpecialityAnalytics(string userId)
+        {
+            var result = (from a in dbContext.QuestionAttempts
+                          join b in dbContext.Questions on a.QuestionId equals b.Id
+                          join c in dbContext.Specialities on b.SpecialityId equals c.Id
+                          where a.UserId == userId
+                          group a by new { c.Id, c.Name } into g
+                          select new
+                          {
+                              g.Key.Id,
+                              g.Key.Name,
+                              IncorrectCount = g.Sum(a => a.IsCorrect ? 0 : 1),
+                              CorrectCount = g.Sum(a => a.IsCorrect ? 1 : 0),
+                              AnsweredQuestionsCount = g.Count(),
+                              TotalQuestionsInSpeciality = (from b2 in dbContext.Questions
+                                                            where b2.SpecialityId == g.Key.Id
+                                                            select b2).Count()
+                          });
+
+            return await result.Select(m => new SpecialityAnalyzerResponse()
+            {
+                SpecialityId = m.Id,
+                Correct = m.CorrectCount,
+                Incorrect = m.IncorrectCount,
+                SpecialityName = m.Name,
+                QuestionsAnswered = m.AnsweredQuestionsCount,
+                TotalQuestions = m.TotalQuestionsInSpeciality
+            }).ToListAsync();
         }
 
         #endregion
