@@ -65,5 +65,12 @@ namespace MedicLaunchApi.Controllers
             await this.questionRepository.ResetUserPracticeAsync(CurrentUserId);
             return Ok();
         }
+
+        [HttpGet("specialityanalytics")]
+        public async Task<IActionResult> GetSpecialityAnalytics()
+        {
+            var result = await this.questionRepository.GetSpecialityAnalytics(CurrentUserId);
+            return Ok(result );
+        }
     }
 }
