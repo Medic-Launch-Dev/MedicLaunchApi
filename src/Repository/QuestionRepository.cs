@@ -444,7 +444,7 @@ namespace MedicLaunchApi.Repository
             await dbContext.SaveChangesAsync();
         }
 
-        public async Task<IEnumerable<SpecialityAnalyzerResponse>> GetSpecialityAnalytics(string userId)
+        public async Task<List<SpecialityAnalyzerResponse>> GetSpecialityAnalytics(string userId)
         {
             var result = (from a in dbContext.QuestionAttempts
                           join b in dbContext.Questions on a.QuestionId equals b.Id
