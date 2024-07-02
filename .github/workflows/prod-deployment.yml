@@ -26,8 +26,7 @@ env:
 
 on:
   push:
-    branches: [ "production_release" ]
-  workflow_dispatch:
+    tags: [ 'v*.*.*' ]
 
 permissions:
   contents: read
