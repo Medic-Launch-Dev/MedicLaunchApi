@@ -20,7 +20,7 @@
 name: Build and deploy to production
 
 env:
-  AZURE_WEBAPP_NAME: MedicLaunchApi    # set this to the name of your Azure Web App
+  AZURE_WEBAPP_NAME: MedicLaunchApiProd    # set this to the name of your Azure Web App
   AZURE_WEBAPP_PACKAGE_PATH: '.'      # set this to the path to your web app project, defaults to the repository root
   DOTNET_VERSION: '8.0'                 # set this to the .NET Core version to use
 
@@ -81,6 +81,6 @@ jobs:
           id: deploy-to-webapp-prod
           uses: azure/webapps-deploy@v2
           with:
-            app-name: MedicLaunchApiProd
+            app-name: ${{ env.AZURE_WEBAPP_NAME }}
             publish-profile: ${{ secrets.AZURE_PRODUCTION_DEPLOYMENT_PROFILE }}
             package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
