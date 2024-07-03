@@ -11,7 +11,6 @@ using System.Security.Claims;
 
 namespace MedicLaunchApi.Controllers
 {
-    [Authorize(Policy = RoleConstants.QuestionAuthor)]
     [Route("api/questions")]
     [ApiController]
     public class QuestionController : ControllerBase
@@ -25,6 +24,7 @@ namespace MedicLaunchApi.Controllers
             this.questionRepository = questionRepository;
         }
 
+        [Authorize(Policy = RoleConstants.QuestionAuthor)]
         [HttpPost("create")]
         public async Task<IActionResult> CreateQuestion([FromBody] QuestionViewModel model)
         {
@@ -49,6 +49,7 @@ namespace MedicLaunchApi.Controllers
             return Ok();
         }
 
+        [Authorize(Policy = RoleConstants.QuestionAuthor)]
         [HttpPost("update/{questionId}")]
         public async Task<IActionResult> Update([FromBody] QuestionViewModel model, string questionId)
         {
@@ -79,6 +80,7 @@ namespace MedicLaunchApi.Controllers
             }
         }
 
+        [Authorize(Policy = RoleConstants.QuestionAuthor)]
         [HttpPost("list")]
         public async Task<IEnumerable<QuestionViewModel>> EditQuestions(EditQuestionsRequest request)
         {
@@ -86,6 +88,7 @@ namespace MedicLaunchApi.Controllers
             return await this.questionRepository.GetQuestionsToEdit(request, GetCurrentUserId(), isAdmin);
         }
 
+        [Authorize(Policy = RoleConstants.QuestionAuthor)]
         [HttpDelete("delete/{specialityId}/{questionId}")]
         public async Task<IActionResult> DeleteQuestion(string specialityId, string questionId)
         {
@@ -93,6 +96,7 @@ namespace MedicLaunchApi.Controllers
             return Ok();
         }
 
+        [Authorize(Policy = RoleConstants.QuestionAuthor)]
         [HttpPost("speciality/create")]
         public async Task<IActionResult> CreateSpeciality([FromBody] SpecialityViewModel model)
         {
@@ -105,6 +109,7 @@ namespace MedicLaunchApi.Controllers
             return Ok(speciality);
         }
 
+        [Authorize(Policy = RoleConstants.QuestionAuthor)]
         [HttpPost("speciality/bulk-create")]
         public async Task<IActionResult> CreateSpecialities([FromBody] IEnumerable<SpecialityViewModel> specialities)
         {
