@@ -28,7 +28,7 @@ namespace MedicLaunchApi.Repository
                 notificationCreationList.Add(new UserNotification()
                 {
                     Id = Guid.NewGuid().ToString(),
-                    Message = request.Content,
+                    Message = request.Message,
                     UserId = userId,
                     Title = request.Title,
                     CreatedOn = DateTime.UtcNow
