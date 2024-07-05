@@ -219,6 +219,8 @@ namespace MedicLaunchApi.Data
 
         public string Message { get; set; }
 
+        public string Title { get; set; }
+
         public bool IsRead { get; set; }
 
         public DateTime CreatedOn { get; set; }

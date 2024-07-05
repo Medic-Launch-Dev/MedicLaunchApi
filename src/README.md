@@ -14,3 +14,56 @@ Make sure to call the `register` and `login` endpoints first to get a valid bear
 Requests folder:
 ![image](https://github.com/Medic-Launch-Dev/MedicLaunchApi/assets/154400233/9e9d05b5-7776-483e-85fa-dd995f4347c3)
 
+
+
+### Commonly Used `dotnet ef migrations` Commands
+
+- **Add Migration**
+  ```sh
+  dotnet ef migrations add <MigrationName>
+  ```
+
+- **Remove Last Migration**
+  ```sh
+  dotnet ef migrations remove
+  ```
+
+- **Update Database**
+  ```sh
+  dotnet ef database update
+  ```
+
+- **Update Database to Specific Migration**
+  ```sh
+  dotnet ef database update <MigrationName>
+  ```
+
+- **List Migrations**
+  ```sh
+  dotnet ef migrations list
+  ```
+
+- **Generate SQL Script for Latest Migration**
+  ```sh
+  dotnet ef migrations script
+  ```
+
+- **Generate SQL Script for All Migrations**
+  ```sh
+  dotnet ef migrations script --from 0
+  ```
+
+- **Generate SQL Script for Specific Migrations**
+  ```sh
+  dotnet ef migrations script <FromMigration> <ToMigration>
+  ```
+
+- **Revert Database to Initial State**
+  ```sh
+  dotnet ef database update 0
+  ```
+
+- **Revert Database to previous migration**
+  ```sh
+  dotnet ef database update <PreviousMigrationName>
+  ```

@@ -35,7 +35,7 @@ namespace MedicLaunchApi.Controllers
             return Ok(notifications);
         }
 
-        [HttpPost("mark-as-read")]
+        [HttpPost("mark-as-read/{notificationId}")]
         public async Task<IActionResult> MarkNotificationAsRead(string notificationId)
         {
             await notificationRepository.MarkNotificationAsRead(CurrentUserId, notificationId);

@@ -35,6 +35,7 @@ namespace MedicLaunchApi.Test
             var request = new CreateNotificationRequest()
             {
                 Content = "Test Notification",
+                Title = "Test",
                 UserIds = new string[] { "1", "2" }
             };
 
@@ -52,6 +53,7 @@ namespace MedicLaunchApi.Test
             var request = new CreateNotificationRequest()
             {
                 Content = "Test Notification",
+                Title = "Test",
                 UserIds = new string[] { }
             };
 
@@ -65,6 +67,7 @@ namespace MedicLaunchApi.Test
             var notificationRequest = new CreateNotificationRequest()
             {
                 Content = "Test Notification",
+                Title = "Test",
                 UserIds = new string[] { userId }
             };
 
@@ -72,6 +75,8 @@ namespace MedicLaunchApi.Test
 
             var notifications = await notificationRepository.GetNotificationsForUser(userId);
             Assert.AreEqual(1, notifications.Count);
+            Assert.AreEqual("Test", notifications.First().Title);
+            Assert.AreEqual("Test Notification", notifications.First().Message);
         }
 
         [TestMethod]
@@ -80,6 +85,7 @@ namespace MedicLaunchApi.Test
             var notificationRequest = new CreateNotificationRequest()
             {
                 Content = "Test Notification",
+                Title = "Test",
                 UserIds = new string[] { "2" }
             };
 
@@ -97,6 +103,7 @@ namespace MedicLaunchApi.Test
             {
                 Id = Guid.NewGuid().ToString(),
                 Message = "Test Notification",
+                Title = "Test",
                 UserId = userId,
                 CreatedOn = DateTime.UtcNow
             };
