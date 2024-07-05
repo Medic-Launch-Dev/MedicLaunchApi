@@ -34,7 +34,7 @@ namespace MedicLaunchApi.Test
         {
             var request = new CreateNotificationRequest()
             {
-                Content = "Test Notification",
+                Message = "Test Notification",
                 Title = "Test",
                 UserIds = new string[] { "1", "2" }
             };
@@ -52,7 +52,7 @@ namespace MedicLaunchApi.Test
         {
             var request = new CreateNotificationRequest()
             {
-                Content = "Test Notification",
+                Message = "Test Notification",
                 Title = "Test",
                 UserIds = new string[] { }
             };
@@ -66,7 +66,7 @@ namespace MedicLaunchApi.Test
             var userId = "1";
             var notificationRequest = new CreateNotificationRequest()
             {
-                Content = "Test Notification",
+                Message = "Test Notification",
                 Title = "Test",
                 UserIds = new string[] { userId }
             };
@@ -84,7 +84,7 @@ namespace MedicLaunchApi.Test
         {
             var notificationRequest = new CreateNotificationRequest()
             {
-                Content = "Test Notification",
+                Message = "Test Notification",
                 Title = "Test",
                 UserIds = new string[] { "2" }
             };
