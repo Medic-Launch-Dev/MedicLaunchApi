@@ -19,7 +19,7 @@ namespace MedicLaunchApi.Repository
 
             if (request.UserIds == null || request.UserIds.Length == 0)
             {
-                throw new InvalidOperationException("A notification must be associated with at least one users");
+                throw new InvalidOperationException("A notification must be associated with at least one user");
             }
 
             var notificationCreationList = new List<UserNotification>();
@@ -30,6 +30,7 @@ namespace MedicLaunchApi.Repository
                     Id = Guid.NewGuid().ToString(),
                     Message = request.Content,
                     UserId = userId,
+                    Title = request.Title,
                     CreatedOn = DateTime.UtcNow
                 });
             }
@@ -45,9 +46,11 @@ namespace MedicLaunchApi.Repository
             var notificationsForUser = await this.context.UserNotifications.Where(m => m.UserId == userId).ToListAsync();
             return notificationsForUser.Select(notification => new NotificationResponse()
             {
+                Id = notification.Id,
                 Message = notification.Message,
                 CreatedOn = notification.CreatedOn,
                 IsRead = notification.IsRead,
+                Title = notification.Title
             }).ToList();
         }
 
@@ -65,6 +68,7 @@ namespace MedicLaunchApi.Repository
             }
 
             notification.IsRead = true;
+            notification.ReadOn = DateTime.UtcNow;
             await this.context.SaveChangesAsync();
         }
     }
