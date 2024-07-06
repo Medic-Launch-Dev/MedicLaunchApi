@@ -1,10 +1,10 @@
-﻿using Google.Apis.Auth;
-using MedicLaunchApi.Authorization;
+﻿using MedicLaunchApi.Authorization;
 using MedicLaunchApi.Common;
 using MedicLaunchApi.Models;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
 using MedicLaunchApi.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -63,6 +63,7 @@ namespace MedicLaunchApi.Controllers
         }
 
         [HttpGet("myprofile")]
+        [Authorize]
         public async Task<IActionResult> GetMyProfile()
         {
             var user = await this.userManager.GetUserAsync(User);
@@ -83,13 +84,15 @@ namespace MedicLaunchApi.Controllers
                 SubscribeToPromotions = user.SubscribeToPromotions,
                 SubscriptionMonths = subscriptionPlan != null ? subscriptionPlan.Months.ToString() : "N/A",
                 SubscriptionPurchaseDate = user.SubscriptionCreatedDate.HasValue ? user.SubscriptionCreatedDate.Value.ToUniversalTime().ToString() : string.Empty,
-                QuestionsCompleted = questionRepository.GetTotalAttemptedQuestionsForUser(user.Id)
+                QuestionsCompleted = questionRepository.GetTotalAttemptedQuestionsForUser(user.Id),
+                HasActiveSubscription = user.SubscriptionExpiryDate.HasValue && user.SubscriptionExpiryDate.Value > DateTime.UtcNow
             };
 
             return Ok(userProfile);
         }
 
         [HttpGet("roles")]
+        [Authorize]
         public async Task<IActionResult> GetUserRoles()
         {
             var user = await this.userManager.GetUserAsync(User);
@@ -100,6 +103,25 @@ namespace MedicLaunchApi.Controllers
 
             var roles = await this.userManager.GetRolesAsync(user);
             return Ok(roles);
+        }
+
+        [HttpGet("hasactivesubscription")]
+        [Authorize]
+        public async Task<IActionResult> HasActiveSubscription()
+        {
+            var user = await this.userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            // If user is Admin or QuestionAuthor, they have access to all questions
+            if (User.IsInRole(RoleConstants.Admin) || User.IsInRole(RoleConstants.QuestionAuthor))
+            {
+                return Ok(true);
+            }
+
+            return Ok(user.SubscriptionExpiryDate.HasValue && user.SubscriptionExpiryDate.Value > DateTime.UtcNow);
         }
     }
 }

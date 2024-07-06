@@ -1,5 +1,6 @@
 ﻿using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -8,6 +9,7 @@ namespace MedicLaunchApi.Controllers
 {
     [Route("api/note")]
     [ApiController]
+    [Authorize]
     public class NotesController : ControllerBase
     {
         private readonly UserDataRepository userDataRepository;

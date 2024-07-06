@@ -5,6 +5,7 @@ using MedicLaunchApi.Models;
 using MedicLaunchApi.Repository;
 using MedicLaunchApi.Services;
 using MedicLaunchApi.Storage;
+using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -51,7 +52,12 @@ namespace MedicLaunchApi
             builder.Services.AddScoped<NotificationRepository>();
             builder.Services.AddScoped<MockExamRepository>();
 
+            builder.Services.AddOptions<BearerTokenOptions>(IdentityConstants.BearerScheme).Configure(options => {
+                options.BearerTokenExpiration = TimeSpan.FromHours(24);
+            });
+
             var services = builder.Services;
+
             services.AddCors(options =>
             {
                 options.AddPolicy(ProdCorsPolicy,

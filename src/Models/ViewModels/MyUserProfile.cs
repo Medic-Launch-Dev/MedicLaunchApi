@@ -21,5 +21,7 @@
         public string SubscriptionPurchaseDate { get; set; }
 
         public int QuestionsCompleted { get; set; }
+
+        public bool HasActiveSubscription { get; set; }
     }
 }
