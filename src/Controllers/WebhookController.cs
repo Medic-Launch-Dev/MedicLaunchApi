@@ -12,6 +12,7 @@ namespace MedicLaunchApi.Controllers
     public class WebhookController: ControllerBase
     {
         private readonly string stripeWebhookSecret;
+        private readonly string stripeApiKey;
         private readonly ILogger<PaymentController> logger;
         private readonly UserManager<MedicLaunchUser> userManager;
 
@@ -20,6 +21,7 @@ namespace MedicLaunchApi.Controllers
             this.logger = logger;
 
             this.stripeWebhookSecret = Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SECRET") ?? string.Empty;
+            this.stripeApiKey = Environment.GetEnvironmentVariable("STRIPE_API_KEY") ?? string.Empty;
             if (string.IsNullOrEmpty(this.stripeWebhookSecret))
             {
                 throw new Exception("STRIPE_WEBHOOK_SECRET environment variable is not set");
@@ -34,6 +36,7 @@ namespace MedicLaunchApi.Controllers
         {
             try
             {
+                StripeConfiguration.ApiKey = this.stripeApiKey;
                 PaymentIntent? intent = null;
                 Event stripeEvent;
                 try
