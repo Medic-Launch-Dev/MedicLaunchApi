@@ -473,7 +473,139 @@ namespace MedicLaunchApi.Repository
                 TotalQuestions = m.TotalQuestionsInSpeciality
             }).ToListAsync();
         }
+        #endregion
 
+        #region Trial questions
+        public async Task AddTrialQuestionAsync(QuestionViewModel model, string currentUserId)
+        {
+            var id = model.Id ?? Guid.NewGuid().ToString();
+            var questionCode = await GenerateQuestionCodeAsync(model.SpecialityId);
+            var question = new MedicLaunchApi.Data.TrialQuestion
+            {
+                Id = id,
+                SpecialityId = model.SpecialityId,
+                QuestionType = Enum.Parse<Data.QuestionType>(model.QuestionType),
+                QuestionText = model.QuestionText,
+                Options = model.Options.Select(m => new Data.TrialAnswerOption()
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Letter = m.Letter,
+                    Text = m.Text,
+                    TrialQuestionId = id
+                }).ToList(),
+                CorrectAnswerLetter = model.CorrectAnswerLetter,
+                Explanation = model.Explanation,
+                ClinicalTips = model.ClinicalTips,
+                LearningPoints = model.LearningPoints,
+                CreatedOn = DateTime.UtcNow,
+                UpdatedOn = DateTime.UtcNow,
+                UpdatedBy = currentUserId,
+                CreatedBy = currentUserId,
+                Code = questionCode,
+                QuestionState = model.IsSubmitted ? Data.QuestionState.Submitted : Data.QuestionState.Draft,
+                VideoUrl = model.VideoUrl
+            };
+
+            dbContext.TrialQuestions.Add(question);
+            await dbContext.SaveChangesAsync();
+        }
+
+        public async Task UpdateTrialQuestionAsync(QuestionViewModel model, string questionId, string userId, bool isAdmin)
+        {
+            var question = this.dbContext.TrialQuestions.Where(m => m.Id == questionId).Include(m => m.Options).FirstOrDefault();
+            if (question == null)
+            {
+                throw new InvalidOperationException("Question not found");
+            }
+
+            if (question.CreatedBy != userId && !isAdmin)
+            {
+                throw new AccessDeniedException("You are not allowed to update this question");
+            }
+
+            foreach (var option in question.Options)
+            {
+                this.dbContext.Remove(option);
+            }
+
+            question.QuestionText = model.QuestionText;
+            foreach (var option in model.Options)
+            {
+                question.Options.Add(new Data.TrialAnswerOption()
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    Letter = option.Letter,
+                    Text = option.Text,
+                    TrialQuestionId = questionId
+                });
+            }
+            question.CorrectAnswerLetter = model.CorrectAnswerLetter;
+            question.Explanation = model.Explanation;
+            question.ClinicalTips = model.ClinicalTips;
+            question.LearningPoints = model.LearningPoints;
+            question.UpdatedOn = DateTime.UtcNow;
+            question.UpdatedBy = userId;
+            question.SpecialityId = model.SpecialityId;
+            question.QuestionType = Enum.Parse<Data.QuestionType>(model.QuestionType);
+            question.Code = await GenerateQuestionCodeAsync(model.SpecialityId);
+            question.QuestionState = model.IsSubmitted ? Data.QuestionState.Submitted : Data.QuestionState.Draft;
+            question.VideoUrl = model.VideoUrl;
+
+            this.dbContext.TrialQuestions.Update(question);
+            await this.dbContext.SaveChangesAsync();
+        }
+
+        private static QuestionViewModel CreateTrialQuestionViewModel(TrialQuestion question)
+        {
+            if (question.Speciality == null)
+            {
+                throw new InvalidOperationException("Include speciality information in question retrieval");
+            }
+
+            if (question.Options == null || question.Options.Count == 0)
+            {
+                throw new InvalidOperationException("Include options information in question retrieval");
+            }
+
+            return new QuestionViewModel
+            {
+                Id = question.Id,
+                SpecialityId = question.SpecialityId,
+                QuestionType = question.QuestionType.ToString(),
+                QuestionText = question.QuestionText,
+                Options = question.Options.Select(m => new OptionViewModel()
+                {
+                    Letter = m.Letter,
+                    Text = m.Text
+                }),
+                CorrectAnswerLetter = question.CorrectAnswerLetter,
+                Explanation = question.Explanation,
+                ClinicalTips = question.ClinicalTips,
+                LearningPoints = question.LearningPoints,
+                QuestionCode = question.Code,
+                SpecialityName = question.Speciality.Name,
+                IsSubmitted = question.QuestionState == QuestionState.Submitted,
+                VideoUrl = question.VideoUrl
+            };
+        }
+
+        public async Task<IEnumerable<QuestionViewModel>> GetTrialQuestionsAsync()
+        {
+            var questions = await dbContext.TrialQuestions.Include(m => m.Speciality).Include(m => m.Options).ToListAsync();
+            return questions.Select(q => CreateTrialQuestionViewModel(q));
+        }
+
+        public async Task DeleteTrialQuestionAsync(string questionId)
+        {
+            var question = await dbContext.TrialQuestions.FindAsync(questionId);
+            if (question == null)
+            {
+                throw new Exception("Question not found");
+            }
+
+            dbContext.TrialQuestions.Remove(question);
+            await dbContext.SaveChangesAsync();
+        }
         #endregion
     }
 }
