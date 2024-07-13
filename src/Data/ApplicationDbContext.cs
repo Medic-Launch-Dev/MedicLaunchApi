@@ -24,6 +24,10 @@ namespace MedicLaunchApi.Data
 
         public DbSet<MockExam> MockExams { get; set; }
 
+        public DbSet<TrialQuestion> TrialQuestions { get; set; }
+
+        public DbSet<TrialAnswerOption> TrialAnswerOptions { get; set; }
+
         private readonly ApplicationDbContext context;
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) :
@@ -244,6 +248,47 @@ namespace MedicLaunchApi.Data
         public DateTime StartedOn { get; set; }
 
         public DateTime? CompletedOn { get; set; }
+    }
+
+    [Table("TrialQuestion")]
+    public class TrialQuestion: Audit
+    {
+        public string Id { get; set; }
+
+        public string Code { get; set; }
+
+        public QuestionType QuestionType { get; set; }
+
+        public string QuestionText { get; set; }
+
+        public ICollection<TrialAnswerOption> Options { get; set; } = new List<TrialAnswerOption>();
+
+        public string CorrectAnswerLetter { get; set; }
+
+        public string Explanation { get; set; }
+
+        public string ClinicalTips { get; set; }
+
+        public string LearningPoints { get; set; }
+
+        public QuestionState QuestionState { get; set; }
+
+        public string SpecialityId { get; set; }
+
+        public Speciality Speciality { get; set; }
+
+        public string? VideoUrl { get; set; }
+    }
+
+    [Table("TrialAnswerOption")]
+    public class TrialAnswerOption
+    {
+        public string Id { get; set; }
+        public string Letter { get; set; }
+        public string Text { get; set; }
+
+        public string TrialQuestionId { get; set; }
+        public TrialQuestion Question { get; set; }
     }
 
     public enum MockExamType

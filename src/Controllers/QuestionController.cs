@@ -132,6 +132,76 @@ namespace MedicLaunchApi.Controllers
             });
         }
 
+        [Authorize(Policy = RoleConstants.QuestionAuthor)]
+        [HttpPost("create-trial")]
+        public async Task<IActionResult> CreateTrialQuestion([FromBody] QuestionViewModel model)
+        {
+            // Validate that the Options list has at least 4 options. Collect model validation errors
+            if (model.Options != null && model.Options.Count() < 4)
+            {
+                ModelState.AddModelError("Options", "Question must have at least 4 options");
+            }
+
+            if (model.Options?.Any(o => string.IsNullOrWhiteSpace(o.Text)) ?? false)
+            {
+                ModelState.AddModelError("Options", "Each option must have text");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            await this.questionRepository.AddTrialQuestionAsync(model, GetCurrentUserId());
+            return Ok();
+        }
+
+        [Authorize(Policy = RoleConstants.QuestionAuthor)]
+        [HttpPost("update-trial/{questionId}")]
+        public async Task<IActionResult> UpdateTrial([FromBody] QuestionViewModel model, string questionId)
+        {
+            if (model.Options != null && model.Options.Count() < 4)
+            {
+                ModelState.AddModelError("Options", "Question must have at least 4 options");
+            }
+
+            if (model.Options?.Any(o => string.IsNullOrWhiteSpace(o.Text)) ?? false)
+            {
+                ModelState.AddModelError("Options", "Each option must have text");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                bool isAdmin = User.IsInRole(RoleConstants.Admin);
+                await this.questionRepository.UpdateTrialQuestionAsync(model, questionId, GetCurrentUserId(), isAdmin);
+                return Ok();
+            }
+            catch (AccessDeniedException ex)
+            {
+                return Forbid(ex.Message);
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpGet("trial-questions")]
+        public async Task<IEnumerable<QuestionViewModel>> GetTrialQuestions()
+        {
+            return await this.questionRepository.GetTrialQuestionsAsync();
+        }
+
+        [Authorize(Policy = RoleConstants.QuestionAuthor)]
+        [HttpDelete("delete-trial/{questionId}")]
+        public async Task<IActionResult> DeleteTrialQuestion(string questionId)
+        {
+            await this.questionRepository.DeleteTrialQuestionAsync(questionId);
+            return Ok();
+        }
+
         private string GetCurrentUserId()
         {
             return User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
