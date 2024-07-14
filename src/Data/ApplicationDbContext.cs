@@ -28,6 +28,10 @@ namespace MedicLaunchApi.Data
 
         public DbSet<TrialAnswerOption> TrialAnswerOptions { get; set; }
 
+        public DbSet<Course> Courses { get; set; }
+
+        public DbSet<CoursePurchase> CoursePurchases { get; set; }
+
         private readonly ApplicationDbContext context;
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) :
@@ -48,6 +52,18 @@ namespace MedicLaunchApi.Data
             builder.Entity<MockExam>()
                 .Property(e => e.MockExamType)
                 .HasConversion<string>();
+
+            builder.Entity<Course>()
+                .Property(course => course.CourseType)
+                .HasConversion<string>();
+
+            builder.Entity<Course>()
+               .Property(course => course.Price)
+               .HasPrecision(18, 2); // This is a common precision for money values
+
+            builder.Entity<CoursePurchase>()
+               .Property(course => course.PurchasePrice)
+               .HasPrecision(18, 2);
 
             base.OnModelCreating(builder);
         }
@@ -296,4 +312,41 @@ namespace MedicLaunchApi.Data
         PaperOneMockExam,
         PaperTwoMockExam
     }
+
+    // Add this enum inside the namespace MedicLaunchApi.Data
+    public enum CourseType
+    {
+        LiveCourse,
+        Webinar,
+        OnDemand
+    }
+
+    // Add this class inside the same namespace
+    [Table("Course")]
+    public class Course: Audit
+    {
+        public string Id { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public DateTime CourseDate { get; set; }
+        public decimal Price { get; set; }
+        public string CheckoutLink { get; set; }
+        public CourseType CourseType { get; set; } = CourseType.LiveCourse;
+    }
+
+    [Table("CoursePurchase")]
+    public class CoursePurchase
+    {
+        public string Id { get; set; }
+        public string UserId { get; set; }
+        public string CourseId { get; set; }
+        public decimal PurchasePrice { get; set; }
+        public DateTime PurchaseDate { get; set; }
+
+        // Navigation properties
+        public Course Course { get; set; }
+        // Assuming a User entity exists, otherwise omit or adjust
+        // public User User { get; set; }
+    }
+
 }
