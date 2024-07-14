@@ -8,6 +8,7 @@ using MedicLaunchApi.Storage;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 namespace MedicLaunchApi
 {
@@ -37,7 +38,12 @@ namespace MedicLaunchApi
                 options.AddPolicy(RoleConstants.FlashcardAuthor, policy => policy.RequireRole(RoleConstants.FlashcardAuthor, RoleConstants.Admin));
             });
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -51,6 +57,7 @@ namespace MedicLaunchApi
             builder.Services.AddScoped<FlashcardRepository>();
             builder.Services.AddScoped<NotificationRepository>();
             builder.Services.AddScoped<MockExamRepository>();
+            builder.Services.AddScoped<CoursesRepository>();
 
             builder.Services.AddOptions<BearerTokenOptions>(IdentityConstants.BearerScheme).Configure(options => {
                 options.BearerTokenExpiration = TimeSpan.FromHours(24);
