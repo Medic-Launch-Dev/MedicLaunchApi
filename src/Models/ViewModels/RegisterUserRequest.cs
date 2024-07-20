@@ -21,5 +21,7 @@
         public string? HowDidYouHearAboutUs { get; set; }
 
         public bool SubscribeToPromotions { get; set; }
+
+        public string PhoneNumber { get; set; } = string.Empty;
     }
 }

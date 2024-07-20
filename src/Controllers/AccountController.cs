@@ -42,7 +42,8 @@ namespace MedicLaunchApi.Controllers
                 GraduationYear = user.GraduationYear,
                 City = user.City,
                 HowDidYouHearAboutUs = user.HowDidYouHearAboutUs,
-                SubscribeToPromotions = user.SubscribeToPromotions
+                SubscribeToPromotions = user.SubscribeToPromotions,
+                PhoneNumber = user.PhoneNumber
             };
 
             var result = await this.userManager.CreateAsync(newUser, user.Password);
@@ -77,6 +78,8 @@ namespace MedicLaunchApi.Controllers
             {
                 Id = user.Id,
                 DisplayName = user.DisplayName,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
                 Email = user.Email ?? string.Empty,
                 University = user.University,
                 GraduationYear = user.GraduationYear,
@@ -89,6 +92,35 @@ namespace MedicLaunchApi.Controllers
             };
 
             return Ok(userProfile);
+        }
+
+        [HttpPut("edit")]
+        [Authorize]
+        public async Task<IActionResult> EditProfile([FromBody] RegisterUserRequest user)
+        {
+            var currentUser = await this.userManager.GetUserAsync(User);
+            if (currentUser == null)
+            {
+                return NotFound();
+            }
+
+            currentUser.FirstName = user.FirstName;
+            currentUser.LastName = user.LastName;
+            currentUser.DisplayName = user.DisplayName;
+            currentUser.University = user.University;
+            currentUser.GraduationYear = user.GraduationYear;
+            currentUser.City = user.City;
+            currentUser.PhoneNumber = user.PhoneNumber;
+
+            var result = await this.userManager.UpdateAsync(currentUser);
+            if (result.Succeeded)
+            {
+                return Ok();
+            }
+            else
+            {
+                return BadRequest(result.Errors);
+            }
         }
 
         [HttpGet("roles")]
