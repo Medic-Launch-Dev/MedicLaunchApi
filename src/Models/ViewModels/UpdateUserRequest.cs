@@ -15,5 +15,7 @@
         public int GraduationYear { get; set; }
 
         public string City { get; set; }
+
+        public string PhoneNumber { get; set; } = string.Empty;
     }
 }

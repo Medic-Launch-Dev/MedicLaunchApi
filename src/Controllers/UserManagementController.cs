@@ -36,6 +36,8 @@ namespace MedicLaunchApi.Controllers
                 adminUserProfiles.Add(new UserProfileForAdmin
                 {
                     Id = user.Id,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
                     DisplayName = user.DisplayName,
                     Email = user.Email ?? string.Empty,
                     University = user.University,
@@ -44,7 +46,8 @@ namespace MedicLaunchApi.Controllers
                     SubscribeToPromotions = user.SubscribeToPromotions,
                     SubscriptionMonths = user.SubscriptionPlanId != null ? PaymentHelper.GetSubscriptionPlan(user.SubscriptionPlanId).Months.ToString() : "N/A",
                     SubscriptionPurchaseDate = user.SubscriptionCreatedDate.HasValue ? user.SubscriptionCreatedDate.Value.ToUniversalTime().ToString() : string.Empty,
-                    UserRoles = userRoles
+                    UserRoles = userRoles,
+                    PhoneNumber = user.PhoneNumber ?? string.Empty
                 });
             }
 
@@ -66,6 +69,7 @@ namespace MedicLaunchApi.Controllers
             user.University = userProfile.University;
             user.GraduationYear = userProfile.GraduationYear;
             user.City = userProfile.City;
+            user.PhoneNumber = userProfile.PhoneNumber;
 
             var result = await this.userManager.UpdateAsync(user);
             if (result.Succeeded)
