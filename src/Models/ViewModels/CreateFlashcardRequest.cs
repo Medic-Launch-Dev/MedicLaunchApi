@@ -38,6 +38,15 @@ namespace MedicLaunchApi.Models.ViewModels
 
         public DateTime CreatedOn { get; set; }
 
-        public string? Note { get; set; }
+        public NoteResponse Note { get; set; }
+    }
+
+    public class NoteResponse
+    {
+        public string Id { get; set; }
+
+        public string Content { get; set; }
+
+        public string FlashcardId { get; set; }
     }
 }

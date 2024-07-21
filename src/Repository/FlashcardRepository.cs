@@ -88,21 +88,30 @@ namespace MedicLaunchApi.Repository
                 },
                 CreatedBy = flashcard.CreatedBy,
                 CreatedOn = flashcard.CreatedOn,
-                Note = noteForFlashcard?.Content
+                Note = noteForFlashcard == null ? null : new NoteResponse
+                {
+                    Id = noteForFlashcard.Id,
+                    Content = noteForFlashcard.Content,
+                    FlashcardId = noteForFlashcard.FlashcardId
+                }
             };
         }
 
         public async Task<List<FlashcardResponse>> GetFlashcards(string currentUser)
         {
-            // Get all flashcards and join with notes for the current user
-            var flashcards = await context.Flashcards
-                .Include(m => m.Speciality)
-                .GroupJoin(context.Notes.Where(m => m.UserId == currentUser), flashcard => flashcard.Id, note => note.FlashcardId, (flashcard, notes) => new { flashcard, notes })
-                .SelectMany(m => m.notes.DefaultIfEmpty(), (flashcard, note) => new { flashcard, note })
-                .Select(m => CreateFlashCardResponseModel(m.flashcard.flashcard, m.note))
+            // Get all flashcards, left join with notes for the current user. Make sure duplicate flashcards are not returned
+            var flashcardsQuery = from flashcard in context.Flashcards.Include(m => m.Speciality)
+                                  join note in context.Notes.Where(n => n.UserId == currentUser)
+                                  on flashcard.Id equals note.FlashcardId into flashcardNotes
+                                  from note in flashcardNotes.DefaultIfEmpty()
+                                  select new { Flashcard = flashcard, Note = note };
+
+            var distinctFlashcards = await flashcardsQuery
+                .GroupBy(f => f.Flashcard.Id)
+                .Select(g => g.First())
                 .ToListAsync();
 
-            return flashcards;
+            return distinctFlashcards.Select(f => CreateFlashCardResponseModel(f.Flashcard, f.Note)).ToList();
         }
 
         public async Task DeleteFlashcardAsync(string id)
