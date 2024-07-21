@@ -88,7 +88,8 @@ namespace MedicLaunchApi.Controllers
                 SubscriptionMonths = subscriptionPlan != null ? subscriptionPlan.Months.ToString() : "N/A",
                 SubscriptionPurchaseDate = user.SubscriptionCreatedDate.HasValue ? user.SubscriptionCreatedDate.Value.ToUniversalTime().ToString() : string.Empty,
                 QuestionsCompleted = questionRepository.GetTotalAttemptedQuestionsForUser(user.Id),
-                HasActiveSubscription = user.SubscriptionExpiryDate.HasValue && user.SubscriptionExpiryDate.Value > DateTime.UtcNow
+                HasActiveSubscription = user.SubscriptionExpiryDate.HasValue && user.SubscriptionExpiryDate.Value > DateTime.UtcNow,
+                PhoneNumber = user.PhoneNumber ?? string.Empty
             };
 
             return Ok(userProfile);

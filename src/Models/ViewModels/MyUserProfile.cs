@@ -27,5 +27,7 @@
         public int QuestionsCompleted { get; set; }
 
         public bool HasActiveSubscription { get; set; }
+
+        public string PhoneNumber { get; set; }
     }
 }
