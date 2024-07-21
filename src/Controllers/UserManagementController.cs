@@ -83,7 +83,7 @@ namespace MedicLaunchApi.Controllers
         }
 
         [HttpPost("resetuserpassword")]
-        public async Task<IActionResult> ResetUserPassword([FromBody] ResetUserPasswordRequest resetPasswordRequest)
+        public async Task<IActionResult> ResetUserPassword([FromBody] ResetUserPasswordRequestForAdmin resetPasswordRequest)
         {
             var user = await this.userManager.FindByIdAsync(resetPasswordRequest.UserId);
             if (user == null)

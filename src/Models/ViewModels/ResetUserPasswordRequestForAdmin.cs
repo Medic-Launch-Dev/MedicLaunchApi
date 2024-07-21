@@ -1,6 +1,6 @@
 ﻿namespace MedicLaunchApi.Models.ViewModels
 {
-    public class ResetUserPasswordRequest
+    public class ResetUserPasswordRequestForAdmin
     {
         public string UserId { get; set; }
 

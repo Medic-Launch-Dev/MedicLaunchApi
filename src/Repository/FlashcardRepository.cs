@@ -92,10 +92,17 @@ namespace MedicLaunchApi.Repository
             };
         }
 
-        public async Task<List<FlashcardResponse>> GetFlashcards()
+        public async Task<List<FlashcardResponse>> GetFlashcards(string currentUser)
         {
-            var flashcards = await context.Flashcards.Include(m => m.Speciality).ToListAsync();
-            return flashcards.Select(flashcard => CreateFlashCardResponseModel(flashcard)).ToList();
+            // Get all flashcards and join with notes for the current user
+            var flashcards = await context.Flashcards
+                .Include(m => m.Speciality)
+                .GroupJoin(context.Notes.Where(m => m.UserId == currentUser), flashcard => flashcard.Id, note => note.FlashcardId, (flashcard, notes) => new { flashcard, notes })
+                .SelectMany(m => m.notes.DefaultIfEmpty(), (flashcard, note) => new { flashcard, note })
+                .Select(m => CreateFlashCardResponseModel(m.flashcard.flashcard, m.note))
+                .ToListAsync();
+
+            return flashcards;
         }
 
         public async Task DeleteFlashcardAsync(string id)
