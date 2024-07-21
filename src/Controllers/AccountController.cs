@@ -155,5 +155,26 @@ namespace MedicLaunchApi.Controllers
 
             return Ok(user.SubscriptionExpiryDate.HasValue && user.SubscriptionExpiryDate.Value > DateTime.UtcNow);
         }
+
+        [HttpPost("resetpassword")]
+        [Authorize]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest resetPasswordRequest)
+        {
+            var user = await this.userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var result = await this.userManager.ChangePasswordAsync(user, resetPasswordRequest.CurrentPassword, resetPasswordRequest.NewPassword);
+            if (result.Succeeded)
+            {
+                return Ok();
+            }
+            else
+            {
+                return BadRequest(result.Errors);
+            }
+        }
     }
 }

@@ -67,7 +67,8 @@ namespace MedicLaunchApi.Controllers
         [HttpGet("list")]
         public async Task<IActionResult> GetFlashcards()
         {
-            var flashcards = await flashcardRepository.GetFlashcards();
+            var currentUser = GetCurrentUserId();
+            var flashcards = await flashcardRepository.GetFlashcards(currentUser);
             return Ok(flashcards);
         }
 
