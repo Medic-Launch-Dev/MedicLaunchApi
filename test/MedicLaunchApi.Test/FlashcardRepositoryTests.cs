@@ -54,7 +54,7 @@ namespace MedicLaunchApi.Test
 
             await flashcardRepository.CreateFlashcardAsync(request, "1");
 
-            var flashcards = await flashcardRepository.GetFlashcards();
+            var flashcards = await flashcardRepository.GetFlashcards("1");
             Assert.AreEqual(1, flashcards.Count);
             Assert.AreEqual("Acute Medicine Flashcard", flashcards[0].Name);
             Assert.AreEqual("https://mediclaunch.blob.core.windows.net/flashcards/acute_medicine.jpg", flashcards[0].ImageUrl);
@@ -102,7 +102,7 @@ namespace MedicLaunchApi.Test
 
             await flashcardRepository.UpdateFlashcardAsync(request, "1", false);
 
-            var flashcards = await flashcardRepository.GetFlashcards();
+            var flashcards = await flashcardRepository.GetFlashcards("1");
             Assert.AreEqual(1, flashcards.Count);
             Assert.AreEqual("Acute Medicine Flashcard Updated", flashcards[0].Name);
             Assert.AreEqual("https://mediclaunch.blob.core.windows.net/flashcards/acute_medicine_updated.jpg", flashcards[0].ImageUrl);
@@ -135,7 +135,7 @@ namespace MedicLaunchApi.Test
 
             await flashcardRepository.DeleteFlashcardAsync("1");
 
-            var flashcards = await flashcardRepository.GetFlashcards();
+            var flashcards = await flashcardRepository.GetFlashcards("1");
             Assert.AreEqual(0, flashcards.Count);
         }
 
@@ -208,7 +208,7 @@ namespace MedicLaunchApi.Test
 
             await flashcardRepository.UpdateFlashcardAsync(request, "2", true);
 
-            var flashcards = await flashcardRepository.GetFlashcards();
+            var flashcards = await flashcardRepository.GetFlashcards("1");
             Assert.AreEqual(1, flashcards.Count);
             Assert.AreEqual("Acute Medicine Flashcard Updated", flashcards[0].Name);
             Assert.AreEqual("https://mediclaunch.blob.core.windows.net/flashcards/acute_medicine_updated.jpg", flashcards[0].ImageUrl);
