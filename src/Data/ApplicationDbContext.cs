@@ -49,6 +49,14 @@ namespace MedicLaunchApi.Data
                 .Property(e => e.QuestionState)
                 .HasConversion<string>();
 
+            builder.Entity<TrialQuestion>()
+                .Property(e => e.QuestionType)
+                .HasConversion<string>();
+
+            builder.Entity<TrialQuestion>()
+                .Property(e => e.QuestionState)
+                .HasConversion<string>();
+
             builder.Entity<MockExam>()
                 .Property(e => e.MockExamType)
                 .HasConversion<string>();
