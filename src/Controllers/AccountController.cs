@@ -159,7 +159,7 @@ namespace MedicLaunchApi.Controllers
 
         [HttpPost("resetpassword")]
         [Authorize]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest resetPasswordRequest)
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestForStudent resetPasswordRequest)
         {
             var user = await this.userManager.GetUserAsync(User);
             if (user == null)
