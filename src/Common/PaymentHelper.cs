@@ -22,13 +22,13 @@ namespace MedicLaunchApi.Common
                 {
                     PlanId = "2",
                     Amount = 2000, // £20
-                    Months = 2
+                    Months = 3
                 },
                 new SubscriptionPlan()
                 {
                     PlanId = "3",
-                    Amount = 3000, // £30
-                    Months = 3
+                    Amount = 3500, // £35
+                    Months = 12
                 }
             };
 
