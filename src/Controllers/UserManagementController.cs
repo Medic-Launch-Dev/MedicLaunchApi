@@ -47,7 +47,8 @@ namespace MedicLaunchApi.Controllers
                     SubscriptionMonths = user.SubscriptionPlanId != null ? PaymentHelper.GetSubscriptionPlan(user.SubscriptionPlanId).Months.ToString() : "N/A",
                     SubscriptionPurchaseDate = user.SubscriptionCreatedDate.HasValue ? user.SubscriptionCreatedDate.Value.ToUniversalTime().ToString() : string.Empty,
                     UserRoles = userRoles,
-                    PhoneNumber = user.PhoneNumber ?? string.Empty
+                    PhoneNumber = user.PhoneNumber ?? string.Empty,
+                    IsSubscribed = user.SubscriptionExpiryDate.HasValue && user.SubscriptionExpiryDate.Value > DateTime.UtcNow
                 });
             }
 
@@ -127,7 +128,7 @@ namespace MedicLaunchApi.Controllers
         [HttpPost("add")]
         public async Task<IActionResult> AddUser([FromBody] AddUserRequest user)
         {
-            if(user == null || string.IsNullOrEmpty(user.SubscriptionPlanId))
+            if (user == null || string.IsNullOrEmpty(user.SubscriptionPlanId))
             {
                 return BadRequest("Subscription plan is required");
             }
