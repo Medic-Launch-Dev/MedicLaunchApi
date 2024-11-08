@@ -4,12 +4,13 @@ using MedicLaunchApi.Repository;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Stripe;
+using Stripe.Checkout;
 
 namespace MedicLaunchApi.Controllers
 {
     [Route("api/webhook")]
     [ApiController]
-    public class WebhookController: ControllerBase
+    public class WebhookController : ControllerBase
     {
         private readonly string stripeWebhookSecret;
         private readonly string stripeApiKey;
@@ -34,6 +35,7 @@ namespace MedicLaunchApi.Controllers
         [Route("stripe")]
         public async Task<ActionResult> StripeHook()
         {
+            logger.LogInformation("webhook triggered");
             try
             {
                 StripeConfiguration.ApiKey = this.stripeApiKey;
@@ -61,6 +63,10 @@ namespace MedicLaunchApi.Controllers
                         intent = stripeEvent.Data.Object as PaymentIntent;
 
                         await HandlePaymentSucceeded(intent);
+                        break;
+                    case Events.CheckoutSessionCompleted:
+                        var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
+                        await HandleCheckoutSessionCompleted(session);
                         break;
                     case Events.PaymentIntentPaymentFailed:
                         logger.LogInformation("Payment Failure: {ID}. Details {Details}", intent?.Id, stripeEvent.ToJson());
@@ -110,6 +116,42 @@ namespace MedicLaunchApi.Controllers
                 this.logger.LogError($"Unable to find user with email {customerEmail}");
                 return BadRequest();
             }
+
+            var plan = PaymentHelper.GetSubscriptionPlan(user.SubscriptionPlanId!);
+            user.SubscriptionExpiryDate = DateTime.UtcNow.AddMonths(plan.Months);
+            user.SubscriptionCreatedDate = DateTime.UtcNow;
+            await userManager.UpdateAsync(user);
+            return Ok();
+        }
+
+        private async Task<ActionResult> HandleCheckoutSessionCompleted(Session? session)
+        {
+            if (session == null)
+            {
+                this.logger.LogError("Invalid checkout session");
+                return BadRequest();
+            }
+
+            var customerService = new CustomerService();
+            var customer = await customerService.GetAsync(session.CustomerId);
+
+            if (customer?.Email == null)
+            {
+                this.logger.LogError("Invalid customer email");
+                return BadRequest();
+            }
+
+            string customerEmail = customer.Email;
+
+            // Find user by email using usermanager
+            var user = await userManager.FindByEmailAsync(customerEmail);
+            if (user == null)
+            {
+                this.logger.LogError($"Unable to find user with email {customerEmail}");
+                return BadRequest();
+            }
+
+            this.logger.LogInformation(customerEmail);
 
             var plan = PaymentHelper.GetSubscriptionPlan(user.SubscriptionPlanId!);
             user.SubscriptionExpiryDate = DateTime.UtcNow.AddMonths(plan.Months);

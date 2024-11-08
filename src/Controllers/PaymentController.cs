@@ -35,6 +35,22 @@ namespace MedicLaunchApi.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("create-checkout-session")]
+        public async Task<IActionResult> CreateCheckoutSession(string planId)
+        {
+            try
+            {
+                var sessionUrl = await this.paymentService.CreateCheckoutSession(planId, this.GetCurrentUserId());
+                return Ok(new { sessionUrl });
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex, "Error creating payment intent");
+                return BadRequest(ex.Message);
+            }
+        }
+
         [HttpGet]
         [Route("publishable-key")]
         public IActionResult GetPublishableKey()

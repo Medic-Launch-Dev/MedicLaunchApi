@@ -4,6 +4,8 @@
     {
         public string PlanId { get; set; }
 
+        public string StripePriceId { get; set; }
+
         public long Amount { get; set; }
 
         public int Months { get; set; }
