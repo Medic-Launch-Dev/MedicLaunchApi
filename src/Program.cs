@@ -59,7 +59,8 @@ namespace MedicLaunchApi
             builder.Services.AddScoped<MockExamRepository>();
             builder.Services.AddScoped<CoursesRepository>();
 
-            builder.Services.AddOptions<BearerTokenOptions>(IdentityConstants.BearerScheme).Configure(options => {
+            builder.Services.AddOptions<BearerTokenOptions>(IdentityConstants.BearerScheme).Configure(options =>
+            {
                 options.BearerTokenExpiration = TimeSpan.FromHours(24);
             });
 
@@ -94,15 +95,6 @@ namespace MedicLaunchApi
 
             app.UseHttpsRedirection();
 
-            // TODO: Enable this
-            //if (app.Environment.IsDevelopment())
-            //{
-            //    app.UseCors(LocalDevCorsPolicy);
-            //}
-            //else
-            //{
-            //    app.UseCors(ProdCorsPolicy);
-            //}
             app.UseCors(LocalDevCorsPolicy);
 
             app.UseAuthorization();

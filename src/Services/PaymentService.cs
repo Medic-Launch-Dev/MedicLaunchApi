@@ -3,6 +3,7 @@ using MedicLaunchApi.Controllers;
 using MedicLaunchApi.Models;
 using Microsoft.AspNetCore.Identity;
 using Stripe;
+using Stripe.Checkout;
 
 namespace MedicLaunchApi.Services
 {
@@ -12,10 +13,12 @@ namespace MedicLaunchApi.Services
         private readonly string stripePublishableKey;
         private readonly ILogger<PaymentController> logger;
         private readonly UserManager<MedicLaunchUser> userManager;
+        private readonly IConfiguration configuration;
 
-        public PaymentService(ILogger<PaymentController> logger, UserManager<MedicLaunchUser> userManager)
+        public PaymentService(ILogger<PaymentController> logger, UserManager<MedicLaunchUser> userManager, IConfiguration configuration)
         {
             this.logger = logger;
+            this.configuration = configuration;
             this.stripeApiKey = Environment.GetEnvironmentVariable("STRIPE_API_KEY") ?? string.Empty;
 
             if (string.IsNullOrEmpty(this.stripeApiKey))
@@ -83,6 +86,63 @@ namespace MedicLaunchApi.Services
             }
         }
 
+        public async Task<string> CreateCheckoutSession(string planId, string userId)
+        {
+            try
+            {
+                StripeConfiguration.ApiKey = this.stripeApiKey;
+                var user = await this.userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    this.logger.LogError($"User not found with id {userId}");
+                }
+                else
+                {
+                    user.SubscriptionPlanId = planId;
+                    await this.userManager.UpdateAsync(user);
+                }
+
+                var customerOptions = new CustomerListOptions { Limit = 1, Email = user.Email! };
+                var customerService = new CustomerService();
+                var customers = await customerService.ListAsync(customerOptions);
+                var customer = customers.FirstOrDefault();
+                if (customer == null)
+                {
+                    this.logger.LogError($"Customer not found with email {user.Email}");
+                    throw new Exception("Stripe customer not found");
+                }
+
+                var subscription = PaymentHelper.GetSubscriptionPlan(planId);
+
+                var domain = configuration.GetValue<string>("ReactApp:Url");
+                var options = new SessionCreateOptions
+                {
+                    LineItems = new List<SessionLineItemOptions>
+                {
+                  new SessionLineItemOptions
+                  {
+                    Price = subscription.StripePriceId,
+                    Quantity = 1,
+                  },
+                },
+                    Mode = "payment",
+                    SuccessUrl = domain + "/payment-complete",
+                    CancelUrl = domain + "/subscribe",
+                    AllowPromotionCodes = true,
+                    Customer = customer.Id,
+                };
+                var service = new SessionService();
+                Session session = service.Create(options);
+
+                return session.Url;
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex, "Error creating payment intent");
+                throw;
+            }
+        }
+
         public void CreateStripeCustomer(MedicLaunchUser user)
         {
             try
@@ -102,7 +162,7 @@ namespace MedicLaunchApi.Services
             {
                 this.logger.LogError(ex, "Error creating stripe customer");
             }
-         }
+        }
 
         public string GetPublishKey()
         {
