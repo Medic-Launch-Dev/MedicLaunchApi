@@ -15,21 +15,21 @@ namespace MedicLaunchApi.Common
                 new SubscriptionPlan()
                 {
                     PlanId = "1",
-                    StripePriceId = "price_1QIjrOJUITqc1TPfCumWSsVB",
+                    StripePriceId = "price_1QJ1ueJWpM75Jidqf4LB819i",
                     Amount = 1700, // amount is in cents, so this is £17.00
                     Months = 1
                 },
                 new SubscriptionPlan()
                 {
                     PlanId = "2",
-                    StripePriceId = "price_1PrUcmJUITqc1TPfpYpki2Sk",
+                    StripePriceId = "price_1QJ1vBJWpM75JidqKdhQkXNS",
                     Amount = 2900, // £29
                     Months = 3
                 },
                 new SubscriptionPlan()
                 {
                     PlanId = "3",
-                    StripePriceId = "price_1QIjrhJUITqc1TPf67H4KCC6",
+                    StripePriceId = "price_1QJ1vhJWpM75Jidq2NhXQM1g",
                     Amount = 4200, // £42
                     Months = 12
                 }
