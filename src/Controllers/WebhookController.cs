@@ -133,6 +133,7 @@ namespace MedicLaunchApi.Controllers
             }
 
             var customerService = new CustomerService();
+            this.logger.LogInformation(session.CustomerId);
             var customer = await customerService.GetAsync(session.CustomerId);
 
             if (customer?.Email == null)
