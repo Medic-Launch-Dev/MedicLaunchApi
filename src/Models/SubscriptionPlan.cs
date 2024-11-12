@@ -4,7 +4,7 @@
     {
         public string PlanId { get; set; }
 
-        public string StripePriceId { get; set; }
+        public string LookupKey { get; set; }
 
         public long Amount { get; set; }
 

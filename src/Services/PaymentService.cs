@@ -114,6 +114,19 @@ namespace MedicLaunchApi.Services
 
                 var subscription = PaymentHelper.GetSubscriptionPlan(planId);
 
+                var priceService = new PriceService();
+                var price = await priceService.ListAsync(new PriceListOptions
+                {
+                    LookupKeys = new List<string> { subscription.LookupKey },
+                    Limit = 1,
+                });
+
+                if (!price.Any())
+                {
+                    this.logger.LogError($"Price not found for lookup key {subscription.LookupKey}");
+                    throw new Exception("Stripe price not found");
+                }
+
                 var domain = configuration.GetValue<string>("ReactApp:Url");
                 var options = new SessionCreateOptions
                 {
@@ -121,7 +134,7 @@ namespace MedicLaunchApi.Services
                 {
                   new SessionLineItemOptions
                   {
-                    Price = subscription.StripePriceId,
+                    Price = price.First().Id,
                     Quantity = 1,
                   },
                 },
