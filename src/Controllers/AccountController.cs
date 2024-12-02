@@ -6,6 +6,8 @@ using MedicLaunchApi.Repository;
 using MedicLaunchApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.Data;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MedicLaunchApi.Controllers
@@ -15,20 +17,29 @@ namespace MedicLaunchApi.Controllers
     public class AccountController : ControllerBase
     {
         private readonly UserManager<MedicLaunchUser> userManager;
-        private readonly RoleManager<IdentityRole> roleManager;
         private readonly PaymentService paymentService;
-        private readonly UserDataRepository userRepository;
         private readonly QuestionRepository questionRepository;
-        public AccountController(UserManager<MedicLaunchUser> signInManager, PaymentService paymentService, UserDataRepository userRepository, RoleManager<IdentityRole> roleManager, QuestionRepository questionRepository)
-        {
-            this.userManager = signInManager;
-            this.paymentService = paymentService;
-            this.userRepository = userRepository;
-            this.roleManager = roleManager;
-            this.questionRepository = questionRepository;
-        }
+		private readonly IEmailSender emailSender;
+		private readonly IConfiguration configuration;
+        private readonly ILogger<AccountController> logger;
+		public AccountController(
+            UserManager<MedicLaunchUser> userManager,
+			PaymentService paymentService,
+			QuestionRepository questionRepository,
+			IEmailSender emailSender,
+			IConfiguration configuration,
+			ILogger<AccountController> logger)
+		{
+			this.userManager = userManager;
 
-        [HttpPost("register")]
+			this.paymentService = paymentService;
+			this.questionRepository = questionRepository;
+			this.emailSender = emailSender;
+			this.configuration = configuration;
+			this.logger = logger;
+		}
+
+		[HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterUserRequest user)
         {
             var newUser = new MedicLaunchUser
@@ -55,7 +66,13 @@ namespace MedicLaunchApi.Controllers
                 // Default role is student - use role manager to add roles
                 await this.userManager.AddToRoleAsync(newUser, RoleConstants.Student);
 
-                return Ok();
+				var token = await this.userManager.GenerateEmailConfirmationTokenAsync(newUser);
+				var domain = configuration.GetValue<string>("ReactApp:Url");
+                var confirmationLink = $"{domain}/confirm-email?userId={newUser.Id}&token={token}";
+				var message = $"Please confirm your email by clicking this link: {confirmationLink}";
+				await this.emailSender.SendEmailAsync(newUser.Email, "Confirm Your Email", message);
+
+				return Ok();
             }
             else
             {
@@ -63,7 +80,59 @@ namespace MedicLaunchApi.Controllers
             }
         }
 
-        [HttpGet("myprofile")]
+		[HttpPost("resend-confirmation-email")]
+		public async Task<IActionResult> ResendConfirmationEmail([FromBody] ResendConfirmationEmailRequest request)
+		{
+			var user = await this.userManager.FindByEmailAsync(request.Email);
+			if (user == null)
+			{
+				return NotFound(new { Message = "User not found." });
+			}
+
+			if (await this.userManager.IsEmailConfirmedAsync(user))
+			{
+				return BadRequest(new { Message = "Email is already confirmed." });
+			}
+
+			var token = await this.userManager.GenerateEmailConfirmationTokenAsync(user);
+            this.logger.LogInformation(token);
+			var domain = configuration.GetValue<string>("ReactApp:Url");
+			var confirmationLink = $"{domain}/confirm-email?userId={user.Id}&token={token}";
+			var message = $"Please confirm your email by clicking this link: {confirmationLink}";
+
+			await this.emailSender.SendEmailAsync(user.Email, "Confirm Your Email", message);
+
+			return Ok();
+		}
+
+		[HttpGet("confirm-email")]
+		public async Task<IActionResult> ConfirmEmail(string userId, string token)
+		{
+			if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(token))
+			{
+				return BadRequest("User ID and token are required.");
+			}
+
+			var user = await this.userManager.FindByIdAsync(userId);
+			if (user == null)
+			{
+				return NotFound("User not found.");
+			}
+
+            this.logger.LogInformation(token);
+
+			var result = await this.userManager.ConfirmEmailAsync(user, token);
+			if (result.Succeeded)
+			{
+				return Ok("Email confirmed successfully.");
+			}
+			else
+			{
+				return BadRequest(result.Errors);
+			}
+		}
+
+		[HttpGet("myprofile")]
         [Authorize]
         public async Task<IActionResult> GetMyProfile()
         {

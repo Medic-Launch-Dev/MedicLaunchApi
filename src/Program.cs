@@ -1,4 +1,4 @@
-
+ 
 using MedicLaunchApi.Authorization;
 using MedicLaunchApi.Data;
 using MedicLaunchApi.Models;
@@ -7,6 +7,7 @@ using MedicLaunchApi.Services;
 using MedicLaunchApi.Storage;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
@@ -29,7 +30,15 @@ namespace MedicLaunchApi
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddUserManager<UserManager<MedicLaunchUser>>();
 
-            builder.Services.AddAuthorization(options =>
+            builder.Services.Configure<IdentityOptions>(options =>
+            {
+                options.SignIn.RequireConfirmedEmail = true;
+            });
+
+            builder.Services.AddTransient<IEmailSender, EmailSender>();
+			builder.Services.Configure<AuthMessageSenderOptions>(builder.Configuration);
+
+			builder.Services.AddAuthorization(options =>
             {
                 // Admin should be able to do whatever other roles can do
                 options.AddPolicy(RoleConstants.Admin, policy => policy.RequireRole(RoleConstants.Admin));
@@ -58,6 +67,7 @@ namespace MedicLaunchApi
             builder.Services.AddScoped<NotificationRepository>();
             builder.Services.AddScoped<MockExamRepository>();
             builder.Services.AddScoped<CoursesRepository>();
+
 
             builder.Services.AddOptions<BearerTokenOptions>(IdentityConstants.BearerScheme).Configure(options =>
             {
