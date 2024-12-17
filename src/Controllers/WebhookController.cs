@@ -61,13 +61,12 @@ namespace MedicLaunchApi.Controllers
                 {
                     case Events.PaymentIntentSucceeded:
                         intent = stripeEvent.Data.Object as PaymentIntent;
-
                         await HandlePaymentSucceeded(intent);
                         break;
-                    case Events.CheckoutSessionCompleted:
-                        var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
-                        await HandleCheckoutSessionCompleted(session);
-                        break;
+                    // case Events.CheckoutSessionCompleted:
+                    //     var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
+                    //     await HandleCheckoutSessionCompleted(session);
+                    //     break;
                     case Events.PaymentIntentPaymentFailed:
                         logger.LogInformation("Payment Failure: {ID}. Details {Details}", intent?.Id, stripeEvent.ToJson());
 
@@ -134,6 +133,7 @@ namespace MedicLaunchApi.Controllers
 
             var customerService = new CustomerService();
             this.logger.LogInformation(session.CustomerId);
+            // if (session.PaymentIntent.Status === "succeeded")
             var customer = await customerService.GetAsync(session.CustomerId);
 
             if (customer?.Email == null)
