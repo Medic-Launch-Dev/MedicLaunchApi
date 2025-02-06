@@ -32,7 +32,11 @@ namespace MedicLaunchApi.Data
 
         public DbSet<CoursePurchase> CoursePurchases { get; set; }
 
-        private readonly ApplicationDbContext context;
+		public DbSet<TextbookLesson> TextbookLessons { get; set; }
+
+		public DbSet<TextbookLessonContent> TextbookLessonContents { get; set; }
+
+		private readonly ApplicationDbContext context;
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) :
             base(options)
@@ -356,5 +360,31 @@ namespace MedicLaunchApi.Data
         // Assuming a User entity exists, otherwise omit or adjust
         // public User User { get; set; }
     }
+
+	[Table("TextbookLesson")]
+	public class TextbookLesson : Audit
+	{
+		public string Id { get; set; }
+
+		public string Title { get; set; }
+
+		public string SpecialityId { get; set; }
+
+		public Speciality Speciality { get; set; }
+
+		public ICollection<TextbookLessonContent> Contents { get; set; } = new List<TextbookLessonContent>();
+	}
+
+	[Table("TextbookLessonContent")]
+	public class TextbookLessonContent
+	{
+		public string Id { get; set; }
+
+		public string TextbookLessonId { get; set; }
+		public TextbookLesson TextbookLesson { get; set; }
+
+		public string Heading { get; set; }
+		public string Text { get; set; }
+	}
 
 }
