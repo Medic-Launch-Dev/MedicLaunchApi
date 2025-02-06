@@ -34,9 +34,6 @@ namespace MedicLaunchApi.Models.ViewModels
 
 		public List<TextbookLessonContentResponse> Contents { get; set; }
 
-		public string CreatedBy { get; set; }
-
-		public DateTime CreatedOn { get; set; }
 	}
 
 	public class CreateTextbookLessonContentRequest
@@ -63,6 +60,5 @@ namespace MedicLaunchApi.Models.ViewModels
 
 		public string Text { get; set; }
 
-		public string TextbookLessonId { get; set; }
 	}
 }

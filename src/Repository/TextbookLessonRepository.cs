@@ -126,10 +126,7 @@ namespace MedicLaunchApi.Repository
 					Id = c.Id,
 					Heading = c.Heading,
 					Text = c.Text,
-					TextbookLessonId = lesson.Id
-				}).ToList(),
-				CreatedBy = lesson.CreatedBy,
-				CreatedOn = lesson.CreatedOn
+				}).ToList()
 			};
 		}
 	}

@@ -58,6 +58,7 @@ namespace MedicLaunchApi
             builder.Services.AddScoped<NotificationRepository>();
             builder.Services.AddScoped<MockExamRepository>();
             builder.Services.AddScoped<CoursesRepository>();
+            builder.Services.AddScoped<TextbookLessonRepository>();
 
             builder.Services.AddOptions<BearerTokenOptions>(IdentityConstants.BearerScheme).Configure(options =>
             {
