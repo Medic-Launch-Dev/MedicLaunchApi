@@ -16,14 +16,17 @@ namespace MedicLaunchApi.Repository
 
 		public async Task CreateTextbookLessonAsync(CreateTextbookLessonRequest request, string userId)
 		{
+			var textbookLessonId = Guid.NewGuid().ToString();
+
 			var textbookLesson = new TextbookLesson
 			{
-				Id = Guid.NewGuid().ToString(),
+				Id = textbookLessonId,
 				Title = request.Title,
 				SpecialityId = request.SpecialityId,
 				Contents = request.Contents.Select(c => new TextbookLessonContent
 				{
 					Id = Guid.NewGuid().ToString(),
+					TextbookLessonId = textbookLessonId,
 					Heading = c.Heading,
 					Text = c.Text
 				}).ToList(),
@@ -58,17 +61,71 @@ namespace MedicLaunchApi.Repository
 			textbookLesson.UpdatedBy = userId;
 			textbookLesson.UpdatedOn = DateTime.UtcNow;
 
-			// Remove old content and add updated content
+			// Remove all old content
 			context.TextbookLessonContents.RemoveRange(textbookLesson.Contents);
+
+			// Add the new content
 			textbookLesson.Contents = request.Contents.Select(c => new TextbookLessonContent
 			{
-				Id = string.IsNullOrEmpty(c.Id) ? Guid.NewGuid().ToString() : c.Id,
+				Id = Guid.NewGuid().ToString(), // Generate a new ID for each new content
+				TextbookLessonId = textbookLesson.Id,
 				Heading = c.Heading,
 				Text = c.Text
 			}).ToList();
 
 			await context.SaveChangesAsync();
 			return textbookLesson;
+		}
+
+		public async Task<TextbookLesson> AddTextbookLessonContentAsync(string textbookLessonId, CreateTextbookLessonContentRequest request, string userId, bool isAdmin)
+		{
+			var textbookLesson = await context.TextbookLessons.FindAsync(textbookLessonId);
+
+			if (textbookLesson == null)
+			{
+				return null;
+			}
+
+			if (!isAdmin && textbookLesson.CreatedBy != userId)
+			{
+				throw new AccessDeniedException("You do not have permission to modify this textbook lesson");
+			}
+
+			var newContent = new TextbookLessonContent
+			{
+				Id = Guid.NewGuid().ToString(),
+				TextbookLessonId = textbookLessonId,
+				Heading = request.Heading,
+				Text = request.Text
+			};
+
+			context.TextbookLessonContents.Add(newContent);
+			textbookLesson.UpdatedBy = userId;
+			textbookLesson.UpdatedOn = DateTime.UtcNow;
+
+			await context.SaveChangesAsync();
+			return textbookLesson;
+		}
+
+		public async Task<bool> DeleteTextbookLessonContentAsync(string contentId, string userId, bool isAdmin)
+		{
+			var content = await context.TextbookLessonContents.FindAsync(contentId);
+
+			if (content == null)
+			{
+				return false;
+			}
+
+			var textbookLesson = await context.TextbookLessons.FindAsync(content.TextbookLessonId);
+
+			if (!isAdmin && textbookLesson?.CreatedBy != userId)
+			{
+				throw new AccessDeniedException("You do not have permission to delete this content");
+			}
+
+			context.TextbookLessonContents.Remove(content);
+			await context.SaveChangesAsync();
+			return true;
 		}
 
 		public async Task<TextbookLessonResponse> GetTextbookLessonAsync(string id)
@@ -124,6 +181,7 @@ namespace MedicLaunchApi.Repository
 				Contents = lesson.Contents.Select(c => new TextbookLessonContentResponse
 				{
 					Id = c.Id,
+					TextbookLessonId = c.TextbookLessonId,
 					Heading = c.Heading,
 					Text = c.Text,
 				}).ToList()

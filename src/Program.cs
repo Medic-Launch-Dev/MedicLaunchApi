@@ -40,12 +40,13 @@ namespace MedicLaunchApi
 
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
-            {
-                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-            });
+                {
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+					options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+				});
 
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-            builder.Services.AddEndpointsApiExplorer();
+			// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+			builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddScoped<QuestionRepositoryLegacy>();
             builder.Services.AddScoped<IAzureBlobClient, AzureBlobClient>();

@@ -45,7 +45,6 @@ namespace MedicLaunchApi.Models.ViewModels
 
 	public class UpdateTextbookLessonContentRequest
 	{
-		public string Id { get; set; }
 
 		public string Heading { get; set; }
 
@@ -55,6 +54,8 @@ namespace MedicLaunchApi.Models.ViewModels
 	public class TextbookLessonContentResponse
 	{
 		public string Id { get; set; }
+
+		public string TextbookLessonId { get; set; }
 
 		public string Heading { get; set; }
 

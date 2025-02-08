@@ -20,7 +20,7 @@ namespace MedicLaunchApi.Controllers
 			this.textbookLessonRepository = textbookLessonRepository;
 		}
 
-		[Authorize(Policy = RoleConstants.QuestionAuthor)] // Adjust role if necessary
+		[Authorize(Policy = RoleConstants.QuestionAuthor)]
 		[HttpPost("create")]
 		public async Task<IActionResult> CreateTextbookLesson([FromBody] CreateTextbookLessonRequest request)
 		{
@@ -29,7 +29,7 @@ namespace MedicLaunchApi.Controllers
 			return Ok();
 		}
 
-		[Authorize(Policy = RoleConstants.QuestionAuthor)] // Adjust role if necessary
+		[Authorize(Policy = RoleConstants.QuestionAuthor)]
 		[HttpPut("update")]
 		public async Task<IActionResult> UpdateTextbookLesson([FromBody] UpdateTextbookLessonRequest request)
 		{
@@ -62,6 +62,50 @@ namespace MedicLaunchApi.Controllers
 			}
 
 			return Ok(textbookLesson);
+		}
+
+		[Authorize(Policy = RoleConstants.QuestionAuthor)]
+		[HttpPost("add-content")]
+		public async Task<IActionResult> AddTextbookLessonContent([FromBody] CreateTextbookLessonContentRequest request, [FromQuery] string textbookLessonId)
+		{
+			try
+			{
+				bool isAdmin = User.IsInRole(RoleConstants.Admin);
+				var updatedLesson = await textbookLessonRepository.AddTextbookLessonContentAsync(textbookLessonId, request, GetCurrentUserId(), isAdmin);
+
+				if (updatedLesson == null)
+				{
+					return NotFound();
+				}
+
+				return Ok(updatedLesson);
+			}
+			catch (AccessDeniedException ex)
+			{
+				return Forbid(ex.Message);
+			}
+		}
+
+		[Authorize(Policy = RoleConstants.QuestionAuthor)]
+		[HttpDelete("delete-content/{contentId}")]
+		public async Task<IActionResult> DeleteTextbookLessonContent(string contentId)
+		{
+			try
+			{
+				bool isAdmin = User.IsInRole(RoleConstants.Admin);
+				var success = await textbookLessonRepository.DeleteTextbookLessonContentAsync(contentId, GetCurrentUserId(), isAdmin);
+
+				if (!success)
+				{
+					return NotFound();
+				}
+
+				return NoContent();
+			}
+			catch (AccessDeniedException ex)
+			{
+				return Forbid(ex.Message);
+			}
 		}
 
 		[HttpGet("list")]
