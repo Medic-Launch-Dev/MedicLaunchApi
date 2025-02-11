@@ -143,6 +143,17 @@ namespace MedicLaunchApi.Repository
 			return CreateTextbookLessonResponseModel(textbookLesson);
 		}
 
+		public async Task<List<TextbookLessonResponse>> GetTextbookLessonsBySpecialityAsync(string specialityId)
+		{
+			var lessons = await context.TextbookLessons
+				.Where(t => t.SpecialityId == specialityId)
+				.Include(t => t.Speciality)
+				.Include(t => t.Contents)
+				.ToListAsync();
+
+			return lessons.Select(CreateTextbookLessonResponseModel).ToList();
+		}
+
 		public async Task<List<TextbookLessonResponse>> GetTextbookLessonsAsync()
 		{
 			var lessons = await context.TextbookLessons

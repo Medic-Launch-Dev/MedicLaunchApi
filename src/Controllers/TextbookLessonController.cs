@@ -1,4 +1,5 @@
 ﻿using MedicLaunchApi.Authorization;
+using MedicLaunchApi.Data;
 using MedicLaunchApi.Exceptions;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
@@ -64,54 +65,24 @@ namespace MedicLaunchApi.Controllers
 			return Ok(textbookLesson);
 		}
 
-		[Authorize(Policy = RoleConstants.QuestionAuthor)]
-		[HttpPost("add-content")]
-		public async Task<IActionResult> AddTextbookLessonContent([FromBody] CreateTextbookLessonContentRequest request, [FromQuery] string textbookLessonId)
-		{
-			try
-			{
-				bool isAdmin = User.IsInRole(RoleConstants.Admin);
-				var updatedLesson = await textbookLessonRepository.AddTextbookLessonContentAsync(textbookLessonId, request, GetCurrentUserId(), isAdmin);
-
-				if (updatedLesson == null)
-				{
-					return NotFound();
-				}
-
-				return Ok(updatedLesson);
-			}
-			catch (AccessDeniedException ex)
-			{
-				return Forbid(ex.Message);
-			}
-		}
-
-		[Authorize(Policy = RoleConstants.QuestionAuthor)]
-		[HttpDelete("delete-content/{contentId}")]
-		public async Task<IActionResult> DeleteTextbookLessonContent(string contentId)
-		{
-			try
-			{
-				bool isAdmin = User.IsInRole(RoleConstants.Admin);
-				var success = await textbookLessonRepository.DeleteTextbookLessonContentAsync(contentId, GetCurrentUserId(), isAdmin);
-
-				if (!success)
-				{
-					return NotFound();
-				}
-
-				return NoContent();
-			}
-			catch (AccessDeniedException ex)
-			{
-				return Forbid(ex.Message);
-			}
-		}
-
 		[HttpGet("list")]
-		public async Task<IActionResult> GetTextbookLessons()
+		public async Task<IActionResult> GetTextbookLessons([FromQuery] string? specialityId)
 		{
-			var textbookLessons = await textbookLessonRepository.GetTextbookLessonsAsync();
+			IEnumerable<TextbookLessonResponse> textbookLessons;
+
+			if (!string.IsNullOrEmpty(specialityId))
+			{
+				textbookLessons = await textbookLessonRepository.GetTextbookLessonsBySpecialityAsync(specialityId);
+				if (!textbookLessons.Any())
+				{
+					return NotFound("No lessons found for the given specialty.");
+				}
+			}
+			else
+			{
+				textbookLessons = await textbookLessonRepository.GetTextbookLessonsAsync();
+			}
+
 			return Ok(textbookLessons);
 		}
 
