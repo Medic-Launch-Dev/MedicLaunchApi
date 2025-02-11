@@ -88,6 +88,13 @@ namespace MedicLaunchApi
                         });
             });
 
+            services.AddLogging(loggingBuilder =>
+            {
+                loggingBuilder.AddConsole();
+                loggingBuilder.AddDebug();
+                loggingBuilder.AddAzureWebAppDiagnostics();
+            });
+
 
             var app = builder.Build();
             app.MapIdentityApi<MedicLaunchUser>();
