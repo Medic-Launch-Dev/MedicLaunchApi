@@ -73,17 +73,13 @@ namespace MedicLaunchApi.Controllers
 			if (!string.IsNullOrEmpty(specialityId))
 			{
 				textbookLessons = await textbookLessonRepository.GetTextbookLessonsBySpecialityAsync(specialityId);
-				if (!textbookLessons.Any())
-				{
-					return NotFound("No lessons found for the given specialty.");
-				}
 			}
 			else
 			{
 				textbookLessons = await textbookLessonRepository.GetTextbookLessonsAsync();
 			}
 
-			return Ok(textbookLessons);
+			return Ok(textbookLessons ?? new List<TextbookLessonResponse>());
 		}
 
 		[Authorize(Policy = RoleConstants.QuestionAuthor)] // Adjust role if necessary
