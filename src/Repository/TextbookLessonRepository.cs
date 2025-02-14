@@ -14,7 +14,7 @@ namespace MedicLaunchApi.Repository
 			this.context = context;
 		}
 
-		public async Task CreateTextbookLessonAsync(CreateTextbookLessonRequest request, string userId)
+		public async Task<string> CreateTextbookLessonAsync(CreateTextbookLessonRequest request, string userId)
 		{
 			var textbookLessonId = Guid.NewGuid().ToString();
 
@@ -38,6 +38,8 @@ namespace MedicLaunchApi.Repository
 
 			context.TextbookLessons.Add(textbookLesson);
 			await context.SaveChangesAsync();
+
+			return textbookLessonId;
 		}
 
 		public async Task<TextbookLesson> UpdateTextbookLessonAsync(UpdateTextbookLessonRequest request, string userId, bool isAdmin)

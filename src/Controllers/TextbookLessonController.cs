@@ -25,9 +25,9 @@ namespace MedicLaunchApi.Controllers
 		[HttpPost("create")]
 		public async Task<IActionResult> CreateTextbookLesson([FromBody] CreateTextbookLessonRequest request)
 		{
-			await textbookLessonRepository.CreateTextbookLessonAsync(request, GetCurrentUserId());
+			var newTextbookLessonId = await textbookLessonRepository.CreateTextbookLessonAsync(request, GetCurrentUserId());
 
-			return Ok();
+			return Ok(newTextbookLessonId);
 		}
 
 		[Authorize(Policy = RoleConstants.QuestionAuthor)]
