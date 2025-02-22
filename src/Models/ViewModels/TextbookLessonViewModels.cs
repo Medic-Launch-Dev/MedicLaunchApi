@@ -62,4 +62,10 @@ namespace MedicLaunchApi.Models.ViewModels
 		public string Text { get; set; }
 
 	}
+
+	public class GenerateTextbookLessonContentRequest
+	{
+		public string LearningPoints { get; set; }
+		public string SpecialityId { get; set; }
+	}
 }

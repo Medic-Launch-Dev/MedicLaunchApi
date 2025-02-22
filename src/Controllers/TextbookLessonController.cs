@@ -3,6 +3,7 @@ using MedicLaunchApi.Data;
 using MedicLaunchApi.Exceptions;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
+using MedicLaunchApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -15,10 +16,12 @@ namespace MedicLaunchApi.Controllers
 	public class TextbookLessonController : ControllerBase
 	{
 		private readonly TextbookLessonRepository textbookLessonRepository;
+		private readonly TextbookLessonGenerationService textbookLessonGenerationService;
 
-		public TextbookLessonController(TextbookLessonRepository textbookLessonRepository)
+		public TextbookLessonController(TextbookLessonRepository textbookLessonRepository, TextbookLessonGenerationService textbookLessonGenerationService)
 		{
 			this.textbookLessonRepository = textbookLessonRepository;
+			this.textbookLessonGenerationService = textbookLessonGenerationService;
 		}
 
 		[Authorize(Policy = RoleConstants.QuestionAuthor)]
@@ -89,6 +92,14 @@ namespace MedicLaunchApi.Controllers
 			await textbookLessonRepository.DeleteTextbookLessonAsync(id);
 
 			return Ok();
+		}
+
+		[Authorize(Policy = RoleConstants.QuestionAuthor)]
+		[HttpPost("generate")]
+		public async Task<IActionResult> GenerateTextbookLessonContent([FromBody] GenerateTextbookLessonContentRequest request)
+		{
+			var response = await textbookLessonGenerationService.GenerateAndCreateTextbookLessonAsync(request.LearningPoints, request.SpecialityId, GetCurrentUserId());
+			return Ok(response);
 		}
 
 		private string GetCurrentUserId()

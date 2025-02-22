@@ -1,0 +1,21 @@
+{  
+  "title": "Colles' Fractures",  
+  "contents": [  
+    {  
+      "heading": "Overview",  
+      "text": "<ul><li><p>Colles' fractures often occur due to a <strong>fall onto the outstretched hand</strong>, leading to dorsal displacement and radial deviation of the fractured bone.</p></li></ul>"  
+    },  
+    {  
+      "heading": "Symptoms",  
+      "text": "<ul><li><p>Symptoms include pain, swelling, and an obvious deformity at the wrist. There may also be limited wrist movement and tenderness.</p></li></ul>"  
+    },  
+    {  
+      "heading": "Diagnosis",  
+      "text": "<ul><li><p>X-rays confirm the diagnosis, assess the degree of displacement, and guide management decisions.</p></li></ul>"  
+    },  
+    {  
+      "heading": "Management",  
+      "text": "<ul><li><p>Management options include closed reduction and immobilisation with a cast or splint, or surgical intervention in complex or unstable fractures.</p></li></ul>"  
+    }  
+  ]  
+}

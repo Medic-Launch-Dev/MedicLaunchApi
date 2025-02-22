@@ -42,24 +42,28 @@ namespace MedicLaunchApi
                 .AddJsonOptions(options =>
                 {
                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-					options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-				});
+                    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+                });
 
-			// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-			builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-            builder.Services.AddScoped<QuestionRepositoryLegacy>();
+
             builder.Services.AddScoped<IAzureBlobClient, AzureBlobClient>();
+
+            builder.Services.AddScoped<QuestionRepositoryLegacy>();
             builder.Services.AddScoped<AzureBlobClient>();
             builder.Services.AddScoped<PaymentRepository>();
             builder.Services.AddScoped<UserDataRepository>();
-            builder.Services.AddScoped<PaymentService>();
             builder.Services.AddScoped<QuestionRepository>();
             builder.Services.AddScoped<FlashcardRepository>();
             builder.Services.AddScoped<NotificationRepository>();
             builder.Services.AddScoped<MockExamRepository>();
             builder.Services.AddScoped<CoursesRepository>();
             builder.Services.AddScoped<TextbookLessonRepository>();
+
+            builder.Services.AddScoped<PaymentService>();
+            builder.Services.AddScoped<AzureOpenAIService>();
+            builder.Services.AddScoped<TextbookLessonGenerationService>();
 
             builder.Services.AddOptions<BearerTokenOptions>(IdentityConstants.BearerScheme).Configure(options =>
             {
