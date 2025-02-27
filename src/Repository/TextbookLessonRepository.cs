@@ -16,6 +16,21 @@ namespace MedicLaunchApi.Repository
 
 		public async Task<string> CreateTextbookLessonAsync(CreateTextbookLessonRequest request, string userId)
 		{
+			var speciality = await context.Specialities.FindAsync(request.SpecialityId);
+			if (speciality == null)
+			{
+				throw new ArgumentException($"Speciality with ID {request.SpecialityId} not found");
+			}
+
+			if (!string.IsNullOrEmpty(request.QuestionId))
+			{
+				var question = await context.Questions.FindAsync(request.QuestionId);
+				if (question == null)
+				{
+					throw new ArgumentException($"Question with ID {request.QuestionId} not found");
+				}
+			}
+
 			var textbookLessonId = Guid.NewGuid().ToString();
 
 			var textbookLesson = new TextbookLesson
@@ -23,6 +38,7 @@ namespace MedicLaunchApi.Repository
 				Id = textbookLessonId,
 				Title = request.Title,
 				SpecialityId = request.SpecialityId,
+				QuestionId = request.QuestionId,
 				Contents = request.Contents.Select(c => new TextbookLessonContent
 				{
 					Id = Guid.NewGuid().ToString(),
@@ -33,7 +49,8 @@ namespace MedicLaunchApi.Repository
 				CreatedBy = userId,
 				UpdatedBy = userId,
 				CreatedOn = DateTime.UtcNow,
-				UpdatedOn = DateTime.UtcNow
+				UpdatedOn = DateTime.UtcNow,
+				IsSubmitted = request.IsSubmitted
 			};
 
 			context.TextbookLessons.Add(textbookLesson);
@@ -44,6 +61,21 @@ namespace MedicLaunchApi.Repository
 
 		public async Task<TextbookLesson> UpdateTextbookLessonAsync(UpdateTextbookLessonRequest request, string userId, bool isAdmin)
 		{
+			var speciality = await context.Specialities.FindAsync(request.SpecialityId);
+			if (speciality == null)
+			{
+				throw new ArgumentException($"Speciality with ID {request.SpecialityId} not found");
+			}
+
+			if (!string.IsNullOrEmpty(request.QuestionId))
+			{
+				var question = await context.Questions.FindAsync(request.QuestionId);
+				if (question == null)
+				{
+					throw new ArgumentException($"Question with ID {request.QuestionId} not found");
+				}
+			}
+
 			var textbookLesson = await context.TextbookLessons
 				.Include(t => t.Contents)
 				.FirstOrDefaultAsync(t => t.Id == request.Id);
@@ -60,16 +92,15 @@ namespace MedicLaunchApi.Repository
 
 			textbookLesson.Title = request.Title;
 			textbookLesson.SpecialityId = request.SpecialityId;
+			textbookLesson.QuestionId = request.QuestionId;
 			textbookLesson.UpdatedBy = userId;
 			textbookLesson.UpdatedOn = DateTime.UtcNow;
+			textbookLesson.IsSubmitted = request.IsSubmitted;
 
-			// Remove all old content
 			context.TextbookLessonContents.RemoveRange(textbookLesson.Contents);
-
-			// Add the new content
 			textbookLesson.Contents = request.Contents.Select(c => new TextbookLessonContent
 			{
-				Id = Guid.NewGuid().ToString(), // Generate a new ID for each new content
+				Id = Guid.NewGuid().ToString(),
 				TextbookLessonId = textbookLesson.Id,
 				Heading = c.Heading,
 				Text = c.Text
@@ -185,6 +216,8 @@ namespace MedicLaunchApi.Repository
 			{
 				Id = lesson.Id,
 				Title = lesson.Title,
+				IsSubmitted = lesson.IsSubmitted,
+				QuestionId = lesson.QuestionId,
 				SpecialityId = lesson.SpecialityId,
 				Speciality = new SpecialityViewModel
 				{

@@ -32,17 +32,17 @@ namespace MedicLaunchApi.Data
 
         public DbSet<CoursePurchase> CoursePurchases { get; set; }
 
-		public DbSet<TextbookLesson> TextbookLessons { get; set; }
+        public DbSet<TextbookLesson> TextbookLessons { get; set; }
 
-		public DbSet<TextbookLessonContent> TextbookLessonContents { get; set; }
+        public DbSet<TextbookLessonContent> TextbookLessonContents { get; set; }
 
-		private readonly ApplicationDbContext context;
+        private readonly ApplicationDbContext context;
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) :
             base(options)
         {
         }
-        
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<Question>()
@@ -257,7 +257,7 @@ namespace MedicLaunchApi.Data
 
         public DateTime CreatedOn { get; set; }
 
-        public DateTime? ReadOn { get; set;}
+        public DateTime? ReadOn { get; set; }
     }
 
     [Table("MockExam")]
@@ -279,7 +279,7 @@ namespace MedicLaunchApi.Data
     }
 
     [Table("TrialQuestion")]
-    public class TrialQuestion: Audit
+    public class TrialQuestion : Audit
     {
         public string Id { get; set; }
 
@@ -335,7 +335,7 @@ namespace MedicLaunchApi.Data
 
     // Add this class inside the same namespace
     [Table("Course")]
-    public class Course: Audit
+    public class Course : Audit
     {
         public string Id { get; set; }
         public string Title { get; set; }
@@ -361,30 +361,36 @@ namespace MedicLaunchApi.Data
         // public User User { get; set; }
     }
 
-	[Table("TextbookLesson")]
-	public class TextbookLesson : Audit
-	{
-		public string Id { get; set; }
+    [Table("TextbookLesson")]
+    public class TextbookLesson : Audit
+    {
+        public string Id { get; set; }
 
-		public string Title { get; set; }
+        public string Title { get; set; }
 
-		public string SpecialityId { get; set; }
+        public string SpecialityId { get; set; }
 
-		public Speciality Speciality { get; set; }
+        public Speciality Speciality { get; set; }
 
-		public ICollection<TextbookLessonContent> Contents { get; set; } = new List<TextbookLessonContent>();
-	}
+        public string? QuestionId { get; set; }
 
-	[Table("TextbookLessonContent")]
-	public class TextbookLessonContent
-	{
-		public string Id { get; set; }
+        public Question? Question { get; set; }
 
-		public string TextbookLessonId { get; set; }
-		public TextbookLesson TextbookLesson { get; set; }
+        public ICollection<TextbookLessonContent> Contents { get; set; } = new List<TextbookLessonContent>();
 
-		public string Heading { get; set; }
-		public string Text { get; set; }
-	}
+        public bool IsSubmitted { get; set; }
+    }
+
+    [Table("TextbookLessonContent")]
+    public class TextbookLessonContent
+    {
+        public string Id { get; set; }
+
+        public string TextbookLessonId { get; set; }
+        public TextbookLesson TextbookLesson { get; set; }
+
+        public string Heading { get; set; }
+        public string Text { get; set; }
+    }
 
 }

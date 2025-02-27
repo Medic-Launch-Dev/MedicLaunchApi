@@ -28,9 +28,15 @@ namespace MedicLaunchApi.Controllers
 		[HttpPost("create")]
 		public async Task<IActionResult> CreateTextbookLesson([FromBody] CreateTextbookLessonRequest request)
 		{
-			var newTextbookLessonId = await textbookLessonRepository.CreateTextbookLessonAsync(request, GetCurrentUserId());
-
-			return Ok(newTextbookLessonId);
+			try
+			{
+				var newTextbookLessonId = await textbookLessonRepository.CreateTextbookLessonAsync(request, GetCurrentUserId());
+				return Ok(newTextbookLessonId);
+			}
+			catch (ArgumentException ex)
+			{
+				return BadRequest(ex.Message);
+			}
 		}
 
 		[Authorize(Policy = RoleConstants.QuestionAuthor)]
@@ -48,6 +54,10 @@ namespace MedicLaunchApi.Controllers
 				}
 
 				return Ok(textbookLesson);
+			}
+			catch (ArgumentException ex)
+			{
+				return BadRequest(ex.Message);
 			}
 			catch (AccessDeniedException ex)
 			{

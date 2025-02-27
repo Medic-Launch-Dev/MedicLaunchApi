@@ -8,7 +8,11 @@ namespace MedicLaunchApi.Models.ViewModels
 
 		public string SpecialityId { get; set; }
 
+		public string? QuestionId { get; set; }
+
 		public List<CreateTextbookLessonContentRequest> Contents { get; set; }
+
+		public bool IsSubmitted { get; set; } = false;
 	}
 
 	public class UpdateTextbookLessonRequest
@@ -19,7 +23,11 @@ namespace MedicLaunchApi.Models.ViewModels
 
 		public string SpecialityId { get; set; }
 
+		public string? QuestionId { get; set; }
+
 		public List<UpdateTextbookLessonContentRequest> Contents { get; set; }
+
+		public bool IsSubmitted { get; set; }
 	}
 
 	public class TextbookLessonResponse
@@ -32,7 +40,12 @@ namespace MedicLaunchApi.Models.ViewModels
 
 		public SpecialityViewModel Speciality { get; set; }
 
+		public string? QuestionId { get; set; }
+
 		public List<TextbookLessonContentResponse> Contents { get; set; }
+
+		// Include the new flag in the response
+		public bool IsSubmitted { get; set; }
 
 	}
 

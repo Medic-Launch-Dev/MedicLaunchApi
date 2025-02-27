@@ -4,6 +4,7 @@ using MedicLaunchApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace MedicLaunchApi.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250227082716_AddIsSubmittedToTextbookLesson")]
+    partial class AddIsSubmittedToTextbookLesson
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -380,9 +383,6 @@ namespace MedicLaunchApi.Migrations
                     b.Property<bool>("IsSubmitted")
                         .HasColumnType("bit");
 
-                    b.Property<string>("QuestionId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("SpecialityId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
@@ -399,8 +399,6 @@ namespace MedicLaunchApi.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("QuestionId");
 
                     b.HasIndex("SpecialityId");
 
@@ -875,17 +873,11 @@ namespace MedicLaunchApi.Migrations
 
             modelBuilder.Entity("MedicLaunchApi.Data.TextbookLesson", b =>
                 {
-                    b.HasOne("MedicLaunchApi.Data.Question", "Question")
-                        .WithMany()
-                        .HasForeignKey("QuestionId");
-
                     b.HasOne("MedicLaunchApi.Data.Speciality", "Speciality")
                         .WithMany()
                         .HasForeignKey("SpecialityId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Question");
 
                     b.Navigation("Speciality");
                 });
