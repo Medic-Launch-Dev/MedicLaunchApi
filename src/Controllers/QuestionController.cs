@@ -24,7 +24,21 @@ namespace MedicLaunchApi.Controllers
             this.questionRepository = questionRepository;
         }
 
-        [Authorize(Policy = RoleConstants.QuestionAuthor)]
+		[Authorize(Policy = RoleConstants.QuestionAuthor)]
+		[HttpGet("{questionId}")]
+		public async Task<IActionResult> GetQuestionById(string questionId)
+		{
+			var question = await this.questionRepository.GetQuestionByIdAsync(questionId);
+
+			if (question == null)
+			{
+				return NotFound(new { message = "Question not found" });
+			}
+
+			return Ok(question);
+		}
+
+		[Authorize(Policy = RoleConstants.QuestionAuthor)]
         [HttpPost("create")]
         public async Task<IActionResult> CreateQuestion([FromBody] QuestionViewModel model)
         {
@@ -88,7 +102,7 @@ namespace MedicLaunchApi.Controllers
             return await this.questionRepository.GetQuestionsToEdit(request, GetCurrentUserId(), isAdmin);
         }
 
-        [Authorize(Policy = RoleConstants.QuestionAuthor)]
+		[Authorize(Policy = RoleConstants.QuestionAuthor)]
         [HttpDelete("delete/{specialityId}/{questionId}")]
         public async Task<IActionResult> DeleteQuestion(string specialityId, string questionId)
         {

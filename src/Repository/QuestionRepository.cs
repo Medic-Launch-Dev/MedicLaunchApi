@@ -121,8 +121,14 @@ namespace MedicLaunchApi.Repository
             var questions = await dbContext.Questions.Where(q => q.SpecialityId == specialityId).ToListAsync();
             return questions.Select(q => CreateQuestionViewModel(q));
         }
-        
-        public async Task<IEnumerable<QuestionViewModel>> GetQuestionsToEdit(EditQuestionsRequest request, string userId, bool isAdmin)
+
+		public async Task<Question> GetQuestionByIdAsync(string questionId)
+		{
+			var question = await dbContext.Questions.FindAsync(questionId);
+			return question;
+		}
+
+		public async Task<IEnumerable<QuestionViewModel>> GetQuestionsToEdit(EditQuestionsRequest request, string userId, bool isAdmin)
         {
             QuestionType questionType = Enum.Parse<QuestionType>(request.QuestionType);
             var questions = dbContext.Questions.Where(q => q.SpecialityId == request.SpecialityId && q.QuestionType == questionType)
