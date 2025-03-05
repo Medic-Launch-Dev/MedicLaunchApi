@@ -39,12 +39,13 @@ namespace MedicLaunchApi.Repository
 				Title = request.Title,
 				SpecialityId = request.SpecialityId,
 				QuestionId = request.QuestionId,
-				Contents = request.Contents.Select(c => new TextbookLessonContent
+				Contents = request.Contents.Select((c, index) => new TextbookLessonContent
 				{
 					Id = Guid.NewGuid().ToString(),
 					TextbookLessonId = textbookLessonId,
 					Heading = c.Heading,
-					Text = c.Text
+					Text = c.Text,
+					Order = index
 				}).ToList(),
 				CreatedBy = userId,
 				UpdatedBy = userId,
@@ -98,67 +99,17 @@ namespace MedicLaunchApi.Repository
 			textbookLesson.IsSubmitted = request.IsSubmitted;
 
 			context.TextbookLessonContents.RemoveRange(textbookLesson.Contents);
-			textbookLesson.Contents = request.Contents.Select(c => new TextbookLessonContent
+			textbookLesson.Contents = request.Contents.Select((c, index) => new TextbookLessonContent
 			{
 				Id = Guid.NewGuid().ToString(),
 				TextbookLessonId = textbookLesson.Id,
 				Heading = c.Heading,
-				Text = c.Text
+				Text = c.Text,
+				Order = index  // Use array index as order
 			}).ToList();
 
 			await context.SaveChangesAsync();
 			return textbookLesson;
-		}
-
-		public async Task<TextbookLesson> AddTextbookLessonContentAsync(string textbookLessonId, CreateTextbookLessonContentRequest request, string userId, bool isAdmin)
-		{
-			var textbookLesson = await context.TextbookLessons.FindAsync(textbookLessonId);
-
-			if (textbookLesson == null)
-			{
-				return null;
-			}
-
-			if (!isAdmin && textbookLesson.CreatedBy != userId)
-			{
-				throw new AccessDeniedException("You do not have permission to modify this textbook lesson");
-			}
-
-			var newContent = new TextbookLessonContent
-			{
-				Id = Guid.NewGuid().ToString(),
-				TextbookLessonId = textbookLessonId,
-				Heading = request.Heading,
-				Text = request.Text
-			};
-
-			context.TextbookLessonContents.Add(newContent);
-			textbookLesson.UpdatedBy = userId;
-			textbookLesson.UpdatedOn = DateTime.UtcNow;
-
-			await context.SaveChangesAsync();
-			return textbookLesson;
-		}
-
-		public async Task<bool> DeleteTextbookLessonContentAsync(string contentId, string userId, bool isAdmin)
-		{
-			var content = await context.TextbookLessonContents.FindAsync(contentId);
-
-			if (content == null)
-			{
-				return false;
-			}
-
-			var textbookLesson = await context.TextbookLessons.FindAsync(content.TextbookLessonId);
-
-			if (!isAdmin && textbookLesson?.CreatedBy != userId)
-			{
-				throw new AccessDeniedException("You do not have permission to delete this content");
-			}
-
-			context.TextbookLessonContents.Remove(content);
-			await context.SaveChangesAsync();
-			return true;
 		}
 
 		public async Task<TextbookLessonResponse> GetTextbookLessonAsync(string id)
@@ -224,13 +175,15 @@ namespace MedicLaunchApi.Repository
 					Id = lesson.Speciality.Id,
 					Name = lesson.Speciality.Name
 				},
-				Contents = lesson.Contents.Select(c => new TextbookLessonContentResponse
-				{
-					Id = c.Id,
-					TextbookLessonId = c.TextbookLessonId,
-					Heading = c.Heading,
-					Text = c.Text,
-				}).ToList()
+				Contents = lesson.Contents
+					.OrderBy(c => c.Order)
+					.Select(c => new TextbookLessonContentResponse
+					{
+						Id = c.Id,
+						TextbookLessonId = c.TextbookLessonId,
+						Heading = c.Heading,
+						Text = c.Text,
+					}).ToList()
 			};
 		}
 	}
