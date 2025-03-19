@@ -47,7 +47,16 @@ namespace MedicLaunchApi.Services
 		public async Task<CreateTextbookLessonRequest> GenerateAndCreateTextbookLessonAsync(string htmlContent, string specialityId, string userId)
 		{
 			var messages = await GenerateChatPrompt(htmlContent);
-			var response = await azureOpenAIService.GeneratePromptResponseAsync(messages);
+			var options = new ChatCompletionOptions
+			{
+				Temperature = 0.7f,
+				MaxOutputTokenCount = 800,
+				TopP = 0.95f,
+				ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat(),
+				FrequencyPenalty = 0,
+				PresencePenalty = 0,
+			};
+			var response = await azureOpenAIService.GenerateChatCompletion(messages: messages, options: options);
 
 			JsonSerializerOptions jsonOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 			var createTextbookLessonRequest = JsonSerializer.Deserialize<CreateTextbookLessonRequest>(response, jsonOptions);

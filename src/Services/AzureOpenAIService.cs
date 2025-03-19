@@ -1,4 +1,4 @@
-﻿using System.Diagnostics.Eventing.Reader;
+using System.Diagnostics.Eventing.Reader;
 using Azure;
 using Azure.AI.OpenAI;
 using OpenAI.Chat;
@@ -11,59 +11,42 @@ namespace MedicLaunchApi.Services
 		private readonly string azureOpenAIEndpoint;
 		private readonly string azureOpenAIKey;
 		private readonly ILogger<AzureOpenAIService> logger;
-		private readonly ChatClient chatClient;
+		private readonly AzureOpenAIClient azureClient;
+		private readonly string defaultModelName;
 
 		public AzureOpenAIService(ILogger<AzureOpenAIService> logger, IConfiguration configuration)
 		{
 			this.logger = logger;
 
-			this.azureOpenAIEndpoint = Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT") ?? string.Empty;
-			logger.LogInformation($"AZURE_OPENAI_ENDPOINT: {this.azureOpenAIEndpoint}");
-			if (string.IsNullOrEmpty(this.azureOpenAIEndpoint))
+			azureOpenAIEndpoint = Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT") ?? string.Empty;
+			if (string.IsNullOrEmpty(azureOpenAIEndpoint))
 			{
 				throw new Exception("AZURE_OPENAI_ENDPOINT environment variable is not set.");
 			}
 
-			this.azureOpenAIKey = Environment.GetEnvironmentVariable("AZURE_OPENAI_KEY") ?? string.Empty;
-			if (string.IsNullOrEmpty(this.azureOpenAIKey))
+			azureOpenAIKey = Environment.GetEnvironmentVariable("AZURE_OPENAI_KEY") ?? string.Empty;
+			if (string.IsNullOrEmpty(azureOpenAIKey))
 			{
 				throw new Exception("AZURE_OPENAI_KEY environment variable is not set.");
 			}
 
-
-			var credential = new AzureKeyCredential(this.azureOpenAIKey);
-			var azureClient = new AzureOpenAIClient(new Uri(this.azureOpenAIEndpoint), credential);
-			this.chatClient = azureClient.GetChatClient("gpt-4o-mini");
+			defaultModelName = "gpt-4o-mini";
+			var credential = new AzureKeyCredential(azureOpenAIKey);
+			azureClient = new AzureOpenAIClient(new Uri(azureOpenAIEndpoint), credential);
 		}
 
-		public async Task<string> GeneratePromptResponseAsync(List<ChatMessage> messages)
+		public async Task<string> GenerateChatCompletion(List<ChatMessage> messages, string? modelName = null, ChatCompletionOptions? options = null)
 		{
-			var options = new ChatCompletionOptions
-			{
-				Temperature = (float)0.7,
-				MaxOutputTokenCount = 800,
-				TopP = (float)0.95,
-				ResponseFormat = ChatResponseFormat.CreateJsonObjectFormat(),
-				FrequencyPenalty = 0,
-				PresencePenalty = 0,
-			};
+			var chatClient = azureClient.GetChatClient(modelName ?? defaultModelName);
 
 			try
 			{
 				ChatCompletion completion = await chatClient.CompleteChatAsync(messages, options);
-
-				if (completion.Content != null && completion.Content.Count > 0)
-				{
-					return completion.Content[0].Text;
-				}
-				else
-				{
-					return "{}";
-				}
+				return completion.Content?.FirstOrDefault()?.Text ?? "{}";
 			}
 			catch (Exception ex)
 			{
-				this.logger.LogError(ex, "Error generating response from OpenAI");
+				logger.LogError(ex, "Error generating response from OpenAI using model {ModelName}", modelName ?? defaultModelName);
 				throw;
 			}
 		}
