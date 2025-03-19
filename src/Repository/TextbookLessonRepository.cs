@@ -1,4 +1,5 @@
-﻿using MedicLaunchApi.Data;
+﻿using MedicLaunchApi.Authorization;
+using MedicLaunchApi.Data;
 using MedicLaunchApi.Exceptions;
 using MedicLaunchApi.Models.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -127,10 +128,16 @@ namespace MedicLaunchApi.Repository
 			return CreateTextbookLessonResponseModel(textbookLesson);
 		}
 
-		public async Task<List<TextbookLessonResponse>> GetTextbookLessonsBySpecialityAsync(string specialityId)
+		public async Task<List<TextbookLessonResponse>> GetTextbookLessonsBySpecialityAsync(string specialityId, bool isAdmin)
 		{
-			var lessons = await context.TextbookLessons
-				.Where(t => t.SpecialityId == specialityId && t.IsSubmitted)
+			var query = context.TextbookLessons.Where(t => t.SpecialityId == specialityId);
+
+			if (!isAdmin)
+			{
+				query = query.Where(t => t.IsSubmitted);
+			}
+
+			var lessons = await query
 				.Include(t => t.Speciality)
 				.Include(t => t.Contents)
 				.ToListAsync();
@@ -138,10 +145,16 @@ namespace MedicLaunchApi.Repository
 			return lessons.Select(CreateTextbookLessonResponseModel).ToList();
 		}
 
-		public async Task<List<TextbookLessonResponse>> GetTextbookLessonsAsync()
+		public async Task<List<TextbookLessonResponse>> GetTextbookLessonsAsync(bool isAdmin)
 		{
-			var lessons = await context.TextbookLessons
-				.Where(t => t.IsSubmitted)
+			var query = context.TextbookLessons.AsQueryable();
+
+			if (!isAdmin)
+			{
+				query = query.Where(t => t.IsSubmitted);
+			}
+
+			var lessons = await query
 				.Include(t => t.Speciality)
 				.Include(t => t.Contents)
 				.ToListAsync();

@@ -81,21 +81,22 @@ namespace MedicLaunchApi.Controllers
 		[HttpGet("list")]
 		public async Task<IActionResult> GetTextbookLessons([FromQuery] string? specialityId)
 		{
+			bool isAdmin = User.IsInRole(RoleConstants.Admin);
 			IEnumerable<TextbookLessonResponse> textbookLessons;
 
 			if (!string.IsNullOrEmpty(specialityId))
 			{
-				textbookLessons = await textbookLessonRepository.GetTextbookLessonsBySpecialityAsync(specialityId);
+				textbookLessons = await textbookLessonRepository.GetTextbookLessonsBySpecialityAsync(specialityId, isAdmin);
 			}
 			else
 			{
-				textbookLessons = await textbookLessonRepository.GetTextbookLessonsAsync();
+				textbookLessons = await textbookLessonRepository.GetTextbookLessonsAsync(isAdmin);
 			}
 
 			return Ok(textbookLessons ?? new List<TextbookLessonResponse>());
 		}
 
-		[Authorize(Policy = RoleConstants.QuestionAuthor)] // Adjust role if necessary
+		[Authorize(Policy = RoleConstants.QuestionAuthor)]
 		[HttpDelete("delete/{id}")]
 		public async Task<IActionResult> DeleteTextbookLesson(string id)
 		{
@@ -110,6 +111,34 @@ namespace MedicLaunchApi.Controllers
 		{
 			var response = await textbookLessonGenerationService.GenerateAndCreateTextbookLessonAsync(request.LearningPoints, request.SpecialityId, GetCurrentUserId());
 			return Ok(response);
+		}
+
+		[HttpGet]
+		public async Task<IActionResult> GetTextbookLessons()
+		{
+			var isAdmin = User.IsInRole(RoleConstants.Admin);
+
+			var userRoles = User.Claims
+				.Where(c => c.Type == ClaimTypes.Role)
+				.Select(c => c.Value)
+				.ToArray();
+
+			var lessons = await textbookLessonRepository.GetTextbookLessonsAsync(isAdmin);
+			return Ok(lessons);
+		}
+
+		[HttpGet("speciality/{specialityId}")]
+		public async Task<IActionResult> GetTextbookLessonsBySpeciality(string specialityId)
+		{
+			var isAdmin = User.IsInRole(RoleConstants.Admin);
+
+			var userRoles = User.Claims
+				.Where(c => c.Type == ClaimTypes.Role)
+				.Select(c => c.Value)
+				.ToArray();
+
+			var lessons = await textbookLessonRepository.GetTextbookLessonsBySpecialityAsync(specialityId, isAdmin);
+			return Ok(lessons);
 		}
 
 		private string GetCurrentUserId()
