@@ -113,12 +113,19 @@ namespace MedicLaunchApi.Repository
 			return textbookLesson;
 		}
 
-		public async Task<TextbookLessonResponse> GetTextbookLessonAsync(string id)
+		public async Task<TextbookLessonResponse> GetTextbookLessonAsync(string id, bool isAdmin = false)
 		{
-			var textbookLesson = await context.TextbookLessons
+			var query = context.TextbookLessons
 				.Include(t => t.Speciality)
 				.Include(t => t.Contents)
-				.FirstOrDefaultAsync(t => t.Id == id && t.IsSubmitted);
+				.Where(t => t.Id == id);
+
+			if (!isAdmin)
+			{
+				query = query.Where(t => t.IsSubmitted);
+			}
+
+			var textbookLesson = await query.FirstOrDefaultAsync();
 
 			if (textbookLesson == null)
 			{

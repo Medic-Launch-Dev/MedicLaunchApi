@@ -68,7 +68,8 @@ namespace MedicLaunchApi.Controllers
 		[HttpGet("{id}")]
 		public async Task<IActionResult> GetTextbookLesson(string id)
 		{
-			var textbookLesson = await textbookLessonRepository.GetTextbookLessonAsync(id);
+			bool isAdmin = User.IsInRole(RoleConstants.Admin);
+			var textbookLesson = await textbookLessonRepository.GetTextbookLessonAsync(id, isAdmin);
 
 			if (textbookLesson == null)
 			{
@@ -111,34 +112,6 @@ namespace MedicLaunchApi.Controllers
 		{
 			var response = await textbookLessonGenerationService.GenerateAndCreateTextbookLessonAsync(request.LearningPoints, request.SpecialityId, GetCurrentUserId());
 			return Ok(response);
-		}
-
-		[HttpGet]
-		public async Task<IActionResult> GetTextbookLessons()
-		{
-			var isAdmin = User.IsInRole(RoleConstants.Admin);
-
-			var userRoles = User.Claims
-				.Where(c => c.Type == ClaimTypes.Role)
-				.Select(c => c.Value)
-				.ToArray();
-
-			var lessons = await textbookLessonRepository.GetTextbookLessonsAsync(isAdmin);
-			return Ok(lessons);
-		}
-
-		[HttpGet("speciality/{specialityId}")]
-		public async Task<IActionResult> GetTextbookLessonsBySpeciality(string specialityId)
-		{
-			var isAdmin = User.IsInRole(RoleConstants.Admin);
-
-			var userRoles = User.Claims
-				.Where(c => c.Type == ClaimTypes.Role)
-				.Select(c => c.Value)
-				.ToArray();
-
-			var lessons = await textbookLessonRepository.GetTextbookLessonsBySpecialityAsync(specialityId, isAdmin);
-			return Ok(lessons);
 		}
 
 		private string GetCurrentUserId()
