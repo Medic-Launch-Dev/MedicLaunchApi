@@ -117,7 +117,7 @@ namespace MedicLaunchApi.Repository
 			var textbookLesson = await context.TextbookLessons
 				.Include(t => t.Speciality)
 				.Include(t => t.Contents)
-				.FirstOrDefaultAsync(t => t.Id == id);
+				.FirstOrDefaultAsync(t => t.Id == id && t.IsSubmitted);
 
 			if (textbookLesson == null)
 			{
@@ -130,7 +130,7 @@ namespace MedicLaunchApi.Repository
 		public async Task<List<TextbookLessonResponse>> GetTextbookLessonsBySpecialityAsync(string specialityId)
 		{
 			var lessons = await context.TextbookLessons
-				.Where(t => t.SpecialityId == specialityId)
+				.Where(t => t.SpecialityId == specialityId && t.IsSubmitted)
 				.Include(t => t.Speciality)
 				.Include(t => t.Contents)
 				.ToListAsync();
@@ -141,6 +141,7 @@ namespace MedicLaunchApi.Repository
 		public async Task<List<TextbookLessonResponse>> GetTextbookLessonsAsync()
 		{
 			var lessons = await context.TextbookLessons
+				.Where(t => t.IsSubmitted)
 				.Include(t => t.Speciality)
 				.Include(t => t.Contents)
 				.ToListAsync();
