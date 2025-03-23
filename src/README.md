@@ -15,6 +15,16 @@ Requests folder:
 ![image](https://github.com/Medic-Launch-Dev/MedicLaunchApi/assets/154400233/9e9d05b5-7776-483e-85fa-dd995f4347c3)
 
 
+### Before Running The Project
+Ensure that the following Environment Variables are set:
+- `STRIPE_API_KEY`
+- `STRIPE_PUBLISHABLE_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `AZURE_OPENAI_ENDPOINT`
+- `AZURE_OPENAI_KEY`
+
+If on mac, since you can't run localdb, set the `ConnectionStrings__DefaultConnection` environment variable to the connection string to `mediclaunchdevdb`
+
 
 ### Commonly Used `dotnet ef migrations` Commands
 
