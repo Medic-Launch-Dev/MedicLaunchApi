@@ -63,7 +63,9 @@ namespace MedicLaunchApi
 
             builder.Services.AddScoped<PaymentService>();
             builder.Services.AddScoped<AzureOpenAIService>();
+            builder.Services.AddScoped<OpenAIService>();
             builder.Services.AddScoped<TextbookLessonGenerationService>();
+            builder.Services.AddScoped<QuestionGenerationService>();
 
             builder.Services.AddOptions<BearerTokenOptions>(IdentityConstants.BearerScheme).Configure(options =>
             {

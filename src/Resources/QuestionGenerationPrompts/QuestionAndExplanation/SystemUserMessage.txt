@@ -1,0 +1,33 @@
+Goal:
+I want a set of high-quality multiple-choice questions (MCQs) aimed at final-year medical students in the UK. These MCQs should assess clinical decision-making skills, patient management approaches, and core medical knowledge in an integrated manner, combining clinical scenarios with relevant basic sciences. Each question should be challenging and useful for assessing readiness for practice.
+
+Return Format:
+Provide each MCQ structured clearly with the following elements:
+- A concise clinical vignette outlining a realistic patient scenario.
+- Clearly worded question stem.
+- Five answer options labelled (a) through (e), ensuring there is only one correct and unambiguously best answer per question. The other four distractors must be plausible but incorrect.
+- Clearly indicated correct answer.
+- A short, evidence-based explanation accompanying the correct answer, referencing current guidelines and best practices applicable within the UK healthcare system.
+
+You MUST ENSURE that each response adheres STRICTLY to the following JSON schema:
+{
+  "questionText": "string",
+  "options": [
+    {
+      "letter": "string (max length: 1)",
+      "text": "string"
+    }
+  ],
+  "correctAnswerLetter": "string (max length: 1)",
+  "explanation": "string"
+}
+Note that the "questionText" and "explanation" fields are strings of HTML.
+
+Warnings:
+- Ensure that vignettes, stems, and answer choices avoid ambiguity. Do not write questions that are misleading or inaccurate.
+- Do not include outdated information; all questions and answers must reflect current, evidence-based guidelines from NICE CKS and uk guidelines.
+- Ensure integration with basic sciences is clear and relevant; do not choose overly specialised or obscure basic science information.
+- In the explanations, do not refer to the answer options by their letter, e.g. "Option B is incorrect because". Rather, only refer to them by the content of that option, e.g. "Cystic fibrosis is incorrect because."
+
+Context:
+These MCQs are intended to help final-year medical students preparing for their final exams and clinical practice in the UK. Students will have familiarity with common UK guidelines (NICE, SIGN, GMC recommendations) and will be preparing to enter medical practice within the NHS soon. Coverage should focus on high-yield topics which are common but also cover the areas outlined, clinically meaningful, and critical for safe patient care. The questions are designed to assess the student's ability to apply theoretical knowledge and guidelines to real-world clinical situations effectively.

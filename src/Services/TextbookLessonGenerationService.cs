@@ -1,6 +1,4 @@
-﻿using System.IO;
-using System.Text.Json;
-using MedicLaunchApi.Data;
+﻿using System.Text.Json;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
 using OpenAI.Chat;

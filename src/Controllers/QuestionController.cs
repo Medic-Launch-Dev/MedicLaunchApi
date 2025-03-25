@@ -1,6 +1,7 @@
 ﻿using MedicLaunchApi.Authorization;
 using MedicLaunchApi.Exceptions;
 using MedicLaunchApi.Models;
+using MedicLaunchApi.Models.QuestionDTOs;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
 using MedicLaunchApi.Services;
@@ -17,11 +18,16 @@ namespace MedicLaunchApi.Controllers
     {
         private readonly ILogger<QuestionController> logger;
         private readonly QuestionRepository questionRepository;
+        private readonly QuestionGenerationService questionGenerationService;
 
-        public QuestionController(ILogger<QuestionController> logger, QuestionRepository questionRepository)
+        public QuestionController(
+            ILogger<QuestionController> logger, 
+            QuestionRepository questionRepository,
+            QuestionGenerationService questionGenerationService)
         {
             this.logger = logger;
             this.questionRepository = questionRepository;
+            this.questionGenerationService = questionGenerationService;
         }
 
 		[Authorize(Policy = RoleConstants.QuestionAuthor)]
@@ -214,6 +220,22 @@ namespace MedicLaunchApi.Controllers
         {
             await this.questionRepository.DeleteTrialQuestionAsync(questionId);
             return Ok();
+        }
+
+        [Authorize(Policy = RoleConstants.QuestionAuthor)]
+        [HttpPost("generate/text-and-explanation")]
+        public async Task<ActionResult<QuestionTextAndExplanation>> GenerateQuestionTextAndExplanation([FromBody] string conditions)
+        {
+            try 
+            {
+                var generatedQuestion = await questionGenerationService.GenerateQuestionTextAndExplanationAsync(conditions);
+                return Ok(generatedQuestion);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error generating question");
+                return StatusCode(500, "Error generating question");
+            }
         }
 
         private string GetCurrentUserId()
