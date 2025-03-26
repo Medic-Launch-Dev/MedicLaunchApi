@@ -7,16 +7,13 @@ namespace MedicLaunchApi.Services
 {
 	public class TextbookLessonGenerationService
 	{
-		private readonly ILogger<AzureOpenAIService> logger;
 		private readonly AzureOpenAIService azureOpenAIService;
 		private readonly TextbookLessonRepository textbookLessonRepository;
 
 		public TextbookLessonGenerationService(
-				ILogger<AzureOpenAIService> logger,
 				AzureOpenAIService azureOpenAIService,
 				TextbookLessonRepository textbookLessonRepository)
 		{
-			this.logger = logger;
 			this.azureOpenAIService = azureOpenAIService;
 			this.textbookLessonRepository = textbookLessonRepository;
 		}

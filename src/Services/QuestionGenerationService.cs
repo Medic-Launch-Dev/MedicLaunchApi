@@ -4,16 +4,12 @@ using MedicLaunchApi.Models.QuestionDTOs;
 
 namespace MedicLaunchApi.Services
 {
-  public class QuestionGenerationService
+  public class QuestionGenerationService : IQuestionGenerationService
   {
-    private readonly ILogger<OpenAIService> logger;
     private readonly OpenAIService openAIService;
 
-    public QuestionGenerationService(
-        ILogger<OpenAIService> logger,
-        OpenAIService openAIService)
+    public QuestionGenerationService(OpenAIService openAIService)
     {
-      this.logger = logger;
       this.openAIService = openAIService;
     }
 

@@ -1,8 +1,10 @@
 ﻿using MedicLaunchApi.Controllers;
 using MedicLaunchApi.Data;
 using MedicLaunchApi.Exceptions;
+using MedicLaunchApi.Models.QuestionDTOs;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
+using MedicLaunchApi.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,7 +37,26 @@ namespace MedicLaunchApi.Test
 
             context = new ApplicationDbContext(options);
             questionRepository = new QuestionRepository(context);
-            questionController = new QuestionController(logger, questionRepository);
+            
+            var mockQuestionGenerationService = new Mock<IQuestionGenerationService>();
+            mockQuestionGenerationService
+                .Setup(m => m.GenerateQuestionTextAndExplanationAsync(It.IsAny<string>()))
+                .ReturnsAsync(new QuestionTextAndExplanation
+                {
+                    QuestionText = "What is the capital of France?",
+                    Options = new List<OptionViewModel>
+                    {
+                        new OptionViewModel { Letter = "A", Text = "Paris" },
+                        new OptionViewModel { Letter = "B", Text = "London" },
+                        new OptionViewModel { Letter = "C", Text = "Berlin" },
+                        new OptionViewModel { Letter = "D", Text = "Madrid" },
+                        new OptionViewModel { Letter = "E", Text = "Rome" }
+                    },
+                    CorrectAnswerLetter = "A",
+                    Explanation = "Paris is the capital of France"
+                });
+
+            questionController = new QuestionController(logger, questionRepository, mockQuestionGenerationService.Object);
         }
 
         private async Task AddQuestionAttempts()

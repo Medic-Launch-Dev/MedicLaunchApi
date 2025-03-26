@@ -1,12 +1,10 @@
 ﻿using MedicLaunchApi.Authorization;
 using MedicLaunchApi.Exceptions;
-using MedicLaunchApi.Models;
 using MedicLaunchApi.Models.QuestionDTOs;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
 using MedicLaunchApi.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -18,12 +16,12 @@ namespace MedicLaunchApi.Controllers
     {
         private readonly ILogger<QuestionController> logger;
         private readonly QuestionRepository questionRepository;
-        private readonly QuestionGenerationService questionGenerationService;
+        private readonly IQuestionGenerationService questionGenerationService;
 
         public QuestionController(
             ILogger<QuestionController> logger, 
             QuestionRepository questionRepository,
-            QuestionGenerationService questionGenerationService)
+            IQuestionGenerationService questionGenerationService)
         {
             this.logger = logger;
             this.questionRepository = questionRepository;

@@ -4,11 +4,6 @@ using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace MedicLaunchApi.Test
 {
@@ -47,6 +42,15 @@ namespace MedicLaunchApi.Test
 					new CreateTextbookLessonContentRequest { Heading = "Chapter 1", Text = "This is chapter 1." }
 				}
 			};
+
+			await textbookLessonRepository.CreateTextbookLessonAsync(request, "1");
+			var speciality = new Speciality
+			{
+				Id = "1",
+				Name = "Acute Medicine"
+			};
+			await context.Specialities.AddAsync(speciality);
+			await context.SaveChangesAsync();
 
 			await textbookLessonRepository.CreateTextbookLessonAsync(request, "1");
 
