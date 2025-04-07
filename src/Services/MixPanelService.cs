@@ -37,7 +37,7 @@ namespace MedicLaunchApi.Services
 			};
 
 			var response = await _httpClient.PostAsync(
-				"/engage#profile-set",
+				"/engage?ip=0#profile-set",
 				new StringContent(
 					JsonSerializer.Serialize(dictionary),
 					System.Text.Encoding.UTF8,
