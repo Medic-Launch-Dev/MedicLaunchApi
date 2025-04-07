@@ -62,6 +62,7 @@ namespace MedicLaunchApi
             builder.Services.AddScoped<TextbookLessonRepository>();
 
             builder.Services.AddScoped<PaymentService>();
+            builder.Services.AddScoped<IMixPanelService, MixPanelService>();
             builder.Services.AddScoped<AzureOpenAIService>();
             builder.Services.AddScoped<OpenAIService>();
             builder.Services.AddScoped<TextbookLessonGenerationService>();

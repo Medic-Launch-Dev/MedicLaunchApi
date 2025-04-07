@@ -17,12 +17,14 @@ namespace MedicLaunchApi.Controllers
         private readonly UserManager<MedicLaunchUser> userManager;
         private readonly RoleManager<IdentityRole> roleManager;
         private readonly PaymentService paymentService;
+        private readonly IMixPanelService mixPanelService;
         private readonly UserDataRepository userRepository;
         private readonly QuestionRepository questionRepository;
-        public AccountController(UserManager<MedicLaunchUser> signInManager, PaymentService paymentService, UserDataRepository userRepository, RoleManager<IdentityRole> roleManager, QuestionRepository questionRepository)
+        public AccountController(UserManager<MedicLaunchUser> signInManager, PaymentService paymentService, IMixPanelService mixPanelService, UserDataRepository userRepository, RoleManager<IdentityRole> roleManager, QuestionRepository questionRepository)
         {
             this.userManager = signInManager;
             this.paymentService = paymentService;
+            this.mixPanelService = mixPanelService;
             this.userRepository = userRepository;
             this.roleManager = roleManager;
             this.questionRepository = questionRepository;
@@ -49,8 +51,8 @@ namespace MedicLaunchApi.Controllers
             var result = await this.userManager.CreateAsync(newUser, user.Password);
             if (result.Succeeded)
             {
-                // Create stripe customer to be used for future payments
                 this.paymentService.CreateStripeCustomer(newUser);
+                await this.mixPanelService.CreateUserProfile(newUser);
 
                 // Default role is student - use role manager to add roles
                 await this.userManager.AddToRoleAsync(newUser, RoleConstants.Student);
