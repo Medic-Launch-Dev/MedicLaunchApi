@@ -30,7 +30,7 @@ namespace MedicLaunchApi.Services
 						{
 							{ "$email", user.Email },
 							{ "$name", $"{user.FirstName} {user.LastName}" },
-							{ "created_at", DateTime.UtcNow }
+							{ "$created", DateTime.UtcNow }
 						}
 					}
 				}
