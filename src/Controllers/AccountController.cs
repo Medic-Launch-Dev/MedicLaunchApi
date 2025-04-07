@@ -52,7 +52,12 @@ namespace MedicLaunchApi.Controllers
             if (result.Succeeded)
             {
                 this.paymentService.CreateStripeCustomer(newUser);
-                await this.mixPanelService.CreateUserProfile(newUser);
+
+                string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
+                    ?? Request.Headers["X-Forwarded-For"].FirstOrDefault()
+                    ?? "0.0.0.0";
+
+                await this.mixPanelService.CreateUserProfile(newUser, ipAddress);
 
                 // Default role is student - use role manager to add roles
                 await this.userManager.AddToRoleAsync(newUser, RoleConstants.Student);

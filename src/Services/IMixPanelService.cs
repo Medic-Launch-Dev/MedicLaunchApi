@@ -4,6 +4,6 @@ namespace MedicLaunchApi.Services
 {
   public interface IMixPanelService
   {
-    Task CreateUserProfile(MedicLaunchUser user);
+    Task CreateUserProfile(MedicLaunchUser user, string ipAddress);
   }
 }

@@ -18,7 +18,7 @@ namespace MedicLaunchApi.Services
 			};
 		}
 
-		public async Task CreateUserProfile(MedicLaunchUser user)
+		public async Task CreateUserProfile(MedicLaunchUser user, string ipAddress)
 		{
 			var dictionary = new Dictionary<string, object>[]
 			{
@@ -26,6 +26,7 @@ namespace MedicLaunchApi.Services
 				{
 					{ "$token", _token },
 					{ "$distinct_id", user.Id },
+					{ "$ip", ipAddress },  // Add IP address here
 					{ "$set", new Dictionary<string, object>
 						{
 							{ "$email", user.Email },
@@ -37,7 +38,7 @@ namespace MedicLaunchApi.Services
 			};
 
 			var response = await _httpClient.PostAsync(
-				"/engage?ip=0#profile-set",
+				"/engage#profile-set",  // Remove ip=0 parameter
 				new StringContent(
 					JsonSerializer.Serialize(dictionary),
 					System.Text.Encoding.UTF8,
