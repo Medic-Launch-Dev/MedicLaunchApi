@@ -45,7 +45,7 @@ namespace MedicLaunchApi.Controllers
 		{
 			try
 			{
-				bool isAdmin = User.IsInRole(RoleConstants.Admin);
+				bool isAdmin = User.IsInRole(RoleConstants.Admin) || User.IsInRole(RoleConstants.QuestionAuthor);
 				var textbookLesson = await textbookLessonRepository.UpdateTextbookLessonAsync(request, GetCurrentUserId(), isAdmin);
 
 				if (textbookLesson == null)
@@ -68,7 +68,7 @@ namespace MedicLaunchApi.Controllers
 		[HttpGet("{id}")]
 		public async Task<IActionResult> GetTextbookLesson(string id)
 		{
-			bool isAdmin = User.IsInRole(RoleConstants.Admin);
+			bool isAdmin = User.IsInRole(RoleConstants.Admin) || User.IsInRole(RoleConstants.QuestionAuthor);
 			var textbookLesson = await textbookLessonRepository.GetTextbookLessonAsync(id, isAdmin);
 
 			if (textbookLesson == null)
@@ -82,7 +82,7 @@ namespace MedicLaunchApi.Controllers
 		[HttpGet("list")]
 		public async Task<IActionResult> GetTextbookLessons([FromQuery] string? specialityId)
 		{
-			bool isAdmin = User.IsInRole(RoleConstants.Admin);
+			bool isAdmin = User.IsInRole(RoleConstants.Admin) || User.IsInRole(RoleConstants.QuestionAuthor);
 			IEnumerable<TextbookLessonResponse> textbookLessons;
 
 			if (!string.IsNullOrEmpty(specialityId))
