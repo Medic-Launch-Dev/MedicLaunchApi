@@ -17,100 +17,114 @@ namespace MedicLaunchApi.Repository
 
 		public async Task<string> CreateTextbookLessonAsync(CreateTextbookLessonRequest request, string userId)
 		{
-			var speciality = await context.Specialities.FindAsync(request.SpecialityId);
-			if (speciality == null)
+			try
 			{
-				throw new ArgumentException($"Speciality with ID {request.SpecialityId} not found");
-			}
-
-			if (!string.IsNullOrEmpty(request.QuestionId))
-			{
-				var question = await context.Questions.FindAsync(request.QuestionId);
-				if (question == null)
+				var speciality = await context.Specialities.FindAsync(request.SpecialityId);
+				if (speciality == null)
 				{
-					throw new ArgumentException($"Question with ID {request.QuestionId} not found");
+					throw new ArgumentException($"Speciality with ID {request.SpecialityId} not found");
 				}
-			}
 
-			var textbookLessonId = Guid.NewGuid().ToString();
-
-			var textbookLesson = new TextbookLesson
-			{
-				Id = textbookLessonId,
-				Title = request.Title,
-				SpecialityId = request.SpecialityId,
-				QuestionId = request.QuestionId,
-				Contents = request.Contents.Select((c, index) => new TextbookLessonContent
+				if (!string.IsNullOrEmpty(request.QuestionId))
 				{
-					Id = Guid.NewGuid().ToString(),
-					TextbookLessonId = textbookLessonId,
-					Heading = c.Heading,
-					Text = c.Text,
-					Order = index
-				}).ToList(),
-				CreatedBy = userId,
-				UpdatedBy = userId,
-				CreatedOn = DateTime.UtcNow,
-				UpdatedOn = DateTime.UtcNow,
-				IsSubmitted = request.IsSubmitted
-			};
+					var question = await context.Questions.FindAsync(request.QuestionId);
+					if (question == null)
+					{
+						throw new ArgumentException($"Question with ID {request.QuestionId} not found");
+					}
+				}
 
-			context.TextbookLessons.Add(textbookLesson);
-			await context.SaveChangesAsync();
+				var textbookLessonId = Guid.NewGuid().ToString();
 
-			return textbookLessonId;
+				var textbookLesson = new TextbookLesson
+				{
+					Id = textbookLessonId,
+					Title = request.Title,
+					SpecialityId = request.SpecialityId,
+					QuestionId = request.QuestionId,
+					Contents = request.Contents.Select((c, index) => new TextbookLessonContent
+					{
+						Id = Guid.NewGuid().ToString(),
+						TextbookLessonId = textbookLessonId,
+						Heading = c.Heading,
+						Text = c.Text,
+						Order = index
+					}).ToList(),
+					CreatedBy = userId,
+					UpdatedBy = userId,
+					CreatedOn = DateTime.UtcNow,
+					UpdatedOn = DateTime.UtcNow,
+					IsSubmitted = request.IsSubmitted
+				};
+
+				context.TextbookLessons.Add(textbookLesson);
+				await context.SaveChangesAsync();
+
+				return textbookLessonId;
+			}
+			catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("IX_TextbookLessons_QuestionId") ?? false)
+			{
+				throw new ArgumentException($"Question with ID {request.QuestionId} is already associated with another textbook lesson");
+			}
 		}
 
 		public async Task<TextbookLesson> UpdateTextbookLessonAsync(UpdateTextbookLessonRequest request, string userId, bool isAdmin)
 		{
-			var speciality = await context.Specialities.FindAsync(request.SpecialityId);
-			if (speciality == null)
+			try
 			{
-				throw new ArgumentException($"Speciality with ID {request.SpecialityId} not found");
-			}
-
-			if (!string.IsNullOrEmpty(request.QuestionId))
-			{
-				var question = await context.Questions.FindAsync(request.QuestionId);
-				if (question == null)
+				var speciality = await context.Specialities.FindAsync(request.SpecialityId);
+				if (speciality == null)
 				{
-					throw new ArgumentException($"Question with ID {request.QuestionId} not found");
+					throw new ArgumentException($"Speciality with ID {request.SpecialityId} not found");
 				}
+
+				if (!string.IsNullOrEmpty(request.QuestionId))
+				{
+					var question = await context.Questions.FindAsync(request.QuestionId);
+					if (question == null)
+					{
+						throw new ArgumentException($"Question with ID {request.QuestionId} not found");
+					}
+				}
+
+				var textbookLesson = await context.TextbookLessons
+					.Include(t => t.Contents)
+					.FirstOrDefaultAsync(t => t.Id == request.Id);
+
+				if (textbookLesson == null)
+				{
+					return null;
+				}
+
+				if (!isAdmin && textbookLesson.CreatedBy != userId)
+				{
+					throw new AccessDeniedException("You do not have permission to update this textbook lesson");
+				}
+
+				textbookLesson.Title = request.Title;
+				textbookLesson.SpecialityId = request.SpecialityId;
+				textbookLesson.QuestionId = request.QuestionId;
+				textbookLesson.UpdatedBy = userId;
+				textbookLesson.UpdatedOn = DateTime.UtcNow;
+				textbookLesson.IsSubmitted = request.IsSubmitted;
+
+				context.TextbookLessonContents.RemoveRange(textbookLesson.Contents);
+				textbookLesson.Contents = request.Contents.Select((c, index) => new TextbookLessonContent
+				{
+					Id = Guid.NewGuid().ToString(),
+					TextbookLessonId = textbookLesson.Id,
+					Heading = c.Heading,
+					Text = c.Text,
+					Order = index  // Use array index as order
+				}).ToList();
+
+				await context.SaveChangesAsync();
+				return textbookLesson;
 			}
-
-			var textbookLesson = await context.TextbookLessons
-				.Include(t => t.Contents)
-				.FirstOrDefaultAsync(t => t.Id == request.Id);
-
-			if (textbookLesson == null)
+			catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("IX_TextbookLessons_QuestionId") ?? false)
 			{
-				return null;
+				throw new ArgumentException($"Question with ID {request.QuestionId} is already associated with another textbook lesson");
 			}
-
-			if (!isAdmin && textbookLesson.CreatedBy != userId)
-			{
-				throw new AccessDeniedException("You do not have permission to update this textbook lesson");
-			}
-
-			textbookLesson.Title = request.Title;
-			textbookLesson.SpecialityId = request.SpecialityId;
-			textbookLesson.QuestionId = request.QuestionId;
-			textbookLesson.UpdatedBy = userId;
-			textbookLesson.UpdatedOn = DateTime.UtcNow;
-			textbookLesson.IsSubmitted = request.IsSubmitted;
-
-			context.TextbookLessonContents.RemoveRange(textbookLesson.Contents);
-			textbookLesson.Contents = request.Contents.Select((c, index) => new TextbookLessonContent
-			{
-				Id = Guid.NewGuid().ToString(),
-				TextbookLessonId = textbookLesson.Id,
-				Heading = c.Heading,
-				Text = c.Text,
-				Order = index  // Use array index as order
-			}).ToList();
-
-			await context.SaveChangesAsync();
-			return textbookLesson;
 		}
 
 		public async Task<TextbookLessonResponse> GetTextbookLessonAsync(string id, bool isAdmin = false)
@@ -206,6 +220,28 @@ namespace MedicLaunchApi.Repository
 						Text = c.Text,
 					}).ToList()
 			};
+		}
+
+		public async Task<TextbookLessonResponse> GetTextbookLessonByQuestionIdAsync(string questionId, bool isAdmin)
+		{
+			var query = context.TextbookLessons
+				.Include(t => t.Speciality)
+				.Include(t => t.Contents)
+				.Where(t => t.QuestionId == questionId);
+
+			if (!isAdmin)
+			{
+				query = query.Where(t => t.IsSubmitted);
+			}
+
+			var textbookLesson = await query.FirstOrDefaultAsync();
+
+			if (textbookLesson == null)
+			{
+				return null;
+			}
+
+			return CreateTextbookLessonResponseModel(textbookLesson);
 		}
 	}
 }

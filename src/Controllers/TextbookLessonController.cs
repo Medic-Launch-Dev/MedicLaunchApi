@@ -97,6 +97,20 @@ namespace MedicLaunchApi.Controllers
 			return Ok(textbookLessons ?? new List<TextbookLessonResponse>());
 		}
 
+		[HttpGet("by-question/{questionId}")]
+		public async Task<IActionResult> GetTextbookLessonByQuestionId(string questionId)
+		{
+			bool isAdmin = User.IsInRole(RoleConstants.Admin) || User.IsInRole(RoleConstants.QuestionAuthor);
+			var textbookLesson = await textbookLessonRepository.GetTextbookLessonByQuestionIdAsync(questionId, isAdmin);
+
+			if (textbookLesson == null)
+			{
+				return NotFound();
+			}
+
+			return Ok(textbookLesson);
+		}
+
 		[Authorize(Policy = RoleConstants.QuestionAuthor)]
 		[HttpDelete("delete/{id}")]
 		public async Task<IActionResult> DeleteTextbookLesson(string id)

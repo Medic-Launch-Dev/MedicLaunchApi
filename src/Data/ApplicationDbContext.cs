@@ -77,6 +77,19 @@ namespace MedicLaunchApi.Data
                .Property(course => course.PurchasePrice)
                .HasPrecision(18, 2);
 
+            // Add unique index on QuestionId for TextbookLesson
+            builder.Entity<TextbookLesson>()
+                .HasIndex(t => t.QuestionId)
+                .IsUnique()
+                .HasFilter("[QuestionId] IS NOT NULL");  // SQL Server syntax for filtered index
+
+            // Also ensure one-to-one relationship between Question and TextbookLesson
+            builder.Entity<TextbookLesson>()
+                .HasOne(t => t.Question)
+                .WithOne()
+                .HasForeignKey<TextbookLesson>(t => t.QuestionId)
+                .IsRequired(false);
+
             base.OnModelCreating(builder);
         }
     }
