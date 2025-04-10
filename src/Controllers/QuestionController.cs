@@ -236,6 +236,38 @@ namespace MedicLaunchApi.Controllers
             }
         }
 
+        [Authorize(Policy = RoleConstants.QuestionAuthor)]
+        [HttpPost("generate/learning-points")]
+        public async Task<ActionResult<string>> GenerateLearningPoints([FromBody] string condition)
+        {
+            try 
+            {
+                var learningPoints = await questionGenerationService.GenerateLearningPointsAsync(condition);
+                return Ok(learningPoints);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error generating learning points");
+                return StatusCode(500, "Error generating learning points");
+            }
+        }
+
+        [Authorize(Policy = RoleConstants.QuestionAuthor)]
+        [HttpPost("generate/clinical-tips")]
+        public async Task<ActionResult<string>> GenerateClinicalTips([FromBody] string condition)
+        {
+            try 
+            {
+                var clinicalTips = await questionGenerationService.GenerateClinicalTipsAsync(condition);
+                return Ok(clinicalTips);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error generating clinical tips");
+                return StatusCode(500, "Error generating clinical tips");
+            }
+        }
+
         private string GetCurrentUserId()
         {
             return User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

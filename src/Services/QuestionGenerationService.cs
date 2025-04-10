@@ -13,7 +13,7 @@ namespace MedicLaunchApi.Services
       this.openAIService = openAIService;
     }
 
-    private async Task<List<ChatMessage>> GenerateChatPrompt(string conditions)
+    private List<ChatMessage> BuildQuestionTextAndExplanationPrompt(string conditions)
     {
       var messages = new List<ChatMessage>();
 
@@ -38,9 +38,59 @@ namespace MedicLaunchApi.Services
       return messages;
     }
 
+    private List<ChatMessage> BuildLearningPointsPrompt(string condition)
+    {
+      var messages = new List<ChatMessage>();
+
+      var systemUserMessage = "**Goal:**\nI want a comprehensive clinical revision summary for final-year medical students preparing for the UKMLA exam.\n\n**Return Format:**\nBase the summary on NICE guidelines and write in UK English. It should include:\n- A brief overview of the condition.\n- Key signs and symptoms.\n- Relevant investigations.\n- Diagnosis criteria.\n- Management based on NICE guidance.\n- Important differentials.\n- High-yield revision tips. Make it structured and thorough enough for exam success.\n- You must return your answer STRICTLY adhering to HTML formatting.\n\n**Warnings:**\nEnsure that the clinical content is accurate and reflects the most recent NICE guidance. Avoid generic information; tailor it to the condition mentioned in the question.\n\n**For context:**\nThis is for a UKMLA exam revision tool. The condition to summarise is either the correct answer or the key learning point from the question scenario. Final-year medical students will use this as a high-quality study resource, so clarity, accuracy, and practical relevance are essential.";
+      messages.Add(new ChatMessage { Role = "user", Content = [new ChatContent { Text = systemUserMessage }] });
+      var example1UserMessage = "Generate a comprehensive clinical revision summary for the following: Open-Angle Glaucoma.";
+      messages.Add(new ChatMessage { Role = "user", Content = [new ChatContent { Text = example1UserMessage }] });
+      var example1AssistantMessage = "<h3><strong>Open-Angle Glaucoma</strong></h3><p></p><p><strong>Overview:</strong> Open-angle glaucoma is a chronic, progressive optic neuropathy characterised by the gradual loss of peripheral vision due to increased intraocular pressure (IOP), leading to optic nerve damage. It is the most common type of glaucoma and is often asymptomatic until advanced stages.</p><p></p><p><strong>Pathophysiology:</strong></p><ul><li><p>The drainage angle between the iris and cornea remains open, but the trabecular meshwork becomes less efficient at draining aqueous humour.</p></li><li><p>This results in increased IOP, leading to optic nerve damage and visual field loss.</p></li></ul><p></p><p><strong>Risk Factors:</strong></p><ul><li><p>Age (&gt;60 years)</p></li><li><p>Family history of glaucoma</p></li><li><p>African or Hispanic descent</p></li><li><p>Chronic conditions: Myopia, diabetes, hypertension</p></li><li><p>Long-term steroid use</p></li></ul><p></p><p><strong>Symptoms:</strong></p><ul><li><p>Early stages: Often asymptomatic.</p></li><li><p>Late stages:</p><ul><li><p>Gradual loss of peripheral (side) vision.</p></li><li><p>\"Tunnel vision\" in advanced disease.</p></li><li><p>Central vision typically preserved until late stages.</p></li></ul></li></ul><p></p><p><strong>Diagnosis:</strong></p><p></p><ol><li><p><strong>Tonometry:</strong> Measures intraocular pressure (normal range: 10-21 mmHg).</p></li><li><p><strong>Gonioscopy:</strong> Confirms an open anterior chamber angle.</p></li><li><p><strong>Optic Disc Examination:</strong> Shows optic disc cupping and thinning of the neuroretinal rim.</p></li><li><p><strong>Visual Field Testing:</strong> Detects peripheral vision loss.</p></li><li><p><strong>Optical Coherence Tomography (OCT):</strong> Measures retinal nerve fibre layer thickness.</p></li></ol><p></p><p><strong>Management:</strong></p><p></p><ul><li><p><strong>Medications:</strong></p><ol><li><p><strong>Prostaglandin analogues</strong> (e.g., latanoprost): First-line treatment; increases aqueous humour outflow.</p></li><li><p><strong>Beta-blockers</strong> (e.g., timolol): Reduces aqueous humour production.</p></li><li><p><strong>Alpha-agonists</strong> (e.g., brimonidine): Decreases aqueous production and increases outflow.</p></li><li><p><strong>Carbonic anhydrase inhibitors</strong> (e.g., acetazolamide): Lowers aqueous production.</p></li><li><p><strong>Miotics</strong> (e.g., pilocarpine): Increases outflow by contracting the ciliary muscle (less commonly used).</p></li></ol></li><li><p><strong>Laser Therapy:</strong></p><ul><li><p><strong>Laser trabeculoplasty:</strong> Used when medications are insufficient. Increases fluid outflow.</p></li></ul></li><li><p><strong>Surgery:</strong></p><ul><li><p><strong>Trabeculectomy</strong> or <strong>aqueous shunt placement</strong>: For advanced or refractory cases to create new drainage pathways.</p></li></ul></li></ul><p></p><p><strong>Follow-Up:</strong></p><ul><li><p>Regular monitoring of IOP, visual fields, and optic nerve changes is essential to prevent disease progression.</p></li></ul>";
+      messages.Add(new ChatMessage { Role = "assistant", Content = [new ChatContent { Text = example1AssistantMessage }] });
+      var example2UserMessage = "Generate a comprehensive clinical revision summary for the following: Bulimia Nervosa.";
+      messages.Add(new ChatMessage { Role = "user", Content = [new ChatContent { Text = example2UserMessage }] });
+      var example2AssistantMessage = "<h3><strong>Bulimia Nervosa</strong></h3><p></p><ul><li><p><strong>Body Weight</strong>: People with bulimia often maintain a normal body weight, but it may fluctuate.</p></li></ul><p></p><ul><li><p><strong>Binge and Purge</strong>: The disorder is characterised by binge eating followed by purging behaviours like self-induced vomiting or laxative use.</p></li></ul><p></p><ul><li><p><strong>Physical Findings</strong>:</p><ul><li><p>Common Presentations: May include abdominal pain or reflux symptoms.</p></li><li><p>Blood Gas Analysis: Can reveal <strong>alkalosis</strong> caused by vomiting out stomach acid.</p></li><li><p><strong>Hypokalaemia</strong>: Due to purging behaviours.</p></li><li><p><strong>Dental Erosion</strong>: From repeated exposure to stomach acid.</p></li><li><p><strong>Swollen Salivary Glands</strong>: Leading to facial or jaw swelling.</p></li><li><p>Mouth <strong>Ulcers</strong> and Gastro-oesophageal <strong>Reflux</strong>: Due to repeated vomiting.</p></li><li><p><strong>Russell’s Sign</strong>: Calluses on knuckles from inducing vomiting.</p></li></ul></li></ul>";
+      messages.Add(new ChatMessage { Role = "assistant", Content = [new ChatContent { Text = example2AssistantMessage }] });
+      var example3UserMessage = "Generate a comprehensive clinical revision summary for the following: Polypharmacy and Drug Interactions.";
+      messages.Add(new ChatMessage { Role = "user", Content = [new ChatContent { Text = example3UserMessage }] });
+      var example3AssistantMessage = "<h3><strong>Polypharmacy and Drug Interactions</strong></h3><p></p><ul><li><p><strong>Definition:</strong> Polypharmacy is the use of multiple medications by a patient, often defined as the use of five or more drugs.</p><p></p></li><li><p><strong>Risks:</strong> Increased risk of drug-drug interactions, adverse drug reactions, medication non-adherence, and potentially inappropriate prescribing.</p><p></p></li><li><p><strong>Common Interactions:</strong></p><ul><li><p><strong>Pharmacokinetic:</strong> Alterations in drug absorption, distribution, metabolism, or excretion (e.g., warfarin and antibiotics).</p></li><li><p><strong>Pharmacodynamic:</strong> Drugs that have additive, synergistic, or antagonistic effects (e.g., ACE inhibitors and NSAIDs).</p><p></p></li></ul></li><li><p><strong>Management:</strong></p><ul><li><p><strong>Medication Review:</strong> Regularly review all medications to assess necessity, efficacy, and safety.</p></li><li><p><strong>Deprescribing:</strong> Gradual reduction or stopping of medications that are no longer necessary or potentially harmful.</p></li><li><p><strong>Patient Education:</strong> Ensuring patients understand their medications, possible interactions, and the importance of adherence.</p></li></ul></li></ul>";
+      messages.Add(new ChatMessage { Role = "assistant", Content = [new ChatContent { Text = example3AssistantMessage }] });
+
+      var content = $"Generate a comprehensive clinical revision summary for the following: {condition}";
+      messages.Add(new ChatMessage { Role = "user", Content = [new ChatContent { Text = content }] });
+
+      return messages;
+    }
+
+    private List<ChatMessage> BuildClinicalTipsPrompt(string condition)
+    {
+      var messages = new List<ChatMessage>();
+
+      var systemUserMessage = "**Goal:**\nI want a concise and practical clinical tip written in UK English that enhances a junior doctor’s real-world practice.\n\n**Return Format:**\nProvide a one-to-two sentence tip based around:\n- Communication skills\n- Examination technique\n- Procedural know-how\n- Disease detection strategies\n- Professional growth on the ward\n\nMake it specific and memorable — something that can be easily applied during NHS clinical placements.\n\nEnsure that your response adheres STRICTLY to HTML formatting.\n\n**Warnings:**\nAvoid vague or overly generic tips. Focus on delivering something insightful or nuanced that a wise consultant would pass on.\n\n**For context:**\nThis is for junior doctors and final-year medical students. The tip should relate to the condition referenced in the previous question, or be applicable to clinical practice based on the conditions listed. The tone should reflect the wisdom of an experienced NHS consultant.";
+      messages.Add(new ChatMessage { Role = "user", Content = [new ChatContent { Text = systemUserMessage }] });
+      var example1UserMessage = "Generate a concise and practical clinical tip for: Drug Allergy (Amoxicillin-induced Rash).";
+      messages.Add(new ChatMessage { Role = "user", Content = [new ChatContent { Text = example1UserMessage }] });
+      var example1AssistantMessage = "<p>Clearly document any drug allergies in the patient’s medical record and educate the patient about the need to avoid beta-lactam antibiotics in the future.</p>";
+      messages.Add(new ChatMessage { Role = "assistant", Content = [new ChatContent { Text = example1AssistantMessage }] });
+      var example2UserMessage = "Generate a concise and practical clinical tip for: Malignant Melanoma.";
+      messages.Add(new ChatMessage { Role = "user", Content = [new ChatContent { Text = example2UserMessage }] });
+      var example2AssistantMessage = "<p>When assessing pigmented lesions, use the ABCDE rule (Asymmetry, Border irregularity, Colour variation, Diameter &gt;6mm, and Evolution) to differentiate benign from suspicious lesions requiring urgent referral.</p>";
+      messages.Add(new ChatMessage { Role = "assistant", Content = [new ChatContent { Text = example2AssistantMessage }] });
+      var example3UserMessage = "Generate a concise and practical clinical tip for: Adenocarcinoma of the Lungs.";
+      messages.Add(new ChatMessage { Role = "user", Content = [new ChatContent { Text = example3UserMessage }] });
+      var example3AssistantMessage = "<p>When discussing treatment options for lung cancer, ensure to communicate the importance of genetic testing to the patient, as targeted therapies based on these results can significantly improve outcomes and quality of life.</p>";
+      messages.Add(new ChatMessage { Role = "assistant", Content = [new ChatContent { Text = example3AssistantMessage }] });
+
+      var content = $"Generate a concise and practical clinical tip for: {condition}";
+      messages.Add(new ChatMessage { Role = "user", Content = [new ChatContent { Text = content }] });
+
+      return messages;
+    }
+
     public async Task<QuestionTextAndExplanation> GenerateQuestionTextAndExplanationAsync(string content)
     {
-      var messages = await GenerateChatPrompt(content);
+      var messages = BuildQuestionTextAndExplanationPrompt(content);
 
       var response = await openAIService.GenerateChatCompletion(messages);
 
@@ -50,6 +100,20 @@ namespace MedicLaunchApi.Services
       };
 
       return JsonSerializer.Deserialize<QuestionTextAndExplanation>(response, jsonOptions);
+    }
+
+    public async Task<string> GenerateLearningPointsAsync(string condition)
+    {
+      var messages = BuildLearningPointsPrompt(condition);
+      var response = await openAIService.GenerateChatCompletion(messages);
+      return response;
+    }
+
+    public async Task<string> GenerateClinicalTipsAsync(string condition)
+    {
+      var messages = BuildClinicalTipsPrompt(condition);
+      var response = await openAIService.GenerateChatCompletion(messages);
+      return response;
     }
   }
 }
