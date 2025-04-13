@@ -80,5 +80,6 @@ namespace MedicLaunchApi.Models.ViewModels
 	{
 		public string LearningPoints { get; set; }
 		public string SpecialityId { get; set; }
+		public string? QuestionId { get; set; }
 	}
 }

@@ -118,7 +118,7 @@ namespace MedicLaunchApi.Controllers
 		[HttpPost("generate")]
 		public async Task<IActionResult> GenerateTextbookLessonContent([FromBody] GenerateTextbookLessonContentRequest request)
 		{
-			var response = await textbookLessonGenerationService.GenerateAndCreateTextbookLessonAsync(request.LearningPoints, request.SpecialityId, GetCurrentUserId());
+			var response = await textbookLessonGenerationService.GenerateTextbookLessonAsync(request.LearningPoints, request.SpecialityId, request.QuestionId);
 			return Ok(response);
 		}
 
