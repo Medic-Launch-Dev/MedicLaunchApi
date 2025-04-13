@@ -102,12 +102,6 @@ namespace MedicLaunchApi.Controllers
 		{
 			bool isAdmin = User.IsInRole(RoleConstants.Admin) || User.IsInRole(RoleConstants.QuestionAuthor);
 			var textbookLesson = await textbookLessonRepository.GetTextbookLessonByQuestionIdAsync(questionId, isAdmin);
-
-			if (textbookLesson == null)
-			{
-				return NotFound();
-			}
-
 			return Ok(textbookLesson);
 		}
 
