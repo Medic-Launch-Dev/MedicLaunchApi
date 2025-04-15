@@ -1,4 +1,3 @@
-
 using MedicLaunchApi.Authorization;
 using MedicLaunchApi.Data;
 using MedicLaunchApi.Models;
@@ -27,7 +26,13 @@ namespace MedicLaunchApi
             builder.Services.AddIdentityApiEndpoints<MedicLaunchUser>()
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddUserManager<UserManager<MedicLaunchUser>>();
+                .AddUserManager<UserManager<MedicLaunchUser>>()
+                .AddDefaultTokenProviders();
+
+            builder.Services.Configure<IdentityOptions>(options =>
+            {
+                options.SignIn.RequireConfirmedEmail = true;
+            });
 
             builder.Services.AddAuthorization(options =>
             {
@@ -72,6 +77,8 @@ namespace MedicLaunchApi
             {
                 options.BearerTokenExpiration = TimeSpan.FromHours(24);
             });
+
+            builder.Services.AddScoped<EmailService>();
 
             var services = builder.Services;
 

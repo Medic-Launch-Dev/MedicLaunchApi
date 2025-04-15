@@ -20,7 +20,10 @@ namespace MedicLaunchApi.Controllers
         private readonly IMixPanelService mixPanelService;
         private readonly UserDataRepository userRepository;
         private readonly QuestionRepository questionRepository;
-        public AccountController(UserManager<MedicLaunchUser> signInManager, PaymentService paymentService, IMixPanelService mixPanelService, UserDataRepository userRepository, RoleManager<IdentityRole> roleManager, QuestionRepository questionRepository)
+        private readonly EmailService emailService;
+        private readonly IConfiguration configuration;
+
+        public AccountController(UserManager<MedicLaunchUser> signInManager, PaymentService paymentService, IMixPanelService mixPanelService, UserDataRepository userRepository, RoleManager<IdentityRole> roleManager, QuestionRepository questionRepository, EmailService emailService, IConfiguration configuration)
         {
             this.userManager = signInManager;
             this.paymentService = paymentService;
@@ -28,6 +31,8 @@ namespace MedicLaunchApi.Controllers
             this.userRepository = userRepository;
             this.roleManager = roleManager;
             this.questionRepository = questionRepository;
+            this.emailService = emailService;
+            this.configuration = configuration;
         }
 
         [HttpPost("register")]
@@ -45,7 +50,8 @@ namespace MedicLaunchApi.Controllers
                 City = user.City,
                 HowDidYouHearAboutUs = user.HowDidYouHearAboutUs,
                 SubscribeToPromotions = user.SubscribeToPromotions,
-                PhoneNumber = user.PhoneNumber
+                PhoneNumber = user.PhoneNumber,
+                EmailConfirmed = false // Ensure email is not confirmed by default
             };
 
             var result = await this.userManager.CreateAsync(newUser, user.Password);
@@ -59,15 +65,50 @@ namespace MedicLaunchApi.Controllers
 
                 await this.mixPanelService.CreateUserProfile(newUser, ipAddress);
 
+                // Generate email confirmation token
+                var token = await userManager.GenerateEmailConfirmationTokenAsync(newUser);
+
+                // Create confirmation link
+                var confirmationLink = Url.Action("ConfirmEmail", "Account",
+                    new { userId = newUser.Id, token = token },
+                    protocol: HttpContext.Request.Scheme);
+
+                // Send confirmation email
+                await emailService.SendEmailConfirmationAsync(newUser.Email, confirmationLink);
+
                 // Default role is student - use role manager to add roles
                 await this.userManager.AddToRoleAsync(newUser, RoleConstants.Student);
 
-                return Ok();
+                return Ok(new { message = "Registration successful. Please check your email to confirm your account." });
             }
             else
             {
                 return BadRequest(result.Errors);
             }
+        }
+
+        [HttpGet("confirm-email")]
+        public async Task<IActionResult> ConfirmEmail(string userId, string token)
+        {
+            if (userId == null || token == null)
+            {
+                return BadRequest("Invalid email confirmation token");
+            }
+
+            var user = await userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound($"Unable to load user with ID '{userId}'.");
+            }
+
+            var result = await userManager.ConfirmEmailAsync(user, token);
+            if (result.Succeeded)
+            {
+                var domain = configuration.GetValue<string>("ReactApp:Url");
+                return Redirect(domain + "/email-confirmed");
+            }
+
+            return BadRequest("Error confirming your email.");
         }
 
         [HttpGet("myprofile")]
