@@ -111,7 +111,7 @@ namespace MedicLaunchApi
 
 
             var app = builder.Build();
-            app.MapIdentityApi<MedicLaunchUser>();
+            app.MapCustomIdentityApi<MedicLaunchUser>();
 
             app.UseSwagger();
             app.UseSwaggerUI();

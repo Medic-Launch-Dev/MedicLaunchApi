@@ -51,7 +51,6 @@ namespace MedicLaunchApi.Controllers
                 HowDidYouHearAboutUs = user.HowDidYouHearAboutUs,
                 SubscribeToPromotions = user.SubscribeToPromotions,
                 PhoneNumber = user.PhoneNumber,
-                EmailConfirmed = false // Ensure email is not confirmed by default
             };
 
             var result = await this.userManager.CreateAsync(newUser, user.Password);
@@ -65,18 +64,18 @@ namespace MedicLaunchApi.Controllers
 
                 await this.mixPanelService.CreateUserProfile(newUser, ipAddress);
 
-                // Generate email confirmation token
                 var token = await userManager.GenerateEmailConfirmationTokenAsync(newUser);
 
-                // Create confirmation link
                 var confirmationLink = Url.Action("ConfirmEmail", "Account",
                     new { userId = newUser.Id, token = token },
                     protocol: HttpContext.Request.Scheme);
 
-                // Send confirmation email
-                await emailService.SendEmailConfirmationAsync(newUser.Email, confirmationLink);
+                if (string.IsNullOrEmpty(confirmationLink))
+                {
+                    return BadRequest("Error generating email confirmation link");
+                }
 
-                // Default role is student - use role manager to add roles
+                await emailService.SendEmailConfirmationAsync(newUser.Email, confirmationLink);
                 await this.userManager.AddToRoleAsync(newUser, RoleConstants.Student);
 
                 return Ok(new { message = "Registration successful. Please check your email to confirm your account." });
