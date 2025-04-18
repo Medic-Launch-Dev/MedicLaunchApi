@@ -1,4 +1,3 @@
-
 using MedicLaunchApi.Authorization;
 using MedicLaunchApi.Data;
 using MedicLaunchApi.Models;
@@ -27,7 +26,13 @@ namespace MedicLaunchApi
             builder.Services.AddIdentityApiEndpoints<MedicLaunchUser>()
                 .AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddUserManager<UserManager<MedicLaunchUser>>();
+                .AddUserManager<UserManager<MedicLaunchUser>>()
+                .AddDefaultTokenProviders();
+
+            builder.Services.Configure<IdentityOptions>(options =>
+            {
+                options.SignIn.RequireConfirmedEmail = true;
+            });
 
             builder.Services.AddAuthorization(options =>
             {
@@ -61,6 +66,8 @@ namespace MedicLaunchApi
             builder.Services.AddScoped<CoursesRepository>();
             builder.Services.AddScoped<TextbookLessonRepository>();
 
+            builder.Services.AddScoped<IEmailSender<MedicLaunchUser>, EmailSender<MedicLaunchUser>>();
+            builder.Services.AddSingleton<IEmailSender<MedicLaunchUser>, EmailSender<MedicLaunchUser>>();
             builder.Services.AddScoped<PaymentService>();
             builder.Services.AddScoped<IMixPanelService, MixPanelService>();
             builder.Services.AddScoped<AzureOpenAIService>();
@@ -104,7 +111,7 @@ namespace MedicLaunchApi
 
 
             var app = builder.Build();
-            app.MapIdentityApi<MedicLaunchUser>();
+            app.MapCustomIdentityApi<MedicLaunchUser>();
 
             app.UseSwagger();
             app.UseSwaggerUI();
