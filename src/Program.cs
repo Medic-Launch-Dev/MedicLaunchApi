@@ -66,6 +66,8 @@ namespace MedicLaunchApi
             builder.Services.AddScoped<CoursesRepository>();
             builder.Services.AddScoped<TextbookLessonRepository>();
 
+            builder.Services.AddScoped<IEmailSender<MedicLaunchUser>, EmailSender<MedicLaunchUser>>();
+            builder.Services.AddSingleton<IEmailSender<MedicLaunchUser>, EmailSender<MedicLaunchUser>>();
             builder.Services.AddScoped<PaymentService>();
             builder.Services.AddScoped<IMixPanelService, MixPanelService>();
             builder.Services.AddScoped<AzureOpenAIService>();
@@ -77,8 +79,6 @@ namespace MedicLaunchApi
             {
                 options.BearerTokenExpiration = TimeSpan.FromHours(24);
             });
-
-            builder.Services.AddScoped<EmailService>();
 
             var services = builder.Services;
 

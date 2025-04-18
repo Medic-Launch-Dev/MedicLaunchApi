@@ -7,6 +7,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
+using MedicLaunchApi.Models.ViewModels;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -55,7 +56,7 @@ public static class IdentityApiEndpointRouteBuilderExtensions
     // NOTE: We cannot inject UserManager<TUser> directly because the TUser generic parameter is currently unsupported by RDG.
     // https://github.com/dotnet/aspnetcore/issues/47338
     routeGroup.MapPost("/register", async Task<Results<Ok, ValidationProblem>>
-        ([FromBody] RegisterRequest registration, HttpContext context, [FromServices] IServiceProvider sp) =>
+        ([FromBody] RegisterUserRequest registration, HttpContext context, [FromServices] IServiceProvider sp) =>
     {
       var userManager = sp.GetRequiredService<UserManager<TUser>>();
 
@@ -73,9 +74,25 @@ public static class IdentityApiEndpointRouteBuilderExtensions
         return CreateValidationProblem(IdentityResult.Failed(userManager.ErrorDescriber.InvalidEmail(email)));
       }
 
+      // Map all properties if TUser is MedicLaunchUser
       var user = new TUser();
       await userStore.SetUserNameAsync(user, email, CancellationToken.None);
       await emailStore.SetEmailAsync(user, email, CancellationToken.None);
+
+      // Set additional properties if possible
+      if (user is MedicLaunchApi.Models.MedicLaunchUser medicUser)
+      {
+        medicUser.FirstName = registration.FirstName;
+        medicUser.LastName = registration.LastName;
+        medicUser.DisplayName = registration.DisplayName;
+        medicUser.University = registration.University;
+        medicUser.GraduationYear = registration.GraduationYear;
+        medicUser.City = registration.City;
+        medicUser.HowDidYouHearAboutUs = registration.HowDidYouHearAboutUs;
+        medicUser.SubscribeToPromotions = registration.SubscribeToPromotions;
+        medicUser.PhoneNumber = registration.PhoneNumber;
+      }
+
       var result = await userManager.CreateAsync(user, registration.Password);
 
       if (!result.Succeeded)
@@ -83,7 +100,7 @@ public static class IdentityApiEndpointRouteBuilderExtensions
         return CreateValidationProblem(result);
       }
 
-      await SendConfirmationEmailAsync(user, userManager, context, email);
+      // await SendConfirmationEmailAsync(user, userManager, context, email);
       return TypedResults.Ok();
     });
 
@@ -149,10 +166,11 @@ public static class IdentityApiEndpointRouteBuilderExtensions
       return TypedResults.SignIn(newPrincipal, authenticationScheme: IdentityConstants.BearerScheme);
     });
 
-    routeGroup.MapGet("/confirmEmail", async Task<Results<ContentHttpResult, UnauthorizedHttpResult>>
+    routeGroup.MapGet("/confirmEmail", async Task<Results<RedirectHttpResult, UnauthorizedHttpResult>>
         ([FromQuery] string userId, [FromQuery] string code, [FromQuery] string? changedEmail, [FromServices] IServiceProvider sp) =>
     {
       var userManager = sp.GetRequiredService<UserManager<TUser>>();
+      var configuration = sp.GetRequiredService<IConfiguration>();
       if (await userManager.FindByIdAsync(userId) is not { } user)
       {
         // We could respond with a 404 instead of a 401 like Identity UI, but that feels like unnecessary information.
@@ -191,7 +209,8 @@ public static class IdentityApiEndpointRouteBuilderExtensions
         return TypedResults.Unauthorized();
       }
 
-      return TypedResults.Text("Thank you for confirming your email.");
+      var reactAppUrl = configuration["ReactApp:Url"] ?? "/";
+      return TypedResults.Redirect($"{reactAppUrl}/email-confirmed");
     })
     .Add(endpointBuilder =>
     {

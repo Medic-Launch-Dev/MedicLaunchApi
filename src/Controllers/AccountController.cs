@@ -20,10 +20,9 @@ namespace MedicLaunchApi.Controllers
         private readonly IMixPanelService mixPanelService;
         private readonly UserDataRepository userRepository;
         private readonly QuestionRepository questionRepository;
-        private readonly EmailService emailService;
         private readonly IConfiguration configuration;
 
-        public AccountController(UserManager<MedicLaunchUser> signInManager, PaymentService paymentService, IMixPanelService mixPanelService, UserDataRepository userRepository, RoleManager<IdentityRole> roleManager, QuestionRepository questionRepository, EmailService emailService, IConfiguration configuration)
+        public AccountController(UserManager<MedicLaunchUser> signInManager, PaymentService paymentService, IMixPanelService mixPanelService, UserDataRepository userRepository, RoleManager<IdentityRole> roleManager, QuestionRepository questionRepository, IConfiguration configuration)
         {
             this.userManager = signInManager;
             this.paymentService = paymentService;
@@ -31,7 +30,6 @@ namespace MedicLaunchApi.Controllers
             this.userRepository = userRepository;
             this.roleManager = roleManager;
             this.questionRepository = questionRepository;
-            this.emailService = emailService;
             this.configuration = configuration;
         }
 
@@ -75,7 +73,6 @@ namespace MedicLaunchApi.Controllers
                     return BadRequest("Error generating email confirmation link");
                 }
 
-                await emailService.SendEmailConfirmationAsync(newUser.Email, confirmationLink);
                 await this.userManager.AddToRoleAsync(newUser, RoleConstants.Student);
 
                 return Ok(new { message = "Registration successful. Please check your email to confirm your account." });
