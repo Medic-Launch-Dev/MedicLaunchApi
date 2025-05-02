@@ -236,6 +236,7 @@ public static class IdentityApiEndpointRouteBuilderExtensions
         ([FromBody] ForgotPasswordRequest resetRequest, [FromServices] IServiceProvider sp) =>
     {
       var userManager = sp.GetRequiredService<UserManager<TUser>>();
+      var configuration = sp.GetRequiredService<IConfiguration>();
       var user = await userManager.FindByEmailAsync(resetRequest.Email);
 
       if (user is not null && await userManager.IsEmailConfirmedAsync(user))
@@ -243,11 +244,13 @@ public static class IdentityApiEndpointRouteBuilderExtensions
         var code = await userManager.GeneratePasswordResetTokenAsync(user);
         code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
 
-        await emailSender.SendPasswordResetCodeAsync(user, resetRequest.Email, HtmlEncoder.Default.Encode(code));
+        // Generate a reset link for your frontend
+        var reactAppUrl = configuration["ReactApp:Url"];
+        var resetUrl = $"{reactAppUrl}/reset-password?email={Uri.EscapeDataString(resetRequest.Email)}&code={Uri.EscapeDataString(code)}";
+
+        await emailSender.SendPasswordResetLinkAsync(user, resetRequest.Email, resetUrl);
       }
 
-      // Don't reveal that the user does not exist or is not confirmed, so don't return a 200 if we would have
-      // returned a 400 for an invalid code given a valid user email.
       return TypedResults.Ok();
     });
 

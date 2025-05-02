@@ -46,7 +46,7 @@ public class EmailSender<TUser> : IEmailSender<TUser> where TUser : class
 		var client = new SendGridClient(_sendGridKey);
 		var msg = new SendGridMessage()
 		{
-			From = new EmailAddress("ahmedabdullah60@gmail.com", "Medic Launch"),
+			From = new EmailAddress("info@mediclaunch.co.uk", "Medic Launch"),
 			Subject = subject,
 			PlainTextContent = message,
 			HtmlContent = message

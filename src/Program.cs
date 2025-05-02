@@ -74,6 +74,7 @@ namespace MedicLaunchApi
             builder.Services.AddScoped<OpenAIService>();
             builder.Services.AddScoped<TextbookLessonGenerationService>();
             builder.Services.AddScoped<IQuestionGenerationService, QuestionGenerationService>();
+            builder.Services.AddScoped<ClinicalCaseCaptureService>();
 
             builder.Services.AddOptions<BearerTokenOptions>(IdentityConstants.BearerScheme).Configure(options =>
             {
