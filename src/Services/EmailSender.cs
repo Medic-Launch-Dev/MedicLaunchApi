@@ -82,7 +82,7 @@ public class EmailSender<TUser> : IEmailSender<TUser> where TUser : class
       <p>We're thrilled to have you on board as you prepare for your journey to success in the UKMLA.</p>
       <p><strong>Please confirm your email address</strong> to activate your account and access everything Medic Launch has to offer.</p>
       <p style=""text-align: center;"">
-        <a href=""{confirmationLink}"" class=""button"">Confirm My Email</a>
+        <a href=""{confirmationLink}"" class=""button"" style=""color: #ffffff !important; text-decoration: none;"">Confirm My Email</a>
       </p>
       <p>Supporting your journey,<br><strong>The Medic Launch Team</strong></p>
     </div>
@@ -166,7 +166,7 @@ public class EmailSender<TUser> : IEmailSender<TUser> where TUser : class
       <p>We received a request to reset your Medic Launch password. No worries — it happens to the best of us!</p>
       <p>Click the button below to create a new password:</p>
       <p style=""text-align: center;"">
-        <a href=""{resetLink}"" class=""button"">Reset My Password</a>
+        <a href=""{resetLink}"" class=""button"" style=""color: #ffffff !important; text-decoration: none;"">Reset My Password</a>
       </p>
       <p>If you didn’t request this, you can safely ignore this email. Your current password will remain unchanged.</p>
       <p>Need help or have any questions? Just reply to this email — we're here for you.</p>
