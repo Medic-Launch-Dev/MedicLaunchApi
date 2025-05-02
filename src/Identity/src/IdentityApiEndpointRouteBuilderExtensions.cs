@@ -210,7 +210,7 @@ public static class IdentityApiEndpointRouteBuilderExtensions
       }
 
       var reactAppUrl = configuration["ReactApp:Url"] ?? "/";
-      return TypedResults.Redirect($"{reactAppUrl}/email-confirmed");
+      return TypedResults.Redirect(reactAppUrl);
     })
     .Add(endpointBuilder =>
     {
