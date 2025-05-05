@@ -139,8 +139,8 @@ namespace MedicLaunchApi.Services
                   },
                 },
                     Mode = "payment",
-                    SuccessUrl = domain + "payment-complete",
-                    CancelUrl = domain + "subscribe",
+                    SuccessUrl = domain + "/payment-complete",
+                    CancelUrl = domain + "/subscribe",
                     AllowPromotionCodes = true,
                     Customer = customer.Id,
                 };

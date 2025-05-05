@@ -59,19 +59,13 @@ namespace MedicLaunchApi.Controllers
 
                 switch (stripeEvent.Type)
                 {
-                    case Events.PaymentIntentSucceeded:
-                        intent = stripeEvent.Data.Object as PaymentIntent;
-                        await HandlePaymentSucceeded(intent);
-                        break;
-                    // case Events.CheckoutSessionCompleted:
-                    //     var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
-                    //     await HandleCheckoutSessionCompleted(session);
+                    // case Events.PaymentIntentSucceeded:
+                    //     intent = stripeEvent.Data.Object as PaymentIntent;
+                    //     await HandlePaymentSucceeded(intent);
                     //     break;
-                    case Events.PaymentIntentPaymentFailed:
-                        logger.LogInformation("Payment Failure: {ID}. Details {Details}", intent?.Id, stripeEvent.ToJson());
-
-                        // Notify the customer that payment failed ?
-
+                    case Events.CheckoutSessionCompleted:
+                        var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
+                        await HandleCheckoutSessionCompleted(session);
                         break;
                     default:
                         // Handle other event types
@@ -131,9 +125,13 @@ namespace MedicLaunchApi.Controllers
                 return BadRequest();
             }
 
+            if (session.PaymentIntent.Status != "succeeded")
+            {
+                this.logger.LogError("Payment not succeeded");
+                return BadRequest();
+            }
+
             var customerService = new CustomerService();
-            this.logger.LogInformation(session.CustomerId);
-            // if (session.PaymentIntent.Status === "succeeded")
             var customer = await customerService.GetAsync(session.CustomerId);
 
             if (customer?.Email == null)
