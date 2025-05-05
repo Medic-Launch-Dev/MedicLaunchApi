@@ -35,7 +35,6 @@ namespace MedicLaunchApi.Controllers
         [Route("stripe")]
         public async Task<ActionResult> StripeHook()
         {
-            logger.LogInformation("webhook triggered");
             try
             {
                 StripeConfiguration.ApiKey = this.stripeApiKey;
@@ -57,16 +56,20 @@ namespace MedicLaunchApi.Controllers
                     return BadRequest();
                 }
 
+                logger.LogInformation("Stripe event type: {EventType}", stripeEvent.Type);
+
                 switch (stripeEvent.Type)
                 {
-                    // case Events.PaymentIntentSucceeded:
-                    //     intent = stripeEvent.Data.Object as PaymentIntent;
-                    //     await HandlePaymentSucceeded(intent);
-                    //     break;
-                    case Events.CheckoutSessionCompleted:
-                        var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
-                        await HandleCheckoutSessionCompleted(session);
+                    case Events.PaymentIntentSucceeded:
+                        logger.LogInformation("Payment intent succeeded event received");
+                        intent = stripeEvent.Data.Object as PaymentIntent;
+                        await HandlePaymentSucceeded(intent);
                         break;
+                    // case Events.CheckoutSessionCompleted:
+                    //     logger.LogInformation("Checkout session completed event received");
+                    //     var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
+                    //     await HandleCheckoutSessionCompleted(session);
+                    //     break;
                     default:
                         // Handle other event types
 
@@ -122,12 +125,6 @@ namespace MedicLaunchApi.Controllers
             if (session == null)
             {
                 this.logger.LogError("Invalid checkout session");
-                return BadRequest();
-            }
-
-            if (session.PaymentIntent.Status != "succeeded")
-            {
-                this.logger.LogError("Payment not succeeded");
                 return BadRequest();
             }
 
