@@ -60,16 +60,16 @@ namespace MedicLaunchApi.Controllers
 
                 switch (stripeEvent.Type)
                 {
-                    case Events.PaymentIntentSucceeded:
-                        logger.LogInformation("Payment intent succeeded event received");
-                        intent = stripeEvent.Data.Object as PaymentIntent;
-                        await HandlePaymentSucceeded(intent);
-                        break;
-                    // case Events.CheckoutSessionCompleted:
-                    //     logger.LogInformation("Checkout session completed event received");
-                    //     var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
-                    //     await HandleCheckoutSessionCompleted(session);
+                    // case Events.PaymentIntentSucceeded:
+                    //     logger.LogInformation("Payment intent succeeded event received");
+                    //     intent = stripeEvent.Data.Object as PaymentIntent;
+                    //     await HandlePaymentSucceeded(intent);
                     //     break;
+                    case Events.CheckoutSessionCompleted:
+                        logger.LogInformation("Checkout session completed event received");
+                        var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
+                        await HandleCheckoutSessionCompleted(session);
+                        break;
                     default:
                         // Handle other event types
 
@@ -146,8 +146,6 @@ namespace MedicLaunchApi.Controllers
                 this.logger.LogError($"Unable to find user with email {customerEmail}");
                 return BadRequest();
             }
-
-            this.logger.LogInformation(customerEmail);
 
             var plan = PaymentHelper.GetSubscriptionPlan(user.SubscriptionPlanId!);
             user.SubscriptionExpiryDate = DateTime.UtcNow.AddMonths(plan.Months);
