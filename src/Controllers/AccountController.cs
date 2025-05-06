@@ -49,6 +49,7 @@ namespace MedicLaunchApi.Controllers
                 HowDidYouHearAboutUs = user.HowDidYouHearAboutUs,
                 SubscribeToPromotions = user.SubscribeToPromotions,
                 PhoneNumber = user.PhoneNumber,
+                CreatedOn = DateTime.UtcNow
             };
 
             var result = await this.userManager.CreateAsync(newUser, user.Password);
@@ -61,17 +62,6 @@ namespace MedicLaunchApi.Controllers
                     ?? "0.0.0.0";
 
                 await this.mixPanelService.CreateUserProfile(newUser, ipAddress);
-
-                var token = await userManager.GenerateEmailConfirmationTokenAsync(newUser);
-
-                var confirmationLink = Url.Action("ConfirmEmail", "Account",
-                    new { userId = newUser.Id, token = token },
-                    protocol: HttpContext.Request.Scheme);
-
-                if (string.IsNullOrEmpty(confirmationLink))
-                {
-                    return BadRequest("Error generating email confirmation link");
-                }
 
                 await this.userManager.AddToRoleAsync(newUser, RoleConstants.Student);
 
@@ -117,7 +107,9 @@ namespace MedicLaunchApi.Controllers
                 return NotFound();
             }
 
-            var subscriptionPlan = user.SubscriptionPlanId != null ? PaymentHelper.GetSubscriptionPlan(user.SubscriptionPlanId) : null;
+            var subscriptionPlan = user.SubscriptionPlanId != null ?
+                PaymentHelper.GetSubscriptionPlan(user.SubscriptionPlanId) : null;
+
             var userProfile = new MyUserProfile
             {
                 Id = user.Id,
@@ -132,7 +124,9 @@ namespace MedicLaunchApi.Controllers
                 SubscriptionMonths = subscriptionPlan != null ? subscriptionPlan.Months.ToString() : "N/A",
                 SubscriptionPurchaseDate = user.SubscriptionCreatedDate.HasValue ? user.SubscriptionCreatedDate.Value.ToUniversalTime().ToString() : string.Empty,
                 QuestionsCompleted = questionRepository.GetTotalAttemptedQuestionsForUser(user.Id),
-                HasActiveSubscription = user.SubscriptionExpiryDate.HasValue && user.SubscriptionExpiryDate.Value > DateTime.UtcNow,
+                HasActiveSubscription = user.HasActiveSubscription,
+                IsOnFreeTrial = user.IsOnFreeTrial,
+                FreeTrialDaysRemaining = user.FreeTrialDaysRemaining,
                 PhoneNumber = user.PhoneNumber ?? string.Empty
             };
 

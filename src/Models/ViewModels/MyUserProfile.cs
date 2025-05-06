@@ -29,5 +29,9 @@
         public bool HasActiveSubscription { get; set; }
 
         public string PhoneNumber { get; set; }
+
+        public bool IsOnFreeTrial { get; set; }
+
+        public int? FreeTrialDaysRemaining { get; set; }
     }
 }

@@ -29,5 +29,31 @@ namespace MedicLaunchApi.Models
         public DateTime? SubscriptionCreatedDate { get; set; }
 
         public DateTime? SubscriptionExpiryDate { get; set; }
+
+        public DateTime? CreatedOn { get; set; }
+
+        public bool IsOnFreeTrial => CreatedOn.HasValue &&
+            CreatedOn.Value.AddDays(7) > DateTime.UtcNow &&
+            !HasActiveSubscription;
+
+        public bool HasActiveSubscription => SubscriptionExpiryDate.HasValue &&
+            SubscriptionExpiryDate.Value > DateTime.UtcNow;
+
+        public int? FreeTrialDaysRemaining
+        {
+            get
+            {
+                if (!CreatedOn.HasValue || HasActiveSubscription)
+                    return null;
+
+                var trialEnd = CreatedOn.Value.AddDays(7);
+                var now = DateTime.UtcNow;
+
+                if (now > trialEnd)
+                    return null;
+
+                return (int)Math.Ceiling((trialEnd - now).TotalDays);
+            }
+        }
     }
 }
