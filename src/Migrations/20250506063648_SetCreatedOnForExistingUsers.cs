@@ -20,7 +20,10 @@ namespace MedicLaunchApi.Migrations
             // Add SQL to update existing records
             migrationBuilder.Sql(@"
                 UPDATE AspNetUsers 
-                SET CreatedOn = COALESCE(SubscriptionCreatedDate, GETUTCDATE())
+                SET CreatedOn = CASE
+                    WHEN SubscriptionCreatedDate IS NOT NULL THEN SubscriptionCreatedDate
+                    ELSE DATEADD(day, -7, GETUTCDATE())
+                END
                 WHERE CreatedOn IS NULL");
         }
 
