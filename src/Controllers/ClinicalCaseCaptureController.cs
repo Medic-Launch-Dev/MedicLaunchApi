@@ -1,3 +1,4 @@
+using MedicLaunchApi.Authorization;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -7,7 +8,7 @@ namespace MedicLaunchApi.Controllers
 {
 	[Route("api/clinicalCaseCapture")]
 	[ApiController]
-	[Authorize]
+	[Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
 	public class ClinicalCaseCaptureController : ControllerBase
 	{
 		private readonly ClinicalCaseCaptureService clinicalCaseCaptureService;

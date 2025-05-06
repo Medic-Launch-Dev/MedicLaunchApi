@@ -51,6 +51,7 @@ namespace MedicLaunchApi.Controllers
             }
         }
 
+        [Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetFlashcard(string id)
         {
@@ -64,6 +65,7 @@ namespace MedicLaunchApi.Controllers
             return Ok(flashcard);
         }
 
+        [Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
         [HttpGet("list")]
         public async Task<IActionResult> GetFlashcards()
         {

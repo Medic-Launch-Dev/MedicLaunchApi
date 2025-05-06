@@ -65,6 +65,7 @@ namespace MedicLaunchApi.Controllers
 			}
 		}
 
+		[Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
 		[HttpGet("{id}")]
 		public async Task<IActionResult> GetTextbookLesson(string id)
 		{
@@ -79,6 +80,7 @@ namespace MedicLaunchApi.Controllers
 			return Ok(textbookLesson);
 		}
 
+		[Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
 		[HttpGet("list")]
 		public async Task<IActionResult> GetTextbookLessons([FromQuery] string? specialityId)
 		{
@@ -97,6 +99,7 @@ namespace MedicLaunchApi.Controllers
 			return Ok(textbookLessons ?? new List<TextbookLessonResponse>());
 		}
 
+		[Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
 		[HttpGet("by-question/{questionId}")]
 		public async Task<IActionResult> GetTextbookLessonByQuestionId(string questionId)
 		{

@@ -26,27 +26,17 @@ namespace MedicLaunchApi.Controllers
         }
 
         [HttpPost("attemptquestion")]
+        [Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
         public async Task<IActionResult> AttemptQuestion(QuestionAttemptRequest questionAttempt)
         {
-            var hasActiveSubscription = await HasActiveSubscription();
-            if (!hasActiveSubscription)
-            {
-                return Forbid();
-            }
-
             await this.questionRepository.AttemptQuestionAsync(questionAttempt, CurrentUserId);
             return Ok();
         }
 
         [HttpPost("flagquestion/{questionId}")]
+        [Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
         public async Task<IActionResult> FlagQuestion(string questionId)
         {
-            var hasActiveSubscription = await HasActiveSubscription();
-            if (!hasActiveSubscription)
-            {
-                return Forbid();
-            }
-
             await this.questionRepository.AddFlaggedQuestionAsync(questionId, CurrentUserId);
             return Ok();
         }
@@ -58,14 +48,9 @@ namespace MedicLaunchApi.Controllers
         }
 
         [HttpPost("filter")]
+        [Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
         public async Task<IActionResult> FilterQuestions(QuestionsFilterRequest filterRequest)
         {
-            var hasActiveSubscription = await HasActiveSubscription();
-            if (!hasActiveSubscription)
-            {
-                return Forbid();
-            }
-
             return Ok(await this.questionRepository.FilterQuestionsAsync(filterRequest, CurrentUserId));
         }
 
@@ -93,24 +78,7 @@ namespace MedicLaunchApi.Controllers
         public async Task<IActionResult> GetSpecialityAnalytics()
         {
             var result = await this.questionRepository.GetSpecialityAnalytics(CurrentUserId);
-            return Ok(result );
-        }
-
-        private async Task<bool> HasActiveSubscription()
-        {
-            var user = await this.userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                return false;
-            }
-
-            // If user is Admin or QuestionAuthor, they have access to all questions
-            if (User.IsInRole(RoleConstants.Admin) || User.IsInRole(RoleConstants.QuestionAuthor))
-            {
-                return true;
-            }
-
-            return user.SubscriptionExpiryDate.HasValue && user.SubscriptionExpiryDate.Value > DateTime.UtcNow;
+            return Ok(result);
         }
     }
 }

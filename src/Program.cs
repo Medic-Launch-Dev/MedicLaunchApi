@@ -1,4 +1,5 @@
 using MedicLaunchApi.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using MedicLaunchApi.Data;
 using MedicLaunchApi.Models;
 using MedicLaunchApi.Repository;
@@ -41,6 +42,7 @@ namespace MedicLaunchApi
                 options.AddPolicy(RoleConstants.Student, policy => policy.RequireRole(RoleConstants.Student, RoleConstants.Admin));
                 options.AddPolicy(RoleConstants.QuestionAuthor, policy => policy.RequireRole(RoleConstants.QuestionAuthor, RoleConstants.Admin));
                 options.AddPolicy(RoleConstants.FlashcardAuthor, policy => policy.RequireRole(RoleConstants.FlashcardAuthor, RoleConstants.Admin));
+                options.AddPolicy(AuthPolicies.RequireSubscriptionOrTrial, policy => policy.Requirements.Add(new SubscriptionOrTrialRequirement()));
             });
 
             builder.Services.AddControllers()
@@ -75,6 +77,7 @@ namespace MedicLaunchApi
             builder.Services.AddScoped<TextbookLessonGenerationService>();
             builder.Services.AddScoped<IQuestionGenerationService, QuestionGenerationService>();
             builder.Services.AddScoped<ClinicalCaseCaptureService>();
+            builder.Services.AddScoped<IAuthorizationHandler, SubscriptionOrTrialRequirementHandler>();
 
             builder.Services.AddOptions<BearerTokenOptions>(IdentityConstants.BearerScheme).Configure(options =>
             {

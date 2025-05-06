@@ -1,4 +1,5 @@
-﻿using MedicLaunchApi.Models.ViewModels;
+﻿using MedicLaunchApi.Authorization;
+using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -9,7 +10,7 @@ namespace MedicLaunchApi.Controllers
 {
     [Route("api/note")]
     [ApiController]
-    [Authorize]
+    [Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
     public class NotesController : ControllerBase
     {
         private readonly UserDataRepository userDataRepository;
@@ -22,7 +23,7 @@ namespace MedicLaunchApi.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> CreateNoteAsync([FromBody] CreateNoteRequest request)
         {
-            if(request.SpecialityId == null && request.QuestionId == null && request.FlashcardId == null)
+            if (request.SpecialityId == null && request.QuestionId == null && request.FlashcardId == null)
             {
                 return BadRequest("A note should be associated with a speciality, question, or a flashcard");
             }
