@@ -72,7 +72,6 @@ namespace MedicLaunchApi.Controllers
         }
 
         [HttpPost("familiaritycounts")]
-        [Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
         public async Task<QuestionFamiliarityCounts> GetQuestionFamiliarityCounts([FromBody] FamiliarityCountsRequest request)
         {
             return await this.questionRepository.GetQuestionFamiliarityCountsAsync(CurrentUserId, request);
