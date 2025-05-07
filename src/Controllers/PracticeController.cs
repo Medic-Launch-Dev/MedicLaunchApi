@@ -19,6 +19,8 @@ namespace MedicLaunchApi.Controllers
         private string CurrentUserId => User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         private readonly UserManager<MedicLaunchUser> userManager;
 
+        private const int TrialLimit = 200;
+
         public PracticeController(QuestionRepository questionRepository, UserManager<MedicLaunchUser> userManager)
         {
             this.questionRepository = questionRepository;
@@ -29,13 +31,10 @@ namespace MedicLaunchApi.Controllers
         [Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
         public async Task<IActionResult> AttemptQuestion(QuestionAttemptRequest questionAttempt)
         {
-            var user = await userManager.FindByIdAsync(CurrentUserId);
-            if (user == null)
-                return Unauthorized();
+            var trialCheck = await CheckTrialLimit();
+            if (trialCheck != null) return trialCheck;
 
-            int trialLimit = 200;
-            if (user.IsOnFreeTrial && user.TrialQuestionsAttemptedCount >= trialLimit)
-                return Forbid("Trial question attempt limit reached.");
+            var user = await userManager.FindByIdAsync(CurrentUserId);
 
             await this.questionRepository.AttemptQuestionAsync(questionAttempt, CurrentUserId);
 
@@ -66,16 +65,21 @@ namespace MedicLaunchApi.Controllers
         [Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
         public async Task<IActionResult> FilterQuestions(QuestionsFilterRequest filterRequest)
         {
+            var trialCheck = await CheckTrialLimit();
+            if (trialCheck != null) return trialCheck;
+
             return Ok(await this.questionRepository.FilterQuestionsAsync(filterRequest, CurrentUserId));
         }
 
         [HttpPost("familiaritycounts")]
+        [Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
         public async Task<QuestionFamiliarityCounts> GetQuestionFamiliarityCounts([FromBody] FamiliarityCountsRequest request)
         {
             return await this.questionRepository.GetQuestionFamiliarityCountsAsync(CurrentUserId, request);
         }
 
         [HttpPost("unflagquestion/{questionId}")]
+        [Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
         public async Task<IActionResult> UnflagQuestion(string questionId)
         {
             await this.questionRepository.RemoveFlaggedQuestionAsync(questionId, CurrentUserId);
@@ -94,6 +98,18 @@ namespace MedicLaunchApi.Controllers
         {
             var result = await this.questionRepository.GetSpecialityAnalytics(CurrentUserId);
             return Ok(result);
+        }
+
+        private async Task<IActionResult> CheckTrialLimit()
+        {
+            var user = await userManager.FindByIdAsync(CurrentUserId);
+            if (user == null)
+                return Unauthorized();
+
+            if (user.IsOnFreeTrial && user.TrialQuestionsAttemptedCount >= TrialLimit)
+                return StatusCode(403, "Trial question attempt limit reached.");
+
+            return null;
         }
     }
 }

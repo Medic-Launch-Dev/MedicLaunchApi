@@ -41,7 +41,7 @@ namespace MedicLaunchApi.Controllers
 
 			int trialLimit = 5;
 			if (user.IsOnFreeTrial && user.TrialClinicalCasesGeneratedCount >= trialLimit)
-				return Forbid("Trial clinical case generation limit reached.");
+				return StatusCode(403, "Trial clinical case generation limit reached.");
 
 			var result = await clinicalCaseCaptureService.GenerateClinicalCaseAsync(caseDetails);
 

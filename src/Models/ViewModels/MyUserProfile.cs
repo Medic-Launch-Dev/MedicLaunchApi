@@ -34,8 +34,8 @@
 
         public int? FreeTrialDaysRemaining { get; set; }
 
-        public int TrialQuestionsAttemptedCount { get; set; }
+        public int RemainingTrialQuestions { get; set; }
 
-        public int TrialClinicalCasesGeneratedCount { get; set; }
+        public int RemainingTrialClinicalCases { get; set; }
     }
 }
