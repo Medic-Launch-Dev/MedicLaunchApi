@@ -127,7 +127,9 @@ namespace MedicLaunchApi.Controllers
                 HasActiveSubscription = user.HasActiveSubscription,
                 IsOnFreeTrial = user.IsOnFreeTrial,
                 FreeTrialDaysRemaining = user.FreeTrialDaysRemaining,
-                PhoneNumber = user.PhoneNumber ?? string.Empty
+                PhoneNumber = user.PhoneNumber ?? string.Empty,
+                TrialClinicalCasesGeneratedCount = user.TrialClinicalCasesGeneratedCount,
+                TrialQuestionsAttemptedCount = user.TrialQuestionsAttemptedCount
             };
 
             return Ok(userProfile);

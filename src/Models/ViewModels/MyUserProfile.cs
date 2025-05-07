@@ -33,5 +33,9 @@
         public bool IsOnFreeTrial { get; set; }
 
         public int? FreeTrialDaysRemaining { get; set; }
+
+        public int TrialQuestionsAttemptedCount { get; set; }
+
+        public int TrialClinicalCasesGeneratedCount { get; set; }
     }
 }

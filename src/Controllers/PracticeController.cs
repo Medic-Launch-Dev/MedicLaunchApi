@@ -29,7 +29,22 @@ namespace MedicLaunchApi.Controllers
         [Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
         public async Task<IActionResult> AttemptQuestion(QuestionAttemptRequest questionAttempt)
         {
+            var user = await userManager.FindByIdAsync(CurrentUserId);
+            if (user == null)
+                return Unauthorized();
+
+            int trialLimit = 200;
+            if (user.IsOnFreeTrial && user.TrialQuestionsAttemptedCount >= trialLimit)
+                return Forbid("Trial question attempt limit reached.");
+
             await this.questionRepository.AttemptQuestionAsync(questionAttempt, CurrentUserId);
+
+            if (user.IsOnFreeTrial)
+            {
+                user.TrialQuestionsAttemptedCount += 1;
+                await userManager.UpdateAsync(user);
+            }
+
             return Ok();
         }
 
