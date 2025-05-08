@@ -19,6 +19,8 @@ namespace MedicLaunchApi.Controllers
         private string CurrentUserId => User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         private readonly UserManager<MedicLaunchUser> userManager;
 
+        private const int TrialLimit = 200;
+
         public PracticeController(QuestionRepository questionRepository, UserManager<MedicLaunchUser> userManager)
         {
             this.questionRepository = questionRepository;
@@ -29,7 +31,19 @@ namespace MedicLaunchApi.Controllers
         [Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
         public async Task<IActionResult> AttemptQuestion(QuestionAttemptRequest questionAttempt)
         {
+            var trialCheck = await CheckTrialLimit();
+            if (trialCheck != null) return trialCheck;
+
+            var user = await userManager.FindByIdAsync(CurrentUserId);
+
             await this.questionRepository.AttemptQuestionAsync(questionAttempt, CurrentUserId);
+
+            if (user.IsOnFreeTrial)
+            {
+                user.TrialQuestionsAttemptedCount += 1;
+                await userManager.UpdateAsync(user);
+            }
+
             return Ok();
         }
 
@@ -51,6 +65,9 @@ namespace MedicLaunchApi.Controllers
         [Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
         public async Task<IActionResult> FilterQuestions(QuestionsFilterRequest filterRequest)
         {
+            var trialCheck = await CheckTrialLimit();
+            if (trialCheck != null) return trialCheck;
+
             return Ok(await this.questionRepository.FilterQuestionsAsync(filterRequest, CurrentUserId));
         }
 
@@ -61,6 +78,7 @@ namespace MedicLaunchApi.Controllers
         }
 
         [HttpPost("unflagquestion/{questionId}")]
+        [Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
         public async Task<IActionResult> UnflagQuestion(string questionId)
         {
             await this.questionRepository.RemoveFlaggedQuestionAsync(questionId, CurrentUserId);
@@ -79,6 +97,18 @@ namespace MedicLaunchApi.Controllers
         {
             var result = await this.questionRepository.GetSpecialityAnalytics(CurrentUserId);
             return Ok(result);
+        }
+
+        private async Task<IActionResult> CheckTrialLimit()
+        {
+            var user = await userManager.FindByIdAsync(CurrentUserId);
+            if (user == null)
+                return Unauthorized();
+
+            if (user.IsOnFreeTrial && user.TrialQuestionsAttemptedCount >= TrialLimit)
+                return StatusCode(403, "Trial question attempt limit reached.");
+
+            return null;
         }
     }
 }

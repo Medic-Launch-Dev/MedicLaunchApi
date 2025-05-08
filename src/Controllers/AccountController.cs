@@ -1,5 +1,6 @@
 ﻿using MedicLaunchApi.Authorization;
 using MedicLaunchApi.Common;
+using MedicLaunchApi.Data;
 using MedicLaunchApi.Models;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
@@ -110,6 +111,9 @@ namespace MedicLaunchApi.Controllers
             var subscriptionPlan = user.SubscriptionPlanId != null ?
                 PaymentHelper.GetSubscriptionPlan(user.SubscriptionPlanId) : null;
 
+            const int TrialQuestionLimit = 200;
+            const int TrialClinicalCaseLimit = 5;
+            
             var userProfile = new MyUserProfile
             {
                 Id = user.Id,
@@ -127,7 +131,9 @@ namespace MedicLaunchApi.Controllers
                 HasActiveSubscription = user.HasActiveSubscription,
                 IsOnFreeTrial = user.IsOnFreeTrial,
                 FreeTrialDaysRemaining = user.FreeTrialDaysRemaining,
-                PhoneNumber = user.PhoneNumber ?? string.Empty
+                PhoneNumber = user.PhoneNumber ?? string.Empty,
+                RemainingTrialQuestions = TrialQuestionLimit - user.TrialQuestionsAttemptedCount,
+                RemainingTrialClinicalCases = TrialClinicalCaseLimit - user.TrialClinicalCasesGeneratedCount
             };
 
             return Ok(userProfile);

@@ -55,5 +55,9 @@ namespace MedicLaunchApi.Models
                 return (int)Math.Ceiling((trialEnd - now).TotalDays);
             }
         }
+
+        public int TrialQuestionsAttemptedCount { get; set; }
+        
+        public int TrialClinicalCasesGeneratedCount { get; set; }
     }
 }
