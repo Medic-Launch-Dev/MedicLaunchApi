@@ -55,7 +55,7 @@ namespace MedicLaunchApi.Controllers
             var result = await this.userManager.CreateAsync(newUser, user.Password);
             if (result.Succeeded)
             {
-                this.paymentService.CreateStripeCustomer(newUser);
+                await this.paymentService.CreateStripeCustomer(newUser);
 
                 string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
                     ?? Request.Headers["X-Forwarded-For"].FirstOrDefault()

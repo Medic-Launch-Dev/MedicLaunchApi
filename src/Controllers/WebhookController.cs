@@ -38,7 +38,6 @@ namespace MedicLaunchApi.Controllers
             try
             {
                 StripeConfiguration.ApiKey = this.stripeApiKey;
-                PaymentIntent? intent = null;
                 Event stripeEvent;
                 try
                 {
@@ -56,15 +55,8 @@ namespace MedicLaunchApi.Controllers
                     return BadRequest();
                 }
 
-                logger.LogInformation("Stripe event type: {EventType}", stripeEvent.Type);
-
                 switch (stripeEvent.Type)
                 {
-                    // case Events.PaymentIntentSucceeded:
-                    //     logger.LogInformation("Payment intent succeeded event received");
-                    //     intent = stripeEvent.Data.Object as PaymentIntent;
-                    //     await HandlePaymentSucceeded(intent);
-                    //     break;
                     case Events.CheckoutSessionCompleted:
                         logger.LogInformation("Checkout session completed event received");
                         var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
@@ -84,40 +76,6 @@ namespace MedicLaunchApi.Controllers
                 this.logger.LogError(ex, "Stripe Exception");
                 return BadRequest(ex.Message);
             }
-        }
-
-        private async Task<ActionResult> HandlePaymentSucceeded(PaymentIntent intent)
-        {
-            if (intent == null)
-            {
-                this.logger.LogError("Invalid intent");
-                return BadRequest();
-            }
-
-            var customerService = new CustomerService();
-            var customer = await customerService.GetAsync(intent.CustomerId);
-
-            if (customer?.Email == null)
-            {
-                this.logger.LogError("Invalid customer email");
-                return BadRequest();
-            }
-
-            string customerEmail = customer.Email;
-
-            // Find user by email using usermanager
-            var user = await userManager.FindByEmailAsync(customerEmail);
-            if (user == null)
-            {
-                this.logger.LogError($"Unable to find user with email {customerEmail}");
-                return BadRequest();
-            }
-
-            var plan = PaymentHelper.GetSubscriptionPlan(user.SubscriptionPlanId!);
-            user.SubscriptionExpiryDate = DateTime.UtcNow.AddMonths(plan.Months);
-            user.SubscriptionCreatedDate = DateTime.UtcNow;
-            await userManager.UpdateAsync(user);
-            return Ok();
         }
 
         private async Task<ActionResult> HandleCheckoutSessionCompleted(Session? session)

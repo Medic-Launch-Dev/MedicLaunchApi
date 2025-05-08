@@ -153,8 +153,7 @@ namespace MedicLaunchApi.Controllers
             var result = await this.userManager.CreateAsync(newUser, user.Password);
             if (result.Succeeded)
             {
-                // Create stripe customer to be used for future payments
-                this.paymentService.CreateStripeCustomer(newUser);
+                await this.paymentService.CreateStripeCustomer(newUser);
                 return Ok();
             }
             else

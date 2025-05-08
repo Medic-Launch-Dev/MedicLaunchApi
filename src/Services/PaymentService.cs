@@ -86,7 +86,7 @@ namespace MedicLaunchApi.Services
             }
         }
 
-        public async Task<string> CreateCheckoutSession(string planId, string userId)
+        public async Task<string> CreateCheckoutSession(string planLookupKey, string userId)
         {
             try
             {
@@ -95,11 +95,7 @@ namespace MedicLaunchApi.Services
                 if (user == null)
                 {
                     this.logger.LogError($"User not found with id {userId}");
-                }
-                else
-                {
-                    user.SubscriptionPlanId = planId;
-                    await this.userManager.UpdateAsync(user);
+                    throw new Exception("User not found");
                 }
 
                 var customerOptions = new CustomerListOptions { Limit = 1, Email = user.Email! };
@@ -108,22 +104,20 @@ namespace MedicLaunchApi.Services
                 var customer = customers.FirstOrDefault();
                 if (customer == null)
                 {
-                    this.logger.LogError($"Customer not found with email {user.Email}");
-                    throw new Exception("Stripe customer not found");
+                    var createdCustomer = await this.CreateStripeCustomer(user);
+                    customer = createdCustomer;
                 }
-
-                var subscription = PaymentHelper.GetSubscriptionPlan(planId);
 
                 var priceService = new PriceService();
                 var price = await priceService.ListAsync(new PriceListOptions
                 {
-                    LookupKeys = new List<string> { subscription.LookupKey },
+                    LookupKeys = new List<string> { planLookupKey },
                     Limit = 1,
                 });
 
                 if (!price.Any())
                 {
-                    this.logger.LogError($"Price not found for lookup key {subscription.LookupKey}");
+                    this.logger.LogError($"Price not found for lookup key {planLookupKey}");
                     throw new Exception("Stripe price not found");
                 }
 
@@ -131,14 +125,14 @@ namespace MedicLaunchApi.Services
                 var options = new SessionCreateOptions
                 {
                     LineItems = new List<SessionLineItemOptions>
-                {
-                  new SessionLineItemOptions
-                  {
-                    Price = price.First().Id,
-                    Quantity = 1,
-                  },
-                },
-                    Mode = "payment",
+                    {
+                        new SessionLineItemOptions
+                        {
+                            Price = price.First().Id,
+                            Quantity = 1,
+                        },
+                    },
+                    Mode = "subscription",
                     SuccessUrl = domain + "/payment-complete",
                     CancelUrl = domain + "/subscribe",
                     AllowPromotionCodes = true,
@@ -151,12 +145,12 @@ namespace MedicLaunchApi.Services
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, "Error creating payment intent");
+                this.logger.LogError(ex, "Error creating checkout session");
                 throw;
             }
         }
 
-        public void CreateStripeCustomer(MedicLaunchUser user)
+        public async Task<Customer> CreateStripeCustomer(MedicLaunchUser user)
         {
             try
             {
@@ -168,12 +162,13 @@ namespace MedicLaunchApi.Services
                 };
 
                 var service = new CustomerService();
-                service.Create(options);
+                return await service.CreateAsync(options);
 
             }
             catch (Exception ex)
             {
                 this.logger.LogError(ex, "Error creating stripe customer");
+                throw;
             }
         }
 
