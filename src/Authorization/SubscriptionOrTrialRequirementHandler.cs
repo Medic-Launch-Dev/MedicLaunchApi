@@ -21,14 +21,17 @@ namespace MedicLaunchApi.Authorization
 			if (user == null) return;
 
 			if (context.User.IsInRole(RoleConstants.Admin) ||
-				context.User.IsInRole(RoleConstants.QuestionAuthor)
-				|| context.User.IsInRole(RoleConstants.FlashcardAuthor))
+				context.User.IsInRole(RoleConstants.QuestionAuthor) ||
+				context.User.IsInRole(RoleConstants.FlashcardAuthor))
 			{
 				context.Succeed(requirement);
 				return;
 			}
 
-			if (user.HasActiveSubscription || user.IsOnFreeTrial)
+			if (user.HasActiveSubscription ||
+				user.IsOnFreeTrial ||
+				user.StripeSubscriptionStatus == "active" ||
+				user.StripeSubscriptionStatus == "trialing")
 			{
 				context.Succeed(requirement);
 				return;

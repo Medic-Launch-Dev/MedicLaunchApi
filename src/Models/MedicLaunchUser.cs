@@ -57,7 +57,11 @@ namespace MedicLaunchApi.Models
         }
 
         public int TrialQuestionsAttemptedCount { get; set; }
-        
+
         public int TrialClinicalCasesGeneratedCount { get; set; }
+
+        public string? StripeSubscriptionId { get; set; }
+
+        public string? StripeSubscriptionStatus { get; set; }
     }
 }

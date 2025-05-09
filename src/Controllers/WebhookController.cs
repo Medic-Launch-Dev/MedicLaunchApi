@@ -57,10 +57,17 @@ namespace MedicLaunchApi.Controllers
 
                 switch (stripeEvent.Type)
                 {
-                    case Events.CheckoutSessionCompleted:
-                        logger.LogInformation("Checkout session completed event received");
-                        var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
-                        await HandleCheckoutSessionCompleted(session);
+                    // case Events.CheckoutSessionCompleted:
+                    //     logger.LogInformation("Checkout session completed event received");
+                    //     var session = stripeEvent.Data.Object as Stripe.Checkout.Session;
+                    //     await HandleCheckoutSessionCompleted(session);
+                    //     break;
+                    case Events.CustomerSubscriptionCreated:
+                    case Events.CustomerSubscriptionUpdated:
+                    case Events.CustomerSubscriptionDeleted:
+                        logger.LogInformation($"Subscription event received: {stripeEvent.Type}");
+                        var subscription = stripeEvent.Data.Object as Subscription;
+                        await HandleSubscriptionEvent(subscription);
                         break;
                     default:
                         // Handle other event types
@@ -76,6 +83,31 @@ namespace MedicLaunchApi.Controllers
                 this.logger.LogError(ex, "Stripe Exception");
                 return BadRequest(ex.Message);
             }
+        }
+
+        private async Task<ActionResult> HandleSubscriptionEvent(Subscription subscription)
+        {
+            var customerService = new CustomerService();
+            var customer = await customerService.GetAsync(subscription.CustomerId);
+
+            if (customer?.Email == null)
+            {
+                this.logger.LogError("Invalid customer email for subscription event");
+                return BadRequest();
+            }
+
+            var user = await userManager.FindByEmailAsync(customer.Email);
+            if (user == null)
+            {
+                this.logger.LogError($"Unable to find user with email {customer.Email}");
+                return BadRequest();
+            }
+
+            user.StripeSubscriptionId = subscription.Id;
+            user.StripeSubscriptionStatus = subscription.Status;
+            await userManager.UpdateAsync(user);
+
+            return Ok();
         }
 
         private async Task<ActionResult> HandleCheckoutSessionCompleted(Session? session)
@@ -97,7 +129,6 @@ namespace MedicLaunchApi.Controllers
 
             string customerEmail = customer.Email;
 
-            // Find user by email using usermanager
             var user = await userManager.FindByEmailAsync(customerEmail);
             if (user == null)
             {
@@ -105,10 +136,6 @@ namespace MedicLaunchApi.Controllers
                 return BadRequest();
             }
 
-            var plan = PaymentHelper.GetSubscriptionPlan(user.SubscriptionPlanId!);
-            user.SubscriptionExpiryDate = DateTime.UtcNow.AddMonths(plan.Months);
-            user.SubscriptionCreatedDate = DateTime.UtcNow;
-            await userManager.UpdateAsync(user);
             return Ok();
         }
     }
