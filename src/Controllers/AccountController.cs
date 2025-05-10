@@ -113,7 +113,7 @@ namespace MedicLaunchApi.Controllers
 
             const int TrialQuestionLimit = 200;
             const int TrialClinicalCaseLimit = 5;
-            
+
             var userProfile = new MyUserProfile
             {
                 Id = user.Id,
@@ -133,7 +133,8 @@ namespace MedicLaunchApi.Controllers
                 FreeTrialDaysRemaining = user.FreeTrialDaysRemaining,
                 PhoneNumber = user.PhoneNumber ?? string.Empty,
                 RemainingTrialQuestions = TrialQuestionLimit - user.TrialQuestionsAttemptedCount,
-                RemainingTrialClinicalCases = TrialClinicalCaseLimit - user.TrialClinicalCasesGeneratedCount
+                RemainingTrialClinicalCases = TrialClinicalCaseLimit - user.TrialClinicalCasesGeneratedCount,
+                StripeSubscriptionStatus = user.StripeSubscriptionStatus
             };
 
             return Ok(userProfile);

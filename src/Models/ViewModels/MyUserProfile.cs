@@ -37,5 +37,7 @@
         public int RemainingTrialQuestions { get; set; }
 
         public int RemainingTrialClinicalCases { get; set; }
+
+        public string? StripeSubscriptionStatus { get; set; }
     }
 }
