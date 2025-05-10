@@ -51,6 +51,22 @@ namespace MedicLaunchApi.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("create-billing-portal-session")]
+        public async Task<IActionResult> CreatePortalSession()
+        {
+            try
+            {
+                var sessionUrl = await this.paymentService.CreatePortalSession(this.GetCurrentUserId());
+                return Ok(new { sessionUrl });
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex, "Error creating billing portal session");
+                return BadRequest(ex.Message);
+            }
+        }
+
         [HttpGet]
         [Route("publishable-key")]
         public IActionResult GetPublishableKey()

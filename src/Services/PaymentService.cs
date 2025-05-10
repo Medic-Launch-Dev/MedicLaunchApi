@@ -3,7 +3,6 @@ using MedicLaunchApi.Controllers;
 using MedicLaunchApi.Models;
 using Microsoft.AspNetCore.Identity;
 using Stripe;
-using Stripe.Checkout;
 
 namespace MedicLaunchApi.Services
 {
@@ -122,11 +121,11 @@ namespace MedicLaunchApi.Services
                 }
 
                 var domain = configuration.GetValue<string>("ReactApp:Url");
-                var options = new SessionCreateOptions
+                var options = new Stripe.Checkout.SessionCreateOptions
                 {
-                    LineItems = new List<SessionLineItemOptions>
+                    LineItems = new List<Stripe.Checkout.SessionLineItemOptions>
                     {
-                        new SessionLineItemOptions
+                        new Stripe.Checkout.SessionLineItemOptions
                         {
                             Price = price.First().Id,
                             Quantity = 1,
@@ -138,14 +137,53 @@ namespace MedicLaunchApi.Services
                     AllowPromotionCodes = true,
                     Customer = customer.Id,
                 };
-                var service = new SessionService();
-                Session session = service.Create(options);
+                var service = new Stripe.Checkout.SessionService();
+                Stripe.Checkout.Session session = service.Create(options);
 
                 return session.Url;
             }
             catch (Exception ex)
             {
                 this.logger.LogError(ex, "Error creating checkout session");
+                throw;
+            }
+        }
+
+        public async Task<string> CreatePortalSession(string userId)
+        {
+            try
+            {
+                StripeConfiguration.ApiKey = this.stripeApiKey;
+                var user = await this.userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    this.logger.LogError($"User not found with id {userId}");
+                    throw new Exception("User not found");
+                }
+
+                var customerOptions = new CustomerListOptions { Limit = 1, Email = user.Email! };
+                var customerService = new CustomerService();
+                var customers = await customerService.ListAsync(customerOptions);
+                var customer = customers.FirstOrDefault();
+                if (customer == null)
+                {
+                    this.logger.LogError($"Customer not found with email {user.Email}");
+                    throw new Exception("Stripe customer not found");
+                }
+
+                var options = new Stripe.BillingPortal.SessionCreateOptions
+                {
+                    Customer = customer.Id,
+                    ReturnUrl = configuration.GetValue<string>("ReactApp:Url") + "/account",
+                };
+                var service = new Stripe.BillingPortal.SessionService();
+                Stripe.BillingPortal.Session session = service.Create(options);
+
+                return session.Url;
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex, "Error creating billing portal session");
                 throw;
             }
         }
