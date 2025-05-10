@@ -34,10 +34,9 @@ namespace MedicLaunchApi.Models
 
         public bool IsOnFreeTrial => CreatedOn.HasValue &&
             CreatedOn.Value.AddDays(7) > DateTime.UtcNow &&
-            !HasActiveSubscription;
+            StripeSubscriptionStatus != "active";
 
-        public bool HasActiveSubscription => SubscriptionExpiryDate.HasValue &&
-            SubscriptionExpiryDate.Value > DateTime.UtcNow;
+        public bool HasActiveSubscription => StripeSubscriptionStatus == "active";
 
         public int? FreeTrialDaysRemaining
         {
