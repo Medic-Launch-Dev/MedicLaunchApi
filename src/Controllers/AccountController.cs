@@ -111,7 +111,7 @@ namespace MedicLaunchApi.Controllers
             var subscriptionPlan = user.SubscriptionPlanId != null ?
                 PaymentHelper.GetSubscriptionPlan(user.SubscriptionPlanId) : null;
 
-            const int TrialQuestionLimit = 200;
+            const int TrialQuestionLimit = 150;
             const int TrialClinicalCaseLimit = 5;
 
             var userProfile = new MyUserProfile
