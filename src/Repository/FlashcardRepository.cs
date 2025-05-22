@@ -131,5 +131,10 @@ namespace MedicLaunchApi.Repository
         {
             return await azureBlobClient.UploadImageAsync(file);
         }
+
+        public async Task<IEnumerable<Speciality>> GetAllSpecialitiesAsync()
+        {
+            return await context.Specialities.ToListAsync();
+        }
     }
 }

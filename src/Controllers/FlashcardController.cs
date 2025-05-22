@@ -1,8 +1,10 @@
 ﻿using MedicLaunchApi.Authorization;
 using MedicLaunchApi.Exceptions;
+using MedicLaunchApi.Models;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -13,10 +15,12 @@ namespace MedicLaunchApi.Controllers
     [ApiController]
     public class FlashcardController : ControllerBase
     {
+        private readonly UserManager<MedicLaunchUser> userManager;
         private readonly FlashcardRepository flashcardRepository;
 
-        public FlashcardController(FlashcardRepository flashcardRepository)
+        public FlashcardController(UserManager<MedicLaunchUser> userManager, FlashcardRepository flashcardRepository)
         {
+            this.userManager = userManager;
             this.flashcardRepository = flashcardRepository;
         }
 
@@ -51,7 +55,7 @@ namespace MedicLaunchApi.Controllers
             }
         }
 
-        [Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
+        [Authorize(Policy = RoleConstants.FlashcardAuthor)]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetFlashcard(string id)
         {
@@ -69,8 +73,21 @@ namespace MedicLaunchApi.Controllers
         [HttpGet("list")]
         public async Task<IActionResult> GetFlashcards()
         {
-            var currentUser = GetCurrentUserId();
-            var flashcards = await flashcardRepository.GetFlashcards(currentUser);
+            var currentUser = await userManager.GetUserAsync(User);
+            if (currentUser == null)
+            {
+                return Forbid("User does not exist.");
+            }
+
+            var flashcards = await flashcardRepository.GetFlashcards(currentUser.Id);
+            if (currentUser.IsOnFreeTrial)
+            {
+                var allowedSpecialityIds = await GetAllowedSpecialityIdsForTrialUser();
+                return Ok(flashcards
+                    .Where(f => allowedSpecialityIds.Contains(f.SpecialityId))
+                    .ToList());
+            }
+
             return Ok(flashcards);
         }
 
@@ -90,6 +107,16 @@ namespace MedicLaunchApi.Controllers
             var imageUrl = await flashcardRepository.UploadImageAsync(file);
 
             return Ok(imageUrl);
+        }
+
+        private async Task<List<string>> GetAllowedSpecialityIdsForTrialUser()
+        {
+            var specialities = await flashcardRepository.GetAllSpecialitiesAsync();
+            return specialities
+                .OrderBy(s => s.Name)
+                .Take(4)
+                .Select(s => s.Id)
+                .ToList();
         }
 
         private string GetCurrentUserId()
