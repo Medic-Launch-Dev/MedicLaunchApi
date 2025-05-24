@@ -1,5 +1,4 @@
 using MedicLaunchApi.Data;
-using MedicLaunchApi.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace MedicLaunchApi.Repository
@@ -26,6 +25,20 @@ namespace MedicLaunchApi.Repository
             await context.SaveChangesAsync();
         }
 
+        public async Task<bool> UpdateClinicalCaseAsync(string id, string userId, string title, string caseDetails)
+        {
+            var clinicalCase = await context.ClinicalCases
+                .FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+
+            if (clinicalCase == null)
+                return false;
+
+            clinicalCase.Title = title;
+            clinicalCase.CaseDetails = caseDetails;
+            await context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<List<ClinicalCase>> GetUserClinicalCasesAsync(string userId)
         {
             return await context.ClinicalCases
@@ -38,6 +51,19 @@ namespace MedicLaunchApi.Repository
         {
             return await context.ClinicalCases
                 .FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+        }
+
+        public async Task<bool> DeleteClinicalCaseAsync(string id, string userId)
+        {
+            var clinicalCase = await context.ClinicalCases
+                .FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
+
+            if (clinicalCase == null)
+                return false;
+
+            context.ClinicalCases.Remove(clinicalCase);
+            await context.SaveChangesAsync();
+            return true;
         }
     }
 }

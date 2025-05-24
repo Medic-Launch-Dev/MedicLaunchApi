@@ -67,6 +67,7 @@ namespace MedicLaunchApi
             builder.Services.AddScoped<MockExamRepository>();
             builder.Services.AddScoped<CoursesRepository>();
             builder.Services.AddScoped<TextbookLessonRepository>();
+            builder.Services.AddScoped<ClinicalCaseRepository>();
 
             builder.Services.AddScoped<IEmailSender<MedicLaunchUser>, EmailSender<MedicLaunchUser>>();
             builder.Services.AddSingleton<IEmailSender<MedicLaunchUser>, EmailSender<MedicLaunchUser>>();
@@ -76,7 +77,7 @@ namespace MedicLaunchApi
             builder.Services.AddScoped<OpenAIService>();
             builder.Services.AddScoped<TextbookLessonGenerationService>();
             builder.Services.AddScoped<IQuestionGenerationService, QuestionGenerationService>();
-            builder.Services.AddScoped<ClinicalCaseCaptureService>();
+            builder.Services.AddScoped<ClinicalCaseService>();
             builder.Services.AddScoped<IAuthorizationHandler, SubscriptionOrTrialRequirementHandler>();
 
             builder.Services.AddOptions<BearerTokenOptions>(IdentityConstants.BearerScheme).Configure(options =>
