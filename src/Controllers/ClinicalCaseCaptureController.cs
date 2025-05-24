@@ -53,7 +53,7 @@ namespace MedicLaunchApi.Controllers
 			// Save the generated case for the user
 			await clinicalCaseRepository.CreateClinicalCaseAsync(
 				CurrentUserId,
-				caseDetails.Title ?? "Untitled Case",
+				"Untitled Case", // need to fix
 				JsonSerializer.Serialize(result)
 			);
 
