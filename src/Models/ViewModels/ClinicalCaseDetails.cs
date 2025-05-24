@@ -1,6 +1,6 @@
 namespace MedicLaunchApi.Models.ViewModels
 {
-  public class ClinicalCaseDetails
+  public class ClinicalCaseGenerationRequest
   {
     public string PatientDemographics { get; set; }
     public string ClinicalContext { get; set; } = string.Empty;

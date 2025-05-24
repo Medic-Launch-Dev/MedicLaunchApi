@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using MedicLaunchApi.Models;
 using System.Security.Claims;
+using MedicLaunchApi.Repository;
+using System.Text.Json;
 
 namespace MedicLaunchApi.Controllers
 {
@@ -16,19 +18,22 @@ namespace MedicLaunchApi.Controllers
 	{
 		private readonly ClinicalCaseCaptureService clinicalCaseCaptureService;
 		private readonly UserManager<MedicLaunchUser> userManager;
+		private readonly ClinicalCaseRepository clinicalCaseRepository;
 
 		private string CurrentUserId => User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
 		public ClinicalCaseCaptureController(
 			ClinicalCaseCaptureService clinicalCaseCaptureService,
-			UserManager<MedicLaunchUser> userManager)
+			UserManager<MedicLaunchUser> userManager,
+			ClinicalCaseRepository clinicalCaseRepository)
 		{
 			this.clinicalCaseCaptureService = clinicalCaseCaptureService;
 			this.userManager = userManager;
+			this.clinicalCaseRepository = clinicalCaseRepository;
 		}
 
 		[HttpPost("generate")]
-		public async Task<IActionResult> GenerateClinicalCase([FromBody] ClinicalCaseDetails caseDetails)
+		public async Task<IActionResult> GenerateClinicalCase([FromBody] ClinicalCaseGenerationRequest caseDetails)
 		{
 			if (caseDetails == null)
 			{
@@ -45,6 +50,13 @@ namespace MedicLaunchApi.Controllers
 
 			var result = await clinicalCaseCaptureService.GenerateClinicalCaseAsync(caseDetails);
 
+			// Save the generated case for the user
+			await clinicalCaseRepository.CreateClinicalCaseAsync(
+				CurrentUserId,
+				caseDetails.Title ?? "Untitled Case",
+				JsonSerializer.Serialize(result)
+			);
+
 			if (user.IsOnFreeTrial)
 			{
 				user.TrialClinicalCasesGeneratedCount += 1;
@@ -52,6 +64,22 @@ namespace MedicLaunchApi.Controllers
 			}
 
 			return Ok(result);
+		}
+
+		[HttpGet("list")]
+		public async Task<IActionResult> GetMyClinicalCases()
+		{
+			var cases = await clinicalCaseRepository.GetUserClinicalCasesAsync(CurrentUserId);
+			return Ok(cases);
+		}
+
+		[HttpGet("{id}")]
+		public async Task<IActionResult> GetMyClinicalCaseById(string id)
+		{
+			var clinicalCase = await clinicalCaseRepository.GetClinicalCaseByIdAsync(id, CurrentUserId);
+			if (clinicalCase == null)
+				return NotFound();
+			return Ok(clinicalCase);
 		}
 	}
 }

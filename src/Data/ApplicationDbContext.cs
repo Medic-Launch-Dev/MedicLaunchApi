@@ -36,6 +36,8 @@ namespace MedicLaunchApi.Data
 
         public DbSet<TextbookLessonContent> TextbookLessonContents { get; set; }
 
+        public DbSet<ClinicalCase> ClinicalCases { get; set; }
+
         private readonly ApplicationDbContext context;
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) :
@@ -405,6 +407,16 @@ namespace MedicLaunchApi.Data
         public string Heading { get; set; }
         public string Text { get; set; }
         public int Order { get; set; }
+    }
+
+    [Table("ClinicalCases")]
+    public class ClinicalCase
+    {
+        public string Id { get; set; }
+        public string UserId { get; set; }
+        public string Title { get; set; }
+        public string CaseDetails { get; set; }
+        public DateTime CreatedOn { get; set; }
     }
 
 }

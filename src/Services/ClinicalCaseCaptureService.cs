@@ -13,7 +13,7 @@ namespace MedicLaunchApi.Services
       this.openAIService = openAIService;
     }
 
-    private List<ChatMessage> ConstructChatPrompt(ClinicalCaseDetails caseDetails)
+    private List<ChatMessage> ConstructChatPrompt(ClinicalCaseGenerationRequest caseDetails)
     {
       var messages = new List<ChatMessage>();
 
@@ -33,7 +33,7 @@ namespace MedicLaunchApi.Services
       return messages;
     }
 
-    public async Task<string> GenerateClinicalCaseAsync(ClinicalCaseDetails caseDetails)
+    public async Task<string> GenerateClinicalCaseAsync(ClinicalCaseGenerationRequest caseDetails)
     {
       var messages = ConstructChatPrompt(caseDetails);
       var response = await openAIService.GenerateChatCompletion(messages: messages, modelName: "gpt-4.1");
