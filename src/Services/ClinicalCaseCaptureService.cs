@@ -33,12 +33,17 @@ namespace MedicLaunchApi.Services
       return messages;
     }
 
-    public async Task<string> GenerateClinicalCaseAsync(GenerateClinicalCaseDTO caseDetails)
+    public async Task<ClinicalCaseDTO> GenerateClinicalCaseAsync(GenerateClinicalCaseDTO caseDetails)
     {
       var messages = ConstructChatPrompt(caseDetails);
       var response = await openAIService.GenerateChatCompletion(messages: messages, modelName: "gpt-4.1");
 
-      return response;
+      var clinicalCase = JsonSerializer.Deserialize<ClinicalCaseDTO>(response, new JsonSerializerOptions
+      {
+        PropertyNameCaseInsensitive = true
+      });
+
+      return clinicalCase!;
     }
   }
 }
