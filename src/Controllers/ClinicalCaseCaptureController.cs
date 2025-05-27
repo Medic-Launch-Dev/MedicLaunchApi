@@ -37,8 +37,8 @@ namespace MedicLaunchApi.Controllers
 			if (request == null)
 				return BadRequest("Request body is required.");
 
-			await clinicalCaseRepository.CreateClinicalCaseAsync(CurrentUserId, request.Title, request.CaseDetails);
-			return StatusCode(201);
+			var newCase = await clinicalCaseRepository.CreateClinicalCaseAsync(CurrentUserId, request.Title, request.CaseDetails);
+			return Ok(newCase);
 		}
 
 		[HttpPut("{id}")]
@@ -47,11 +47,11 @@ namespace MedicLaunchApi.Controllers
 			if (request == null)
 				return BadRequest("Request body is required.");
 
-			var updated = await clinicalCaseRepository.UpdateClinicalCaseAsync(id, CurrentUserId, request.Title, request.CaseDetails);
-			if (!updated)
-				return NotFound();
+			var updatedCase = await clinicalCaseRepository.UpdateClinicalCaseAsync(id, CurrentUserId, request.Title, request.CaseDetails);
+			if (updatedCase == null)
+				return NotFound("Clinical case not found.");
 
-			return NoContent();
+			return Ok(updatedCase);
 		}
 
 		[HttpGet]

@@ -11,7 +11,7 @@ namespace MedicLaunchApi.Repository
             this.context = context;
         }
 
-        public async Task CreateClinicalCaseAsync(string userId, string title, string caseDetails)
+        public async Task<ClinicalCase> CreateClinicalCaseAsync(string userId, string title, string caseDetails)
         {
             var clinicalCase = new ClinicalCase
             {
@@ -23,20 +23,21 @@ namespace MedicLaunchApi.Repository
             };
             context.ClinicalCases.Add(clinicalCase);
             await context.SaveChangesAsync();
+            return clinicalCase;
         }
 
-        public async Task<bool> UpdateClinicalCaseAsync(string id, string userId, string title, string caseDetails)
+        public async Task<ClinicalCase?> UpdateClinicalCaseAsync(string id, string userId, string title, string caseDetails)
         {
             var clinicalCase = await context.ClinicalCases
                 .FirstOrDefaultAsync(c => c.Id == id && c.UserId == userId);
 
             if (clinicalCase == null)
-                return false;
+                return null;
 
             clinicalCase.Title = title;
             clinicalCase.CaseDetails = caseDetails;
             await context.SaveChangesAsync();
-            return true;
+            return clinicalCase;
         }
 
         public async Task<List<ClinicalCase>> GetUserClinicalCasesAsync(string userId)

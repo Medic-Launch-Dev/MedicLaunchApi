@@ -174,7 +174,7 @@ namespace MedicLaunchApi.Services
                 var options = new Stripe.BillingPortal.SessionCreateOptions
                 {
                     Customer = customer.Id,
-                    ReturnUrl = configuration.GetValue<string>("ReactApp:Url") + "/account",
+                    ReturnUrl = configuration.GetValue<string>("ReactApp:Url") + "/my-profile",
                 };
                 var service = new Stripe.BillingPortal.SessionService();
                 Stripe.BillingPortal.Session session = service.Create(options);

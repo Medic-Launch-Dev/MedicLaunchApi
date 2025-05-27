@@ -106,7 +106,7 @@ namespace MedicLaunchApi.Controllers
                 return Unauthorized();
 
             if (user.IsOnFreeTrial && user.TrialQuestionsAttemptedCount >= TrialLimit)
-                return StatusCode(403, "Trial question attempt limit reached.");
+                return StatusCode(403);
 
             return null;
         }
