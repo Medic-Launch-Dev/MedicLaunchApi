@@ -12,7 +12,7 @@
 
         public bool AllSpecialitiesSelected { get; set; }
 
-        public int Amount { get; set; } // Number of questions to return
+        public int Amount { get; set; }
     }
 
     public enum Familiarity
