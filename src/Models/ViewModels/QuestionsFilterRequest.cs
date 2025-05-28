@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace MedicLaunchApi.Models.ViewModels
+﻿namespace MedicLaunchApi.Models.ViewModels
 {
     public class QuestionsFilterRequest
     {
@@ -8,11 +6,13 @@ namespace MedicLaunchApi.Models.ViewModels
 
         public string QuestionType { get; set; }
 
-        public string Familiarity { get; set; }
+        public Familiarity Familiarity { get; set; }
 
-        public string SelectionOrder { get; set; }
+        public SelectionOrder SelectionOrder { get; set; }
 
         public bool AllSpecialitiesSelected { get; set; }
+
+        public int Amount { get; set; } // Number of questions to return
     }
 
     public enum Familiarity

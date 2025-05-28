@@ -36,7 +36,7 @@ namespace MedicLaunchApi.Controllers
 
             var user = await userManager.FindByIdAsync(CurrentUserId);
 
-            await this.questionRepository.AttemptQuestionAsync(questionAttempt, CurrentUserId);
+            await questionRepository.AttemptQuestionAsync(questionAttempt, CurrentUserId);
 
             if (user.IsOnFreeTrial)
             {
@@ -51,14 +51,14 @@ namespace MedicLaunchApi.Controllers
         [Authorize(Policy = AuthPolicies.RequireSubscriptionOrTrial)]
         public async Task<IActionResult> FlagQuestion(string questionId)
         {
-            await this.questionRepository.AddFlaggedQuestionAsync(questionId, CurrentUserId);
+            await questionRepository.AddFlaggedQuestionAsync(questionId, CurrentUserId);
             return Ok();
         }
 
         [HttpGet("practicestats")]
         public async Task<PracticeStats> GetPracticeStats()
         {
-            return await this.questionRepository.GetPracticeStatsAsync(CurrentUserId);
+            return await questionRepository.GetPracticeStatsAsync(CurrentUserId);
         }
 
         [HttpPost("filter")]
@@ -68,7 +68,9 @@ namespace MedicLaunchApi.Controllers
             var trialCheck = await CheckTrialLimit();
             if (trialCheck != null) return trialCheck;
 
-            return Ok(await this.questionRepository.FilterQuestionsAsync(filterRequest, CurrentUserId));
+            var filteredQuestions = await questionRepository.FilterQuestionsAsync(filterRequest, CurrentUserId);
+
+            return Ok(filteredQuestions);
         }
 
         [HttpPost("familiaritycounts")]

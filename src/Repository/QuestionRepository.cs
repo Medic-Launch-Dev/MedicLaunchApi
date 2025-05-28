@@ -1,9 +1,7 @@
 ﻿using MedicLaunchApi.Data;
 using MedicLaunchApi.Exceptions;
 using MedicLaunchApi.Models.ViewModels;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Collections;
 using System.Linq.Expressions;
 using PracticeStats = MedicLaunchApi.Models.PracticeStats;
 namespace MedicLaunchApi.Repository
@@ -13,8 +11,8 @@ namespace MedicLaunchApi.Repository
         private readonly ApplicationDbContext dbContext;
 
         Expression<Func<Question, bool>> NewQuestionsPredicate(string userId) => q => !dbContext.QuestionAttempts.Any(attempt => attempt.UserId == userId && attempt.QuestionId == q.Id)
-                                                                                       && !dbContext.FlaggedQuestions.Any(flagged => flagged.UserId == userId && flagged.QuestionId == q.Id);
-        
+            && !dbContext.FlaggedQuestions.Any(flagged => flagged.UserId == userId && flagged.QuestionId == q.Id);
+
         Expression<Func<Question, bool>> IncorrectQuestionsPredicate(string userId) => q => dbContext.QuestionAttempts.Any(attempt => attempt.UserId == userId && attempt.QuestionId == q.Id && !attempt.IsCorrect);
 
         Expression<Func<Question, bool>> FlaggedQuestionsPredicate(string userId) => q => dbContext.FlaggedQuestions.Any(flagged => flagged.UserId == userId && flagged.QuestionId == q.Id);
@@ -122,13 +120,13 @@ namespace MedicLaunchApi.Repository
             return questions.Select(q => CreateQuestionViewModel(q));
         }
 
-		public async Task<Question> GetQuestionByIdAsync(string questionId)
-		{
-			var question = await dbContext.Questions.FindAsync(questionId);
-			return question;
-		}
+        public async Task<Question> GetQuestionByIdAsync(string questionId)
+        {
+            var question = await dbContext.Questions.FindAsync(questionId);
+            return question;
+        }
 
-		public async Task<IEnumerable<QuestionViewModel>> GetQuestionsToEdit(EditQuestionsRequest request, string userId, bool isAdmin)
+        public async Task<IEnumerable<QuestionViewModel>> GetQuestionsToEdit(EditQuestionsRequest request, string userId, bool isAdmin)
         {
             QuestionType questionType = Enum.Parse<QuestionType>(request.QuestionType);
             var questions = dbContext.Questions.Where(q => q.SpecialityId == request.SpecialityId && q.QuestionType == questionType)
@@ -136,7 +134,7 @@ namespace MedicLaunchApi.Repository
                 .Include(m => m.Options)
                 .AsQueryable();
 
-            
+
             // If user is not admin, only return questions created by the user
             if (!isAdmin)
             {
@@ -221,9 +219,9 @@ namespace MedicLaunchApi.Repository
             return stats;
         }
 
-        public async Task<List<QuestionViewModel>> FilterQuestionsAsync(MedicLaunchApi.Models.ViewModels.QuestionsFilterRequest filterRequest, string userId)
+        public async Task<List<QuestionViewModel>> FilterQuestionsAsync(QuestionsFilterRequest filterRequest, string userId)
         {
-            var familiarity = Enum.Parse<Familiarity>(filterRequest.Familiarity);
+            var familiarity = filterRequest.Familiarity;
             IQueryable<Question> result = Enumerable.Empty<Question>().AsQueryable();
 
             switch (familiarity)
@@ -243,37 +241,28 @@ namespace MedicLaunchApi.Repository
             }
 
             var notesQuery = from note in dbContext.Notes
-                             where note.UserId == userId
-                             select note;
+                where note.UserId == userId
+                select note;
 
-            // left join questions with flagged questions to mark questions as flagged or not
             var flaggedQuestionsForUser = dbContext.FlaggedQuestions.Where(fq => fq.UserId == userId).Select(fq => fq.QuestionId);
 
-            // do the left join with flagged questions
             var questionsWithFlaggedProperty = from q in result
-                                               join fq in flaggedQuestionsForUser on q.Id equals fq into gj
-                                               from flaggedQuestion in gj.DefaultIfEmpty()
-                                               select new { Question = q, IsFlagged = flaggedQuestion != null };
+                join fq in flaggedQuestionsForUser on q.Id equals fq into gj
+                from flaggedQuestion in gj.DefaultIfEmpty()
+                select new { Question = q, IsFlagged = flaggedQuestion != null };
 
             var query = from q in questionsWithFlaggedProperty
-                        join n in notesQuery on q.Question.Id equals n.QuestionId into gj
-                        from note in gj.DefaultIfEmpty()
-                        select CreateQuestionViewModel(q.Question, note, q.IsFlagged);
+                join n in notesQuery on q.Question.Id equals n.QuestionId into gj
+                from note in gj.DefaultIfEmpty()
+                select CreateQuestionViewModel(q.Question, note, q.IsFlagged);
 
+            var questions = await query.OrderBy(q => Guid.NewGuid()).ToListAsync();
+            int maxAmount = Math.Min(100, filterRequest.Amount > 0 ? filterRequest.Amount : 100);
+            questions = questions.Take(maxAmount).ToList();
 
-            // Apply question ordering. Ordering can be Random or by Speciality
-            var questions = await query.ToListAsync();
-            var order = Enum.Parse<SelectionOrder>(filterRequest.SelectionOrder);
-            switch (order)
+            if (filterRequest.SelectionOrder == SelectionOrder.OrderBySpeciality)
             {
-                case SelectionOrder.Randomized:
-                    questions = questions.OrderBy(m => Guid.NewGuid()).ToList();
-                    break;
-                case SelectionOrder.OrderBySpeciality:
-                    questions = questions.OrderBy(m => m.SpecialityName).ToList();
-                    break;
-                default:
-                    break;
+                questions = questions.OrderBy(q => q.SpecialityName).ToList();
             }
 
             return questions;
@@ -281,12 +270,12 @@ namespace MedicLaunchApi.Repository
 
         private static QuestionViewModel CreateQuestionViewModel(Question question, Note? note = null, bool isFlagged = false)
         {
-            if(question.Speciality == null)
+            if (question.Speciality == null)
             {
                 throw new InvalidOperationException("Include speciality information in question retrieval");
             }
 
-            if(question.Options == null || question.Options.Count == 0)
+            if (question.Options == null || question.Options.Count == 0)
             {
                 throw new InvalidOperationException("Include options information in question retrieval");
             }
@@ -399,9 +388,9 @@ namespace MedicLaunchApi.Repository
                                                join fq in flaggedQuestionsForUser on q.Id equals fq into gj
                                                from flaggedQuestion in gj.DefaultIfEmpty()
                                                select new { Question = q, IsFlagged = flaggedQuestion != null };
-            
+
             var result = from q in questionsWithFlaggedProperty
-                        select CreateQuestionViewModel(q.Question, null, q.IsFlagged);
+                         select CreateQuestionViewModel(q.Question, null, q.IsFlagged);
             return await result.ToListAsync();
         }
 
