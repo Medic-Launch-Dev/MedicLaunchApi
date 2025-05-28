@@ -7,8 +7,11 @@ using MedicLaunchApi.Services;
 using MedicLaunchApi.Storage;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
+using MedicLaunchApi.Configurations;
 
 namespace MedicLaunchApi
 {
@@ -107,6 +110,42 @@ namespace MedicLaunchApi
                         });
             });
 
+            services.AddRateLimiter(options =>
+            {
+                options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+                {
+                    var user = httpContext.User.Identity?.Name;
+                    var ip = httpContext.Connection.RemoteIpAddress?.ToString();
+                    var partitionKey = !string.IsNullOrEmpty(user) ? user : ip ?? "unknown";
+
+                    return RateLimitPartition.GetFixedWindowLimiter(partitionKey, _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 100,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0
+                    });
+                });
+
+                options.AddPolicy(RateLimitingPolicies.Strict, httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                        _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = 4,
+                            Window = TimeSpan.FromMinutes(0.5),
+                            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                            QueueLimit = 0
+                        }
+                    ));
+
+                options.OnRejected = async (context, token) =>
+                {
+                    context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                    await context.HttpContext.Response.WriteAsync("Too many requests. Please try again later.", cancellationToken: token);
+                };
+            });
+
             services.AddLogging(loggingBuilder =>
             {
                 loggingBuilder.AddConsole();
@@ -124,6 +163,8 @@ namespace MedicLaunchApi
             app.UseHttpsRedirection();
 
             app.UseCors(LocalDevCorsPolicy);
+
+            app.UseRateLimiter();
 
             app.UseAuthorization();
 

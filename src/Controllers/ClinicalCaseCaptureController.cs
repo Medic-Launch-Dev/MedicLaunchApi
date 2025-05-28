@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Identity;
 using MedicLaunchApi.Models;
 using System.Security.Claims;
 using MedicLaunchApi.Repository;
+using Microsoft.AspNetCore.RateLimiting;
+using MedicLaunchApi.Configurations;
 
 namespace MedicLaunchApi.Controllers
 {
@@ -80,6 +82,8 @@ namespace MedicLaunchApi.Controllers
 			return NoContent();
 		}
 
+
+		[EnableRateLimiting(RateLimitingPolicies.Strict)]
 		[HttpPost("generate")]
 		public async Task<IActionResult> GenerateClinicalCase([FromBody] GenerateClinicalCaseDTO caseDetails)
 		{
@@ -96,7 +100,7 @@ namespace MedicLaunchApi.Controllers
 			if (user.IsOnFreeTrial && user.TrialClinicalCasesGeneratedCount >= trialLimit)
 				return StatusCode(403, "Trial clinical case generation limit reached.");
 
-			var result = await clinicalCaseService.GenerateClinicalCaseAsync(caseDetails);
+			// var result = await clinicalCaseService.GenerateClinicalCaseAsync(caseDetails);
 
 			if (user.IsOnFreeTrial)
 			{
@@ -104,7 +108,7 @@ namespace MedicLaunchApi.Controllers
 				await userManager.UpdateAsync(user);
 			}
 
-			return Ok(result);
+			return Ok("Test");
 		}
 	}
 }
