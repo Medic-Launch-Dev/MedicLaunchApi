@@ -100,7 +100,7 @@ namespace MedicLaunchApi.Controllers
 			if (user.IsOnFreeTrial && user.TrialClinicalCasesGeneratedCount >= trialLimit)
 				return StatusCode(403, "Trial clinical case generation limit reached.");
 
-			// var result = await clinicalCaseService.GenerateClinicalCaseAsync(caseDetails);
+			var result = await clinicalCaseService.GenerateClinicalCaseAsync(caseDetails);
 
 			if (user.IsOnFreeTrial)
 			{
@@ -108,7 +108,7 @@ namespace MedicLaunchApi.Controllers
 				await userManager.UpdateAsync(user);
 			}
 
-			return Ok("Test");
+			return Ok(result);
 		}
 	}
 }
