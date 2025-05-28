@@ -6,9 +6,9 @@
 
         public string QuestionType { get; set; }
 
-        public Familiarity Familiarity { get; set; }
+        public string Familiarity { get; set; }
 
-        public SelectionOrder SelectionOrder { get; set; }
+        public string SelectionOrder { get; set; }
 
         public bool AllSpecialitiesSelected { get; set; }
 

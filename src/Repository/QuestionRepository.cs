@@ -221,7 +221,7 @@ namespace MedicLaunchApi.Repository
 
         public async Task<List<QuestionViewModel>> FilterQuestionsAsync(QuestionsFilterRequest filterRequest, string userId)
         {
-            var familiarity = filterRequest.Familiarity;
+            var familiarity = Enum.Parse<Familiarity>(filterRequest.Familiarity);
             IQueryable<Question> result = Enumerable.Empty<Question>().AsQueryable();
 
             switch (familiarity)
@@ -260,7 +260,8 @@ namespace MedicLaunchApi.Repository
             int maxAmount = Math.Min(100, filterRequest.Amount > 0 ? filterRequest.Amount : 100);
             questions = questions.Take(maxAmount).ToList();
 
-            if (filterRequest.SelectionOrder == SelectionOrder.OrderBySpeciality)
+            var order = Enum.Parse<SelectionOrder>(filterRequest.SelectionOrder);
+            if (order == SelectionOrder.OrderBySpeciality)
             {
                 questions = questions.OrderBy(q => q.SpecialityName).ToList();
             }
