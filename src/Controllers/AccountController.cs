@@ -1,10 +1,8 @@
 ﻿using MedicLaunchApi.Authorization;
 using MedicLaunchApi.Common;
-using MedicLaunchApi.Data;
 using MedicLaunchApi.Models;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
-using MedicLaunchApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -16,20 +14,12 @@ namespace MedicLaunchApi.Controllers
     public class AccountController : ControllerBase
     {
         private readonly UserManager<MedicLaunchUser> userManager;
-        private readonly RoleManager<IdentityRole> roleManager;
-        private readonly PaymentService paymentService;
-        private readonly IMixPanelService mixPanelService;
-        private readonly UserDataRepository userRepository;
         private readonly QuestionRepository questionRepository;
         private readonly IConfiguration configuration;
 
-        public AccountController(UserManager<MedicLaunchUser> signInManager, PaymentService paymentService, IMixPanelService mixPanelService, UserDataRepository userRepository, RoleManager<IdentityRole> roleManager, QuestionRepository questionRepository, IConfiguration configuration)
+        public AccountController(UserManager<MedicLaunchUser> signInManager, QuestionRepository questionRepository, IConfiguration configuration)
         {
             this.userManager = signInManager;
-            this.paymentService = paymentService;
-            this.mixPanelService = mixPanelService;
-            this.userRepository = userRepository;
-            this.roleManager = roleManager;
             this.questionRepository = questionRepository;
             this.configuration = configuration;
         }
@@ -56,16 +46,7 @@ namespace MedicLaunchApi.Controllers
             var result = await this.userManager.CreateAsync(newUser, user.Password);
             if (result.Succeeded)
             {
-                await this.paymentService.CreateStripeCustomer(newUser);
-
-                string ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString()
-                    ?? Request.Headers["X-Forwarded-For"].FirstOrDefault()
-                    ?? "0.0.0.0";
-
-                await this.mixPanelService.CreateUserProfile(newUser, ipAddress);
-
                 await this.userManager.AddToRoleAsync(newUser, RoleConstants.Student);
-
                 return Ok(new { message = "Registration successful. Please check your email to confirm your account." });
             }
             else

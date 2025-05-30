@@ -26,7 +26,7 @@ namespace MedicLaunchApi.Services
 				{
 					{ "$token", _token },
 					{ "$distinct_id", user.Id },
-					{ "$ip", ipAddress },  // Add IP address here
+					{ "$ip", ipAddress },
 					{ "$set", new Dictionary<string, object>
 						{
 							{ "$email", user.Email },
