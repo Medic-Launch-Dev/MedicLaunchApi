@@ -114,6 +114,12 @@ namespace MedicLaunchApi
             {
                 options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
                 {
+                    if (httpContext.User.Identity?.IsAuthenticated == true &&
+                        httpContext.User.IsInRole(RoleConstants.Admin))
+                    {
+                        return RateLimitPartition.GetNoLimiter("admin-exempt");
+                    }
+
                     var user = httpContext.User.Identity?.Name;
                     var ip = httpContext.Connection.RemoteIpAddress?.ToString();
                     var partitionKey = !string.IsNullOrEmpty(user) ? user : ip ?? "unknown";
