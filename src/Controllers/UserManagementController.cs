@@ -105,13 +105,16 @@ namespace MedicLaunchApi.Controllers
         }
 
         [HttpPost("delete/{userId}")]
-        public async Task<IActionResult> DeleteUser(string userId)
+        public async Task<IActionResult> DeleteUser(string userId, [FromServices] PaymentService paymentService, [FromServices] IMixPanelService mixPanelService)
         {
             var user = await this.userManager.FindByIdAsync(userId);
             if (user == null)
             {
                 return NotFound();
             }
+
+            await paymentService.DeleteStripeCustomer(user);
+            await mixPanelService.DeleteUserProfile(user.Id);
 
             var result = await this.userManager.DeleteAsync(user);
             if (result.Succeeded)
@@ -124,7 +127,6 @@ namespace MedicLaunchApi.Controllers
             }
         }
 
-        // add endpoint to add a user along with a subscription plan. Reuse the RegisterUserRequest model
         [HttpPost("add")]
         public async Task<IActionResult> AddUser([FromBody] AddUserRequest user)
         {

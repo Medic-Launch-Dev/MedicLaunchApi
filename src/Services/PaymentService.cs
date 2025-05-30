@@ -210,6 +210,26 @@ namespace MedicLaunchApi.Services
             }
         }
 
+        public async Task DeleteStripeCustomer(MedicLaunchUser user)
+        {
+            try
+            {
+                StripeConfiguration.ApiKey = this.stripeApiKey;
+                var customerService = new CustomerService();
+                var customers = await customerService.ListAsync(new CustomerListOptions { Email = user.Email, Limit = 1 });
+                var customer = customers.FirstOrDefault();
+                if (customer != null)
+                {
+                    await customerService.DeleteAsync(customer.Id);
+                }
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex, "Error deleting Stripe customer");
+                throw;
+            }
+        }
+
         public string GetPublishKey()
         {
             return this.stripePublishableKey;

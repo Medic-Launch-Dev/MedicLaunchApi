@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
+using UAParser;
 
 namespace Microsoft.AspNetCore.Routing;
 
@@ -171,7 +172,6 @@ public static class IdentityApiEndpointRouteBuilderExtensions
 			var paymentService = sp.GetRequiredService<PaymentService>();
 			var mixPanelService = sp.GetRequiredService<IMixPanelService>();
 
-
 			if (await userManager.FindByIdAsync(userId) is not { } user)
 			{
 				return TypedResults.Unauthorized();
@@ -214,7 +214,24 @@ public static class IdentityApiEndpointRouteBuilderExtensions
 					await paymentService.CreateStripeCustomer(medicUser);
 
 					var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0";
-					await mixPanelService.CreateUserProfile(medicUser, ipAddress);
+					var userAgent = httpContext.Request.Headers["User-Agent"].ToString();
+
+					var userClientInfo = new MedicLaunchApi.Models.UserClientInfo
+					{
+						IpAddress = ipAddress
+					};
+
+					if (!string.IsNullOrEmpty(userAgent))
+					{
+						var uaParser = Parser.GetDefault();
+						ClientInfo clientInfo = uaParser.Parse(userAgent);
+
+						userClientInfo.Os = clientInfo.OS.ToString();
+						userClientInfo.Browser = clientInfo.UA.ToString();
+						userClientInfo.Device = clientInfo.Device.ToString();
+					}
+
+					await mixPanelService.CreateUserProfile(medicUser, userClientInfo);
 				}
 			}
 			catch (Exception ex)

@@ -18,7 +18,7 @@ namespace MedicLaunchApi.Services
 			};
 		}
 
-		public async Task CreateUserProfile(MedicLaunchUser user, string ipAddress)
+		public async Task CreateUserProfile(MedicLaunchUser user, UserClientInfo userClientInfo)
 		{
 			var dictionary = new Dictionary<string, object>[]
 			{
@@ -26,12 +26,15 @@ namespace MedicLaunchApi.Services
 				{
 					{ "$token", _token },
 					{ "$distinct_id", user.Id },
-					{ "$ip", ipAddress },
+					{ "$ip", userClientInfo.IpAddress },
 					{ "$set", new Dictionary<string, object>
 						{
-							{ "$email", user.Email },
+							{ "$email", user.Email ?? "" },
 							{ "$name", $"{user.FirstName} {user.LastName}" },
-							{ "$created", DateTime.UtcNow }
+							{ "$created", DateTime.UtcNow },
+							{ "browser", userClientInfo.Browser },
+							{ "os", userClientInfo.Os },
+							{ "device", userClientInfo.Device }
 						}
 					}
 				}
@@ -39,6 +42,30 @@ namespace MedicLaunchApi.Services
 
 			var response = await _httpClient.PostAsync(
 				"/engage#profile-set",  // Remove ip=0 parameter
+				new StringContent(
+					JsonSerializer.Serialize(dictionary),
+					System.Text.Encoding.UTF8,
+					"application/json"
+				)
+			);
+
+			response.EnsureSuccessStatusCode();
+		}
+
+		public async Task DeleteUserProfile(string userId)
+		{
+			var dictionary = new Dictionary<string, object>[]
+			{
+				new Dictionary<string, object>
+				{
+					{ "$token", _token },
+					{ "$distinct_id", userId },
+					{ "$delete", "" }
+				}
+			};
+
+			var response = await _httpClient.PostAsync(
+				"/engage#profile-delete",
 				new StringContent(
 					JsonSerializer.Serialize(dictionary),
 					System.Text.Encoding.UTF8,

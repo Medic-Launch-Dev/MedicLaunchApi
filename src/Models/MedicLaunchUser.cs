@@ -63,4 +63,12 @@ namespace MedicLaunchApi.Models
 
         public string? StripeSubscriptionStatus { get; set; }
     }
+
+    public class UserClientInfo
+    {
+        public string IpAddress { get; set; }
+        public string Os { get; set; }
+        public string Browser { get; set; }
+        public string Device { get; set; }
+    } 
 }
