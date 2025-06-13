@@ -211,7 +211,7 @@ public static class IdentityApiEndpointRouteBuilderExtensions
 			{
 				if (user is MedicLaunchApi.Models.MedicLaunchUser medicUser)
 				{
-					await paymentService.CreateStripeCustomer(medicUser);
+					await paymentService.CreateStripeCustomerIfNotExists(medicUser);
 
 					var ipAddress = httpContext.Connection.RemoteIpAddress?.ToString() ?? "0.0.0.0";
 					var userAgent = httpContext.Request.Headers["User-Agent"].ToString();

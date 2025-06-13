@@ -103,7 +103,7 @@ namespace MedicLaunchApi.Services
                 var customer = customers.FirstOrDefault();
                 if (customer == null)
                 {
-                    var createdCustomer = await this.CreateStripeCustomer(user);
+                    var createdCustomer = await this.CreateStripeCustomerIfNotExists(user);
                     customer = createdCustomer;
                 }
 
@@ -188,20 +188,36 @@ namespace MedicLaunchApi.Services
             }
         }
 
-        public async Task<Customer> CreateStripeCustomer(MedicLaunchUser user)
+        /// <summary>
+        /// Creates a Stripe customer if it does not already exist for the given user.
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns>Existing or newly created stripe customer</returns>
+        public async Task<Customer> CreateStripeCustomerIfNotExists(MedicLaunchUser user)
         {
             try
             {
                 StripeConfiguration.ApiKey = this.stripeApiKey;
+                var customerService = new CustomerService();
+
+                var customers = await customerService.ListAsync(new CustomerListOptions
+                {
+                    Email = user.Email,
+                    Limit = 1
+                });
+                var existingCustomer = customers.FirstOrDefault();
+                if (existingCustomer != null)
+                {
+                    return existingCustomer;
+                }
+
                 var options = new CustomerCreateOptions
                 {
                     Name = user.FirstName + " " + user.LastName,
                     Email = user.Email
                 };
 
-                var service = new CustomerService();
-                return await service.CreateAsync(options);
-
+                return await customerService.CreateAsync(options);
             }
             catch (Exception ex)
             {

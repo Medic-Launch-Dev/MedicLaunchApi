@@ -106,6 +106,7 @@ namespace MedicLaunchApi.Controllers
             user.StripeSubscriptionId = subscription.Id;
             user.StripeSubscriptionStatus = subscription.Status;
             await userManager.UpdateAsync(user);
+            this.logger.LogInformation($"User {user.Email} subscription updated to: {subscription.Status}");
 
             return Ok();
         }

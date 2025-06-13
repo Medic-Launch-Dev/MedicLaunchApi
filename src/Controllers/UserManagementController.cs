@@ -155,7 +155,7 @@ namespace MedicLaunchApi.Controllers
             var result = await this.userManager.CreateAsync(newUser, user.Password);
             if (result.Succeeded)
             {
-                await this.paymentService.CreateStripeCustomer(newUser);
+                await this.paymentService.CreateStripeCustomerIfNotExists(newUser);
                 return Ok();
             }
             else
