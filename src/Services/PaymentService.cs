@@ -85,7 +85,7 @@ namespace MedicLaunchApi.Services
             }
         }
 
-        public async Task<string> CreateCheckoutSession(string planLookupKey, string userId)
+        public async Task<string> CreateCheckoutSession(string userId, string planLookupKey, string? endorselyReferral = null)
         {
             try
             {
@@ -136,6 +136,9 @@ namespace MedicLaunchApi.Services
                     CancelUrl = domain + "/subscribe",
                     AllowPromotionCodes = true,
                     Customer = customer.Id,
+                    Metadata = endorselyReferral != null
+                        ? new Dictionary<string, string> { { "endorsely_referral", endorselyReferral } }
+                        : null
                 };
                 var service = new Stripe.Checkout.SessionService();
                 Stripe.Checkout.Session session = service.Create(options);

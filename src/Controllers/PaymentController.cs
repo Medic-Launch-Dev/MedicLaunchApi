@@ -37,11 +37,11 @@ namespace MedicLaunchApi.Controllers
 
         [HttpPost]
         [Route("create-checkout-session")]
-        public async Task<IActionResult> CreateCheckoutSession(string planLookupKey)
+        public async Task<IActionResult> CreateCheckoutSession(string planLookupKey, string? endorselyReferral = null)
         {
             try
             {
-                var sessionUrl = await this.paymentService.CreateCheckoutSession(planLookupKey, this.GetCurrentUserId());
+                var sessionUrl = await this.paymentService.CreateCheckoutSession(this.GetCurrentUserId(), planLookupKey, endorselyReferral);
                 return Ok(new { sessionUrl });
             }
             catch (Exception ex)
