@@ -241,20 +241,20 @@ namespace MedicLaunchApi.Repository
             }
 
             var notesQuery = from note in dbContext.Notes
-                where note.UserId == userId
-                select note;
+                             where note.UserId == userId
+                             select note;
 
             var flaggedQuestionsForUser = dbContext.FlaggedQuestions.Where(fq => fq.UserId == userId).Select(fq => fq.QuestionId);
 
             var questionsWithFlaggedProperty = from q in result
-                join fq in flaggedQuestionsForUser on q.Id equals fq into gj
-                from flaggedQuestion in gj.DefaultIfEmpty()
-                select new { Question = q, IsFlagged = flaggedQuestion != null };
+                                               join fq in flaggedQuestionsForUser on q.Id equals fq into gj
+                                               from flaggedQuestion in gj.DefaultIfEmpty()
+                                               select new { Question = q, IsFlagged = flaggedQuestion != null };
 
             var query = from q in questionsWithFlaggedProperty
-                join n in notesQuery on q.Question.Id equals n.QuestionId into gj
-                from note in gj.DefaultIfEmpty()
-                select CreateQuestionViewModel(q.Question, note, q.IsFlagged);
+                        join n in notesQuery on q.Question.Id equals n.QuestionId into gj
+                        from note in gj.DefaultIfEmpty()
+                        select CreateQuestionViewModel(q.Question, note, q.IsFlagged);
 
             var questions = await query.OrderBy(q => Guid.NewGuid()).ToListAsync();
             int maxAmount = Math.Min(100, filterRequest.Amount > 0 ? filterRequest.Amount : 100);
@@ -442,32 +442,46 @@ namespace MedicLaunchApi.Repository
 
         public async Task<List<SpecialityAnalyzerResponse>> GetSpecialityAnalytics(string userId)
         {
-            var result = (from a in dbContext.QuestionAttempts
-                          join b in dbContext.Questions on a.QuestionId equals b.Id
-                          join c in dbContext.Specialities on b.SpecialityId equals c.Id
-                          where a.UserId == userId
-                          group a by new { c.Id, c.Name } into g
-                          select new
-                          {
-                              g.Key.Id,
-                              g.Key.Name,
-                              IncorrectCount = g.Sum(a => a.IsCorrect ? 0 : 1),
-                              CorrectCount = g.Sum(a => a.IsCorrect ? 1 : 0),
-                              AnsweredQuestionsCount = g.Count(),
-                              TotalQuestionsInSpeciality = (from b2 in dbContext.Questions
-                                                            where b2.SpecialityId == g.Key.Id
-                                                            select b2).Count()
-                          });
+            var allSpecialities = await dbContext.Specialities.ToListAsync();
 
-            return await result.Select(m => new SpecialityAnalyzerResponse()
+            var attempts = from a in dbContext.QuestionAttempts
+                           join b in dbContext.Questions on a.QuestionId equals b.Id
+                           where a.UserId == userId
+                           select new { a, b.SpecialityId, a.IsCorrect };
+
+            var attemptsBySpeciality = await attempts
+                .GroupBy(x => x.SpecialityId)
+                .Select(g => new
+                {
+                    SpecialityId = g.Key,
+                    Correct = g.Count(x => x.IsCorrect),
+                    Incorrect = g.Count(x => !x.IsCorrect),
+                    QuestionsAnswered = g.Count()
+                })
+                .ToListAsync();
+
+            var totalQuestionsBySpeciality = await dbContext.Questions
+                .GroupBy(q => q.SpecialityId)
+                .Select(g => new { SpecialityId = g.Key, TotalQuestions = g.Count() })
+                .ToListAsync();
+
+            var result = allSpecialities.Select(s =>
             {
-                SpecialityId = m.Id,
-                Correct = m.CorrectCount,
-                Incorrect = m.IncorrectCount,
-                SpecialityName = m.Name,
-                QuestionsAnswered = m.AnsweredQuestionsCount,
-                TotalQuestions = m.TotalQuestionsInSpeciality
-            }).ToListAsync();
+                var attempt = attemptsBySpeciality.FirstOrDefault(a => a.SpecialityId == s.Id);
+                var totalQuestions = totalQuestionsBySpeciality.FirstOrDefault(t => t.SpecialityId == s.Id)?.TotalQuestions ?? 0;
+
+                return new SpecialityAnalyzerResponse
+                {
+                    SpecialityId = s.Id,
+                    SpecialityName = s.Name,
+                    Correct = attempt?.Correct ?? 0,
+                    Incorrect = attempt?.Incorrect ?? 0,
+                    QuestionsAnswered = attempt?.QuestionsAnswered ?? 0,
+                    TotalQuestions = totalQuestions
+                };
+            }).ToList();
+
+            return result;
         }
         #endregion
 
