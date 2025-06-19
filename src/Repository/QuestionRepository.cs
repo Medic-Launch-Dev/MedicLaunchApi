@@ -627,8 +627,8 @@ namespace MedicLaunchApi.Repository
             return new AuthoredQuestionStats
             {
                 TotalQuestions = totalQuestions,
-                TotalSubmittedQuestions = totalSubmitted,
-                TotalDraftQuestions = totalDraft
+                SubmittedQuestions = totalSubmitted,
+                DraftQuestions = totalDraft
             };
         }
     }
