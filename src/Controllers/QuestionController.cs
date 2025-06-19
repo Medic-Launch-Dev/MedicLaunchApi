@@ -19,7 +19,7 @@ namespace MedicLaunchApi.Controllers
         private readonly IQuestionGenerationService questionGenerationService;
 
         public QuestionController(
-            ILogger<QuestionController> logger, 
+            ILogger<QuestionController> logger,
             QuestionRepository questionRepository,
             IQuestionGenerationService questionGenerationService)
         {
@@ -28,21 +28,21 @@ namespace MedicLaunchApi.Controllers
             this.questionGenerationService = questionGenerationService;
         }
 
-		[Authorize(Policy = RoleConstants.QuestionAuthor)]
-		[HttpGet("{questionId}")]
-		public async Task<IActionResult> GetQuestionById(string questionId)
-		{
-			var question = await this.questionRepository.GetQuestionByIdAsync(questionId);
+        [Authorize(Policy = RoleConstants.QuestionAuthor)]
+        [HttpGet("{questionId}")]
+        public async Task<IActionResult> GetQuestionById(string questionId)
+        {
+            var question = await this.questionRepository.GetQuestionByIdAsync(questionId);
 
-			if (question == null)
-			{
-				return NotFound(new { message = "Question not found" });
-			}
+            if (question == null)
+            {
+                return NotFound(new { message = "Question not found" });
+            }
 
-			return Ok(question);
-		}
+            return Ok(question);
+        }
 
-		[Authorize(Policy = RoleConstants.QuestionAuthor)]
+        [Authorize(Policy = RoleConstants.QuestionAuthor)]
         [HttpPost("create")]
         public async Task<IActionResult> CreateQuestion([FromBody] QuestionViewModel model)
         {
@@ -52,7 +52,7 @@ namespace MedicLaunchApi.Controllers
                 ModelState.AddModelError("Options", "Question must have at least 4 options");
             }
 
-            if(model.Options?.Any(o => string.IsNullOrWhiteSpace(o.Text)) ?? false)
+            if (model.Options?.Any(o => string.IsNullOrWhiteSpace(o.Text)) ?? false)
             {
                 ModelState.AddModelError("Options", "Each option must have text");
             }
@@ -106,7 +106,7 @@ namespace MedicLaunchApi.Controllers
             return await this.questionRepository.GetQuestionsToEdit(request, GetCurrentUserId(), isAdmin);
         }
 
-		[Authorize(Policy = RoleConstants.QuestionAuthor)]
+        [Authorize(Policy = RoleConstants.QuestionAuthor)]
         [HttpDelete("delete/{specialityId}/{questionId}")]
         public async Task<IActionResult> DeleteQuestion(string specialityId, string questionId)
         {
@@ -224,7 +224,7 @@ namespace MedicLaunchApi.Controllers
         [HttpPost("generate/text-and-explanation")]
         public async Task<ActionResult<QuestionTextAndExplanation>> GenerateQuestionTextAndExplanation([FromBody] string conditions)
         {
-            try 
+            try
             {
                 var generatedQuestion = await questionGenerationService.GenerateQuestionTextAndExplanationAsync(conditions);
                 return Ok(generatedQuestion);
@@ -240,7 +240,7 @@ namespace MedicLaunchApi.Controllers
         [HttpPost("generate/learning-points")]
         public async Task<ActionResult<string>> GenerateLearningPoints([FromBody] string condition)
         {
-            try 
+            try
             {
                 var learningPoints = await questionGenerationService.GenerateLearningPointsAsync(condition);
                 return Ok(learningPoints);
@@ -256,7 +256,7 @@ namespace MedicLaunchApi.Controllers
         [HttpPost("generate/clinical-tips")]
         public async Task<ActionResult<string>> GenerateClinicalTips([FromBody] string condition)
         {
-            try 
+            try
             {
                 var clinicalTips = await questionGenerationService.GenerateClinicalTipsAsync(condition);
                 return Ok(clinicalTips);
@@ -266,6 +266,13 @@ namespace MedicLaunchApi.Controllers
                 logger.LogError(ex, "Error generating clinical tips");
                 return StatusCode(500, "Error generating clinical tips");
             }
+        }
+
+        [HttpGet("stats")]
+        public async Task<ActionResult<AuthoredQuestionStats>> GetPlatformStats()
+        {
+            var stats = await questionRepository.GetPlatformQuestionStatsAsync();
+            return Ok(stats);
         }
 
         private string GetCurrentUserId()

@@ -617,5 +617,19 @@ namespace MedicLaunchApi.Repository
             await dbContext.SaveChangesAsync();
         }
         #endregion
+
+        public async Task<AuthoredQuestionStats> GetPlatformQuestionStatsAsync()
+        {
+            var totalQuestions = await dbContext.Questions.CountAsync();
+            var totalSubmitted = await dbContext.Questions.CountAsync(q => q.QuestionState == QuestionState.Submitted);
+            var totalDraft = await dbContext.Questions.CountAsync(q => q.QuestionState == QuestionState.Draft);
+
+            return new AuthoredQuestionStats
+            {
+                TotalQuestions = totalQuestions,
+                TotalSubmittedQuestions = totalSubmitted,
+                TotalDraftQuestions = totalDraft
+            };
+        }
     }
 }
