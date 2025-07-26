@@ -132,6 +132,7 @@ namespace MedicLaunchApi.Services
                         },
                     },
                     Mode = "subscription",
+                    PaymentMethodCollection = "if_required",
                     SuccessUrl = domain + "/payment-complete",
                     CancelUrl = domain + "/subscribe",
                     AllowPromotionCodes = true,
