@@ -33,11 +33,6 @@ namespace MedicLaunchApi
                 .AddUserManager<UserManager<MedicLaunchUser>>()
                 .AddDefaultTokenProviders();
 
-            builder.Services.Configure<IdentityOptions>(options =>
-            {
-                options.SignIn.RequireConfirmedEmail = true;
-            });
-
             builder.Services.AddAuthorization(options =>
             {
                 // Admin should be able to do whatever other roles can do
