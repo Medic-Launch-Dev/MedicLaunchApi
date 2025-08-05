@@ -3,6 +3,7 @@ using MedicLaunchApi.Common;
 using MedicLaunchApi.Models;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Repository;
+using MedicLaunchApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -15,12 +16,14 @@ namespace MedicLaunchApi.Controllers
     {
         private readonly UserManager<MedicLaunchUser> userManager;
         private readonly QuestionRepository questionRepository;
+        private readonly PaymentService paymentService;
         private readonly IConfiguration configuration;
 
-        public AccountController(UserManager<MedicLaunchUser> signInManager, QuestionRepository questionRepository, IConfiguration configuration)
+        public AccountController(UserManager<MedicLaunchUser> signInManager, QuestionRepository questionRepository, PaymentService paymentService, IConfiguration configuration)
         {
             this.userManager = signInManager;
             this.questionRepository = questionRepository;
+            this.paymentService = paymentService;
             this.configuration = configuration;
         }
 
@@ -47,7 +50,8 @@ namespace MedicLaunchApi.Controllers
             if (result.Succeeded)
             {
                 await this.userManager.AddToRoleAsync(newUser, RoleConstants.Student);
-                return Ok(new { message = "Registration successful. Please check your email to confirm your account." });
+                await this.paymentService.CreateStripeCustomerIfNotExists(newUser);
+                return Ok();
             }
             else
             {
