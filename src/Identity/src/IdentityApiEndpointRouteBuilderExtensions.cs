@@ -109,13 +109,6 @@ public static class IdentityApiEndpointRouteBuilderExtensions
 			var userManager = sp.GetRequiredService<UserManager<TUser>>();
 
 			var user = await userManager.FindByEmailAsync(login.Email);
-			if (user != null && !await userManager.IsEmailConfirmedAsync(user))
-			{
-				return TypedResults.Problem(
-				detail: "Email not confirmed",
-				title: "Unauthorized",
-				statusCode: StatusCodes.Status401Unauthorized);
-			}
 
 			var useCookieScheme = (useCookies == true) || (useSessionCookies == true);
 			var isPersistent = (useCookies == true) && (useSessionCookies != true);
