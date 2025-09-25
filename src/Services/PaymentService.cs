@@ -218,8 +218,7 @@ namespace MedicLaunchApi.Services
                     var subscriptions = await subscriptionService.ListAsync(new SubscriptionListOptions
                     {
                         Customer = customer.Id,
-                        Limit = 1,
-                        Status = "active"
+                        Limit = 1
                     });
 
                     var subscription = subscriptions.FirstOrDefault();
