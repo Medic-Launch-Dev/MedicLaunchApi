@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
+using MedicLaunchApi.Models;
 using MedicLaunchApi.Models.ViewModels;
 using MedicLaunchApi.Services;
 using Microsoft.AspNetCore.Authentication.BearerToken;
@@ -106,9 +107,16 @@ public static class IdentityApiEndpointRouteBuilderExtensions
 			([FromBody] LoginRequest login, [FromQuery] bool? useCookies, [FromQuery] bool? useSessionCookies, [FromServices] IServiceProvider sp) =>
 		{
 			var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
-			var userManager = sp.GetRequiredService<UserManager<TUser>>();
+			var userManager = sp.GetRequiredService<UserManager<MedicLaunchUser>>();
+			var paymentService = sp.GetRequiredService<PaymentService>();
 
 			var user = await userManager.FindByEmailAsync(login.Email);
+			if (user == null)
+			{
+				return TypedResults.Problem("User not found", statusCode: StatusCodes.Status401Unauthorized);
+			}
+
+			await paymentService.SyncUserSubscriptionStatusFromStripe(user.Id);
 
 			var useCookieScheme = (useCookies == true) || (useSessionCookies == true);
 			var isPersistent = (useCookies == true) && (useSessionCookies != true);

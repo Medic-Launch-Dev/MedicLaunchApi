@@ -192,6 +192,65 @@ namespace MedicLaunchApi.Services
             }
         }
 
+        public async Task SyncUserSubscriptionStatusFromStripe(string userId)
+        {
+            try
+            {
+                StripeConfiguration.ApiKey = this.stripeApiKey;
+                var user = await this.userManager.FindByIdAsync(userId);
+                if (user == null)
+                {
+                    this.logger.LogError($"User not found with id {userId}");
+                    throw new Exception("User not found");
+                }
+
+                var customerService = new CustomerService();
+                var customers = await customerService.ListAsync(new CustomerListOptions { Email = user.Email, Limit = 1 });
+                var customer = customers.FirstOrDefault();
+
+                if (customer == null)
+                {
+                    user.StripeSubscriptionStatus = "no_subscription";
+                }
+                else
+                {
+                    var subscriptionService = new SubscriptionService();
+                    var subscriptions = await subscriptionService.ListAsync(new SubscriptionListOptions
+                    {
+                        Customer = customer.Id,
+                        Limit = 1,
+                        Status = "active"
+                    });
+
+                    var subscription = subscriptions.FirstOrDefault();
+                    if (subscription != null)
+                    {
+                        user.StripeSubscriptionStatus = subscription.Status;
+                    }
+                    else
+                    {
+                        user.StripeSubscriptionStatus = "no_subscription";
+                    }
+                }
+
+                // Update user in database
+                var result = await this.userManager.UpdateAsync(user);
+                if (!result.Succeeded)
+                {
+                    var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+                    this.logger.LogError($"Failed to sync user subscription status: {errors}");
+                    throw new Exception("Failed to sync user subscription status");
+                }
+
+                this.logger.LogInformation($"Synced subscription status for user {userId} to {user.StripeSubscriptionStatus}");
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex, "Error syncing user subscription status from Stripe");
+                throw;
+            }
+        }
+
         /// <summary>
         /// Creates a Stripe customer if it does not already exist for the given user.
         /// </summary>
