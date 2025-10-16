@@ -19,7 +19,7 @@ public class OpenAIService
       throw new Exception("OPENAI_API_KEY environment variable is not set.");
     }
 
-    defaultModelName = "o1-preview";
+    defaultModelName = "o1";
     httpClient = new HttpClient();
     httpClient.BaseAddress = new Uri("https://api.openai.com/v1/");
     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", openAIKey);
